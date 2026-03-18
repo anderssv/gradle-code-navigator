@@ -24,13 +24,13 @@ class CodeNavigatorPlugin : Plugin<Project> {
         }
 
         project.tasks.register("cnavCallers", FindCallersTask::class.java) {
-            description = "Shows who calls a given method as an indented tree. Usage: -Pmethod=<regex> [-Pdepth=N]"
+            description = "Shows who calls a given method as an indented tree. Usage: -Pmethod=<regex> -Pmaxdepth=N -Pprojectonly=true|false"
             group = "code-navigator"
             dependsOn("classes")
         }
 
         project.tasks.register("cnavCallees", FindCalleesTask::class.java) {
-            description = "Shows what a method calls as an indented tree. Usage: -Pmethod=<regex> [-Pdepth=N]"
+            description = "Shows what a method calls as an indented tree. Usage: -Pmethod=<regex> -Pmaxdepth=N -Pprojectonly=true|false"
             group = "code-navigator"
             dependsOn("classes")
         }

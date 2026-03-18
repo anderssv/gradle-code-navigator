@@ -14,10 +14,11 @@ object CallTreeBuilder {
         maxDepth: Int,
         direction: CallDirection,
         filter: ((MethodRef) -> Boolean)? = null,
-    ): List<CallTreeNode> =
-        roots.map { method ->
+    ): List<CallTreeNode> {
+        return roots.map { method ->
             buildNode(graph, method, maxDepth, direction, depth = 0, visited = mutableSetOf(), filter = filter)
         }
+    }
 
     private fun buildNode(
         graph: CallGraph,
@@ -29,7 +30,9 @@ object CallTreeBuilder {
         filter: ((MethodRef) -> Boolean)?,
     ): CallTreeNode {
         val sourceFile = if (depth > 0) graph.sourceFileOf(method.className) else null
-        val children = if (depth < maxDepth && method !in visited) {
+        val depthCheck = depth < maxDepth
+        val visitedCheck = method !in visited
+        val children = if (depthCheck && visitedCheck) {
             visited.add(method)
             val related = direction.resolve(graph, method.className, method.methodName)
                 .let { refs -> if (filter != null) refs.filter(filter).toSet() else refs }

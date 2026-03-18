@@ -53,7 +53,7 @@ class AgentHelpTextTest {
 
         assertTrue(text.contains("-Ppattern="))
         assertTrue(text.contains("-Pmethod="))
-        assertTrue(text.contains("-Pdepth="))
+        assertTrue(text.contains("-Pmaxdepth="))
         assertTrue(text.contains("-Preverse=true"))
         assertTrue(text.contains("-Pincludetest=true"))
     }

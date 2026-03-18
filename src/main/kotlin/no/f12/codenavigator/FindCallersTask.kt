@@ -14,7 +14,8 @@ abstract class FindCallersTask : DefaultTask() {
     fun findCallers() {
         val methodPattern = project.findProperty("method")?.toString()
             ?: throw GradleException("Missing required property 'method'. Usage: ./gradlew cnavCallers -Pmethod=<regex>")
-        val maxDepth = project.findProperty("depth")?.toString()?.toIntOrNull() ?: 3
+        val maxDepth = project.findProperty("maxdepth")?.toString()?.toIntOrNull()
+            ?: throw GradleException("Missing required property 'maxdepth'. Usage: ./gradlew cnavCallers -Pmethod=<regex> -Pmaxdepth=3")
         val projectOnly = project.findProperty("projectonly")?.toString()?.toBoolean() ?: false
         val jsonFormat = project.findProperty("format")?.toString() == "json"
 
