@@ -17,7 +17,7 @@ abstract class FindCalleesTask : DefaultTask() {
         val maxDepth = project.findProperty("maxdepth")?.toString()?.toIntOrNull()
             ?: throw GradleException("Missing required property 'maxdepth'. Usage: ./gradlew cnavCallees -Pmethod=<regex> -Pmaxdepth=3")
         val projectOnly = project.findProperty("projectonly")?.toString()?.toBoolean() ?: false
-        val jsonFormat = project.findProperty("format")?.toString() == "json"
+        val format = OutputFormat.from(project)
 
         val sourceSets = project.extensions.getByType(SourceSetContainer::class.java)
         val mainSourceSet = sourceSets.getByName("main")
@@ -36,11 +36,11 @@ abstract class FindCalleesTask : DefaultTask() {
             if (projectOnly) graph.projectClassFilter() else null
 
         val trees = CallTreeBuilder.build(graph, methods, maxDepth, CallDirection.CALLEES, filter)
-        val output = if (jsonFormat) {
-            JsonFormatter.renderCallTrees(trees)
-        } else {
-            CallTreeFormatter.renderTrees(trees, CallDirection.CALLEES)
+        val output = when (format) {
+            OutputFormat.JSON -> JsonFormatter.renderCallTrees(trees)
+            OutputFormat.LLM -> LlmFormatter.renderCallTrees(trees, CallDirection.CALLEES)
+            OutputFormat.TEXT -> CallTreeFormatter.renderTrees(trees, CallDirection.CALLEES)
         }
-        logger.lifecycle(OutputWrapper.wrap(output, jsonFormat))
+        logger.lifecycle(OutputWrapper.wrap(output, format))
     }
 }

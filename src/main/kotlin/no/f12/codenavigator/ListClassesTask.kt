@@ -11,7 +11,7 @@ abstract class ListClassesTask : DefaultTask() {
 
     @TaskAction
     fun listClasses() {
-        val jsonFormat = project.findProperty("format")?.toString() == "json"
+        val format = OutputFormat.from(project)
 
         val sourceSets = project.extensions.getByType(SourceSetContainer::class.java)
         val mainSourceSet = sourceSets.getByName("main")
@@ -19,8 +19,12 @@ abstract class ListClassesTask : DefaultTask() {
         val cacheFile = File(project.layout.buildDirectory.asFile.get(), "cnav/class-index.cache")
 
         val classes = ClassIndexCache.getOrScan(cacheFile, classDirectories)
-        val output = if (jsonFormat) JsonFormatter.formatClasses(classes) else TableFormatter.format(classes)
+        val output = when (format) {
+            OutputFormat.JSON -> JsonFormatter.formatClasses(classes)
+            OutputFormat.LLM -> LlmFormatter.formatClasses(classes)
+            OutputFormat.TEXT -> TableFormatter.format(classes)
+        }
 
-        logger.lifecycle(OutputWrapper.wrap(output, jsonFormat))
+        logger.lifecycle(OutputWrapper.wrap(output, format))
     }
 }

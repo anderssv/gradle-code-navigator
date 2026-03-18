@@ -14,7 +14,7 @@ abstract class PackageDepsTask : DefaultTask() {
         val pattern = project.findProperty("package")?.toString()
         val projectOnly = project.findProperty("projectonly")?.toString()?.toBoolean() ?: false
         val reverse = project.findProperty("reverse")?.toString()?.toBoolean() ?: false
-        val jsonFormat = project.findProperty("format")?.toString() == "json"
+        val format = OutputFormat.from(project)
 
         val sourceSets = project.extensions.getByType(SourceSetContainer::class.java)
         val mainSourceSet = sourceSets.getByName("main")
@@ -39,11 +39,11 @@ abstract class PackageDepsTask : DefaultTask() {
             deps.allPackages()
         }
 
-        val output = if (jsonFormat) {
-            JsonFormatter.formatPackageDeps(deps, packages, reverse)
-        } else {
-            PackageDependencyFormatter.format(deps, packages, reverse)
+        val output = when (format) {
+            OutputFormat.JSON -> JsonFormatter.formatPackageDeps(deps, packages, reverse)
+            OutputFormat.LLM -> LlmFormatter.formatPackageDeps(deps, packages, reverse)
+            OutputFormat.TEXT -> PackageDependencyFormatter.format(deps, packages, reverse)
         }
-        logger.lifecycle(OutputWrapper.wrap(output, jsonFormat))
+        logger.lifecycle(OutputWrapper.wrap(output, format))
     }
 }

@@ -14,7 +14,7 @@ abstract class FindSymbolTask : DefaultTask() {
     fun findSymbol() {
         val pattern = project.findProperty("pattern")?.toString()
             ?: throw GradleException("Missing required property 'pattern'. Usage: ./gradlew cnavFindSymbol -Ppattern=<regex>")
-        val jsonFormat = project.findProperty("format")?.toString() == "json"
+        val format = OutputFormat.from(project)
 
         val sourceSets = project.extensions.getByType(SourceSetContainer::class.java)
         val mainSourceSet = sourceSets.getByName("main")
@@ -23,8 +23,12 @@ abstract class FindSymbolTask : DefaultTask() {
         val cacheFile = File(project.layout.buildDirectory.asFile.get(), "cnav/symbol-index.cache")
         val allSymbols = SymbolIndexCache.getOrScan(cacheFile, classDirectories)
         val matches = SymbolFilter.filter(allSymbols, pattern)
-        val output = if (jsonFormat) JsonFormatter.formatSymbols(matches) else SymbolTableFormatter.format(matches)
+        val output = when (format) {
+            OutputFormat.JSON -> JsonFormatter.formatSymbols(matches)
+            OutputFormat.LLM -> LlmFormatter.formatSymbols(matches)
+            OutputFormat.TEXT -> SymbolTableFormatter.format(matches)
+        }
 
-        logger.lifecycle(OutputWrapper.wrap(output, jsonFormat))
+        logger.lifecycle(OutputWrapper.wrap(output, format))
     }
 }

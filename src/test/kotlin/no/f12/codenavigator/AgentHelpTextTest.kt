@@ -20,11 +20,11 @@ class AgentHelpTextTest {
     }
 
     @Test
-    fun `agent help text recommends JSON format for agents`() {
+    fun `agent help text recommends LLM format for agents`() {
         val text = AgentHelpText.generate()
 
+        assertTrue(text.contains("-Pllm=true"))
         assertTrue(text.contains("-Pformat=json"))
-        assertTrue(text.contains("Machine-readable JSON"))
     }
 
     @Test
