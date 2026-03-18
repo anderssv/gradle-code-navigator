@@ -29,7 +29,7 @@ abstract class FindClassDetailTask : DefaultTask() {
         }
 
         val output = if (jsonFormat) JsonFormatter.formatClassDetails(matchingDetails) else ClassDetailFormatter.format(matchingDetails)
-        logger.lifecycle(output)
+        logger.lifecycle(OutputWrapper.wrap(output, jsonFormat))
     }
 
     private fun scanAndFilter(classDirectories: List<File>, regex: Regex): List<ClassDetail> =

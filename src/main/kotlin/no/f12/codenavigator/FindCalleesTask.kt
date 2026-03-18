@@ -41,6 +41,6 @@ abstract class FindCalleesTask : DefaultTask() {
         } else {
             CallTreeFormatter.renderTrees(trees, CallDirection.CALLEES)
         }
-        logger.lifecycle(output)
+        logger.lifecycle(OutputWrapper.wrap(output, jsonFormat))
     }
 }

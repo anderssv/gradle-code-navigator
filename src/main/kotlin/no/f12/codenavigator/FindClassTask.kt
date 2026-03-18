@@ -25,6 +25,6 @@ abstract class FindClassTask : DefaultTask() {
         val matches = ClassFilter.filter(allClasses, pattern)
         val output = if (jsonFormat) JsonFormatter.formatClasses(matches) else TableFormatter.format(matches)
 
-        logger.lifecycle(output)
+        logger.lifecycle(OutputWrapper.wrap(output, jsonFormat))
     }
 }

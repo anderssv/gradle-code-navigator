@@ -41,6 +41,6 @@ abstract class FindCallersTask : DefaultTask() {
         } else {
             CallTreeFormatter.renderTrees(trees, CallDirection.CALLERS)
         }
-        logger.lifecycle(output)
+        logger.lifecycle(OutputWrapper.wrap(output, jsonFormat))
     }
 }

@@ -21,6 +21,6 @@ abstract class ListClassesTask : DefaultTask() {
         val classes = ClassIndexCache.getOrScan(cacheFile, classDirectories)
         val output = if (jsonFormat) JsonFormatter.formatClasses(classes) else TableFormatter.format(classes)
 
-        logger.lifecycle(output)
+        logger.lifecycle(OutputWrapper.wrap(output, jsonFormat))
     }
 }

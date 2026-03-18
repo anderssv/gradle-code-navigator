@@ -44,6 +44,6 @@ abstract class FindInterfaceImplsTask : DefaultTask() {
         } else {
             InterfaceFormatter.format(registry, matchingInterfaces)
         }
-        logger.lifecycle(output)
+        logger.lifecycle(OutputWrapper.wrap(output, jsonFormat))
     }
 }

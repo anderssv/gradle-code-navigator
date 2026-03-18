@@ -44,6 +44,6 @@ abstract class PackageDepsTask : DefaultTask() {
         } else {
             PackageDependencyFormatter.format(deps, packages, reverse)
         }
-        logger.lifecycle(output)
+        logger.lifecycle(OutputWrapper.wrap(output, jsonFormat))
     }
 }

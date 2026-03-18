@@ -40,3 +40,7 @@ All tasks now support `-Pformat=json` for structured JSON output. Hand-rolled JS
 ## ~~8. cnavClass show interfaces implemented (Low effort)~~ DONE
 
 Already implemented. `ClassDetailExtractor` extracts interfaces from bytecode and `ClassDetailFormatter` outputs "Implements: ..." when interfaces are present.
+
+## 9. Write JSON output to file instead of stdout (Medium value)
+
+When `-Pformat=json` is used, write the JSON to a file (e.g., under `build/cnav/`) and print the file path to stdout. Agents and scripts can then read the file directly instead of parsing Gradle's stdout, which mixes task output with Gradle lifecycle noise (e.g., `> Task :cnavCallers`, configuration cache messages). This makes the JSON output reliable regardless of Gradle's verbosity settings.

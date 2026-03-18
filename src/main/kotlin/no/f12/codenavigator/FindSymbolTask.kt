@@ -25,6 +25,6 @@ abstract class FindSymbolTask : DefaultTask() {
         val matches = SymbolFilter.filter(allSymbols, pattern)
         val output = if (jsonFormat) JsonFormatter.formatSymbols(matches) else SymbolTableFormatter.format(matches)
 
-        logger.lifecycle(output)
+        logger.lifecycle(OutputWrapper.wrap(output, jsonFormat))
     }
 }
