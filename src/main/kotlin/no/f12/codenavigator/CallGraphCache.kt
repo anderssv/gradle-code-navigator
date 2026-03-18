@@ -67,7 +67,11 @@ object CallGraphCache {
 
     fun getOrBuild(cacheFile: File, classDirectories: List<File>): CallGraph {
         if (isFresh(cacheFile, classDirectories)) {
-            return read(cacheFile)
+            try {
+                return read(cacheFile)
+            } catch (_: Exception) {
+                cacheFile.delete()
+            }
         }
 
         val graph = CallGraphBuilder.build(classDirectories)

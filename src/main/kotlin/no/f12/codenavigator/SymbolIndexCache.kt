@@ -46,7 +46,11 @@ object SymbolIndexCache {
 
     fun getOrScan(cacheFile: File, classDirectories: List<File>): List<SymbolInfo> {
         if (isFresh(cacheFile, classDirectories)) {
-            return read(cacheFile)
+            try {
+                return read(cacheFile)
+            } catch (_: Exception) {
+                cacheFile.delete()
+            }
         }
 
         val symbols = SymbolScanner.scan(classDirectories)

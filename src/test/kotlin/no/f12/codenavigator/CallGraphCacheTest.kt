@@ -150,6 +150,19 @@ class CallGraphCacheTest {
         assertFalse(CallGraphCache.isFresh(cacheFile, listOf(classesDir, secondDir)))
     }
 
+    @Test
+    fun `getOrBuild rebuilds when cache file is corrupt`() {
+        writeClassFile("com/example/Foo")
+
+        cacheFile.parentFile?.mkdirs()
+        cacheFile.writeText("[EDGES]\nonly-one-field\n")
+        cacheFile.setLastModified(System.currentTimeMillis() + 10_000)
+
+        val result = CallGraphCache.getOrBuild(cacheFile, listOf(classesDir))
+
+        assertTrue(result.calleesOf("any.Class", "anyMethod").isEmpty())
+    }
+
     private fun writeClassFile(className: String, targetDir: File = classesDir) {
         val writer = ClassWriter(0)
         writer.visit(Opcodes.V21, Opcodes.ACC_PUBLIC, className, null, "java/lang/Object", null)

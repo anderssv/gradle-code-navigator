@@ -94,6 +94,19 @@ class SymbolIndexCacheTest {
         assertEquals(symbols, result)
     }
 
+    @Test
+    fun `getOrScan rebuilds when cache file is corrupt`() {
+        writeClassFile("com/example/Foo")
+
+        cacheFile.parentFile?.mkdirs()
+        cacheFile.writeText("only-one-field\n")
+        cacheFile.setLastModified(System.currentTimeMillis() + 10_000)
+
+        val result = SymbolIndexCache.getOrScan(cacheFile, listOf(classesDir))
+
+        assertTrue(result is List<SymbolInfo>)
+    }
+
     private fun writeClassFile(className: String, targetDir: File = classesDir) {
         val writer = ClassWriter(0)
         writer.visit(Opcodes.V21, Opcodes.ACC_PUBLIC, className, null, "java/lang/Object", null)

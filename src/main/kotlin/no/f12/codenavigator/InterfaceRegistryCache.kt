@@ -44,7 +44,11 @@ object InterfaceRegistryCache {
 
     fun getOrBuild(cacheFile: File, classDirectories: List<File>): InterfaceRegistry {
         if (isFresh(cacheFile, classDirectories)) {
-            return read(cacheFile)
+            try {
+                return read(cacheFile)
+            } catch (_: Exception) {
+                cacheFile.delete()
+            }
         }
 
         val registry = InterfaceRegistry.build(classDirectories)

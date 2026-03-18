@@ -116,6 +116,19 @@ class InterfaceRegistryCacheTest {
         assertTrue(deepCacheFile.exists())
     }
 
+    @Test
+    fun `getOrBuild rebuilds when cache file is corrupt`() {
+        writeClassFile("com/example/Foo")
+
+        cacheFile.parentFile?.mkdirs()
+        cacheFile.writeText("only-one-field\n")
+        cacheFile.setLastModified(System.currentTimeMillis() + 10_000)
+
+        val result = InterfaceRegistryCache.getOrBuild(cacheFile, listOf(classesDir))
+
+        assertTrue(result.findInterfaces(".*").isEmpty())
+    }
+
     private fun writeClassFile(className: String, targetDir: File = classesDir) {
         val writer = ClassWriter(0)
         writer.visit(Opcodes.V21, Opcodes.ACC_PUBLIC, className, null, "java/lang/Object", null)
