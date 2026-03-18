@@ -1,0 +1,44 @@
+package no.f12.codenavigator
+
+data class CallTreeNode(
+    val method: MethodRef,
+    val sourceFile: String?,
+    val children: List<CallTreeNode>,
+)
+
+object CallTreeBuilder {
+
+    fun build(
+        graph: CallGraph,
+        roots: List<MethodRef>,
+        maxDepth: Int,
+        direction: CallDirection,
+        filter: ((MethodRef) -> Boolean)? = null,
+    ): List<CallTreeNode> =
+        roots.map { method ->
+            buildNode(graph, method, maxDepth, direction, depth = 0, visited = mutableSetOf(), filter = filter)
+        }
+
+    private fun buildNode(
+        graph: CallGraph,
+        method: MethodRef,
+        maxDepth: Int,
+        direction: CallDirection,
+        depth: Int,
+        visited: MutableSet<MethodRef>,
+        filter: ((MethodRef) -> Boolean)?,
+    ): CallTreeNode {
+        val sourceFile = if (depth > 0) graph.sourceFileOf(method.className) else null
+        val children = if (depth < maxDepth && method !in visited) {
+            visited.add(method)
+            val related = direction.resolve(graph, method.className, method.methodName)
+                .let { refs -> if (filter != null) refs.filter(filter).toSet() else refs }
+            related.sortedBy { it.qualifiedName }.map { child ->
+                buildNode(graph, child, maxDepth, direction, depth + 1, visited, filter)
+            }
+        } else {
+            emptyList()
+        }
+        return CallTreeNode(method, sourceFile, children)
+    }
+}
