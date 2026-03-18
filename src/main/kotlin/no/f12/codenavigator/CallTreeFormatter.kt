@@ -16,41 +16,37 @@ object CallTreeFormatter {
         maxDepth: Int,
         direction: CallDirection,
         filter: ((MethodRef) -> Boolean)? = null,
+    ): String {
+        val trees = CallTreeBuilder.build(graph, methods, maxDepth, direction, filter)
+        return renderTrees(trees, direction)
+    }
+
+    fun renderTrees(
+        trees: List<CallTreeNode>,
+        direction: CallDirection,
     ): String = buildString {
-        methods.forEachIndexed { index, method ->
+        trees.forEachIndexed { index, tree ->
             if (index > 0) appendLine()
-            appendLine(method.qualifiedName)
-            val related = direction.resolve(graph, method.className, method.methodName)
-                .let { refs -> if (filter != null) refs.filter(filter).toSet() else refs }
-            if (related.isEmpty()) {
+            appendLine(tree.method.qualifiedName)
+            if (tree.children.isEmpty()) {
                 append("  ${direction.emptyMessage}")
             } else {
-                renderTree(graph, related, maxDepth, direction, depth = 1, visited = mutableSetOf(method), filter = filter)
+                renderChildren(tree.children, direction, depth = 1)
             }
         }
     }.trimEnd()
 
-    private fun StringBuilder.renderTree(
-        graph: CallGraph,
-        methods: Set<MethodRef>,
-        maxDepth: Int,
+    private fun StringBuilder.renderChildren(
+        children: List<CallTreeNode>,
         direction: CallDirection,
         depth: Int,
-        visited: MutableSet<MethodRef>,
-        filter: ((MethodRef) -> Boolean)?,
     ) {
         val indent = "  ".repeat(depth)
-        val sorted = methods.sortedBy { it.qualifiedName }
-        for (method in sorted) {
-            val sourceFile = graph.sourceFileOf(method.className)
-            appendLine("$indent${direction.arrow} ${method.qualifiedName} ($sourceFile)")
-            if (depth < maxDepth && method !in visited) {
-                visited.add(method)
-                val next = direction.resolve(graph, method.className, method.methodName)
-                    .let { refs -> if (filter != null) refs.filter(filter).toSet() else refs }
-                if (next.isNotEmpty()) {
-                    renderTree(graph, next, maxDepth, direction, depth + 1, visited, filter)
-                }
+        for (node in children) {
+            val sourceFile = node.sourceFile ?: "<unknown>"
+            appendLine("$indent${direction.arrow} ${node.method.qualifiedName} ($sourceFile)")
+            if (node.children.isNotEmpty()) {
+                renderChildren(node.children, direction, depth + 1)
             }
         }
     }
