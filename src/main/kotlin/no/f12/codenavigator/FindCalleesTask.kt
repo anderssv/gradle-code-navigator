@@ -34,10 +34,11 @@ abstract class FindCalleesTask : DefaultTask() {
         val filter: ((MethodRef) -> Boolean)? =
             if (projectOnly) graph.projectClassFilter() else null
 
+        val trees = CallTreeBuilder.build(graph, methods, maxDepth, CallDirection.CALLEES, filter)
         val output = if (jsonFormat) {
-            JsonFormatter.formatCallTree(graph, methods, maxDepth, CallDirection.CALLEES, filter)
+            JsonFormatter.renderCallTrees(trees)
         } else {
-            CalleeTreeFormatter.format(graph, methods, maxDepth, filter)
+            CallTreeFormatter.renderTrees(trees, CallDirection.CALLEES)
         }
         logger.lifecycle(output)
     }
