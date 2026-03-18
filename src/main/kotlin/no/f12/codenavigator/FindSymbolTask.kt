@@ -5,6 +5,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
+import java.io.File
 
 @DisableCachingByDefault(because = "Produces console output only")
 abstract class FindSymbolTask : DefaultTask() {
@@ -18,7 +19,8 @@ abstract class FindSymbolTask : DefaultTask() {
         val mainSourceSet = sourceSets.getByName("main")
         val classDirectories = mainSourceSet.output.classesDirs.files.toList()
 
-        val allSymbols = SymbolScanner.scan(classDirectories)
+        val cacheFile = File(project.layout.buildDirectory.asFile.get(), "cnav/symbol-index.cache")
+        val allSymbols = SymbolIndexCache.getOrScan(cacheFile, classDirectories)
         val matches = SymbolFilter.filter(allSymbols, pattern)
         val output = SymbolTableFormatter.format(matches)
 

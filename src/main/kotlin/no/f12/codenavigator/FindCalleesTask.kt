@@ -5,6 +5,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
+import java.io.File
 
 @DisableCachingByDefault(because = "Produces console output only")
 abstract class FindCalleesTask : DefaultTask() {
@@ -19,7 +20,8 @@ abstract class FindCalleesTask : DefaultTask() {
         val mainSourceSet = sourceSets.getByName("main")
         val classDirectories = mainSourceSet.output.classesDirs.files.toList()
 
-        val graph = CallGraphBuilder.build(classDirectories)
+        val cacheFile = File(project.layout.buildDirectory.asFile.get(), "cnav/call-graph.cache")
+        val graph = CallGraphCache.getOrBuild(cacheFile, classDirectories)
         val methods = graph.findMethods(methodPattern)
 
         if (methods.isEmpty()) {

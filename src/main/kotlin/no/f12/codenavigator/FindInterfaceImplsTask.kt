@@ -5,6 +5,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
+import java.io.File
 
 @DisableCachingByDefault(because = "Produces console output only")
 abstract class FindInterfaceImplsTask : DefaultTask() {
@@ -18,7 +19,8 @@ abstract class FindInterfaceImplsTask : DefaultTask() {
         val mainSourceSet = sourceSets.getByName("main")
         val classDirectories = mainSourceSet.output.classesDirs.files.toList()
 
-        val registry = InterfaceRegistry.build(classDirectories)
+        val cacheFile = File(project.layout.buildDirectory.asFile.get(), "cnav/interface-registry.cache")
+        val registry = InterfaceRegistryCache.getOrBuild(cacheFile, classDirectories)
         val matchingInterfaces = registry.findInterfaces(pattern)
 
         if (matchingInterfaces.isEmpty()) {

@@ -23,6 +23,10 @@ class InterfaceRegistry(
             .sorted()
     }
 
+    fun forEachEntry(action: (interfaceName: String, implementors: List<ImplementorInfo>) -> Unit) {
+        interfaceToImplementors.forEach { (iface, impls) -> action(iface, impls) }
+    }
+
     companion object {
         private val SYNTHETIC_SUFFIX = Regex("""\$\d+$""")
         private val LAMBDA_PATTERN = Regex("""\${'$'}lambda\${'$'}""")

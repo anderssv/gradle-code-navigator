@@ -39,18 +39,6 @@ object ClassIndexCache {
                 .toList()
         }
 
-    fun isFresh(cacheFile: File, classDirectories: List<File>): Boolean {
-        if (!cacheFile.exists()) return false
-
-        val cacheLastModified = cacheFile.lastModified()
-
-        return classDirectories
-            .filter { it.exists() }
-            .flatMap { dir ->
-                dir.walkTopDown()
-                    .filter { it.isFile && it.extension == "class" }
-                    .toList()
-            }
-            .all { it.lastModified() <= cacheLastModified }
-    }
+    fun isFresh(cacheFile: File, classDirectories: List<File>): Boolean =
+        CacheFreshness.isFresh(cacheFile, classDirectories)
 }

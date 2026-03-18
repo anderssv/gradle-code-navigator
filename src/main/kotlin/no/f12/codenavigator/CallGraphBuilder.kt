@@ -52,6 +52,10 @@ class CallGraph(
             callees.forEach { callee -> action(caller, callee) }
         }
     }
+
+    fun forEachSourceFile(action: (className: String, sourceFile: String) -> Unit) {
+        sourceFiles.forEach { (className, sourceFile) -> action(className, sourceFile) }
+    }
 }
 
 object CallGraphBuilder {
@@ -122,7 +126,7 @@ object CallGraphBuilder {
                     }
                 }
             },
-            0,
+            ClassReader.SKIP_FRAMES,
         )
     }
 }
