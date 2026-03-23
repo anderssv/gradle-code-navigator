@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.12
+
+- Fix: Maven help text showed incorrect goal name `cnav:help-config` instead of `cnav:config-help`
+- Add missing `cnavAgentHelp` / `cnav:agent-help` assertions to HelpTextTest
+- Add backward-compatibility default-parameter tests for HelpText and ConfigHelpText
+- Add `agent-help` and `config-help` sections to README task reference
+
 ## 0.1.11
 
 - Add `BuildTool` enum for build-tool-aware help text — Gradle users see `./gradlew cnavXxx -Pparam=value`, Maven users see `mvn cnav:goal -Dparam=value`
