@@ -18,6 +18,11 @@ class HelpTextTest {
         assertTrue(text.contains("cnavInterfaces"))
         assertTrue(text.contains("cnavDeps"))
         assertTrue(text.contains("cnavHelp"))
+        assertTrue(text.contains("cnavHotspots"))
+        assertTrue(text.contains("cnavCoupling"))
+        assertTrue(text.contains("cnavAge"))
+        assertTrue(text.contains("cnavAuthors"))
+        assertTrue(text.contains("cnavChurn"))
     }
 
     @Test

@@ -16,6 +16,14 @@ To release:
 8. Commit: `git commit -am "Bump to X.Y.Z-SNAPSHOT"`
 9. Push: `git push && git push --tags`
 
+## Package Structure
+
+The codebase is split into three areas:
+
+- **`no.f12.codenavigator`** (root) — Shared infrastructure: `CodeNavigatorPlugin`, formatters (`JsonFormatter`, `LlmFormatter`, `TableFormatter`), `OutputFormat`, `OutputWrapper`, `CacheFreshness`, help text tasks.
+- **`no.f12.codenavigator.navigation`** — Bytecode-based navigation: class scanning, symbol extraction, call graph building, interface registry, package dependencies. All navigation tasks depend on compiled `classes`.
+- **`no.f12.codenavigator.analysis`** — Git history analysis: hotspots, coupling, code age, authors, churn. Parses `git log` output. No compilation required.
+
 ## Code Structure Principles
 
 ### Separate parsing, resolution, and formatting

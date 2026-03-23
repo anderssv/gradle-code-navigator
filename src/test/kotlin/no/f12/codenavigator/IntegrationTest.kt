@@ -1,5 +1,8 @@
 package no.f12.codenavigator
 
+import no.f12.codenavigator.navigation.CallGraphBuilder
+import no.f12.codenavigator.navigation.CallerTreeFormatter
+import no.f12.codenavigator.navigation.MethodRef
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.assertEquals
@@ -11,8 +14,7 @@ class IntegrationTest {
     fun `transitive callers work with real compiled bytecode`() {
         val classesDir = File("test-project/build/classes/kotlin/main")
         if (!classesDir.exists()) {
-            println("SKIP: test-project not compiled, run ./gradlew classes in test-project first")
-            return
+            buildTestProject()
         }
 
         val graph = CallGraphBuilder.build(listOf(classesDir))
@@ -48,5 +50,17 @@ class IntegrationTest {
         assertTrue(result.contains("sendResetNotification"), "Tree should show sendResetNotification")
         assertTrue(result.contains("resetPassword"), "Tree should show resetPassword at depth 2")
         assertTrue(result.contains("handleReset"), "Tree should show handleReset at depth 3")
+    }
+
+    private fun buildTestProject() {
+        val testProjectDir = File("test-project")
+        val gradlew = File(testProjectDir.parentFile, "gradlew").absolutePath
+        val process = ProcessBuilder(gradlew, "classes")
+            .directory(testProjectDir)
+            .redirectErrorStream(true)
+            .start()
+        val output = process.inputStream.bufferedReader().readText()
+        val exitCode = process.waitFor()
+        check(exitCode == 0) { "Failed to build test-project (exit $exitCode): $output" }
     }
 }

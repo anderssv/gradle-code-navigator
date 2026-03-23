@@ -9,6 +9,7 @@ class AgentHelpTextTest {
     fun `agent help text contains all task names`() {
         val text = AgentHelpText.generate()
 
+        // Navigation tasks
         assertTrue(text.contains("cnavListClasses"))
         assertTrue(text.contains("cnavFindClass"))
         assertTrue(text.contains("cnavFindSymbol"))
@@ -17,6 +18,13 @@ class AgentHelpTextTest {
         assertTrue(text.contains("cnavClass"))
         assertTrue(text.contains("cnavInterfaces"))
         assertTrue(text.contains("cnavDeps"))
+
+        // Analysis tasks
+        assertTrue(text.contains("cnavHotspots"))
+        assertTrue(text.contains("cnavCoupling"))
+        assertTrue(text.contains("cnavAge"))
+        assertTrue(text.contains("cnavAuthors"))
+        assertTrue(text.contains("cnavChurn"))
     }
 
     @Test
@@ -36,6 +44,7 @@ class AgentHelpTextTest {
         assertTrue(text.contains("INSPECT"))
         assertTrue(text.contains("TRACE"))
         assertTrue(text.contains("MAP"))
+        assertTrue(text.contains("ANALYZE"))
     }
 
     @Test
@@ -56,6 +65,10 @@ class AgentHelpTextTest {
         assertTrue(text.contains("-Pmaxdepth="))
         assertTrue(text.contains("-Preverse=true"))
         assertTrue(text.contains("-Pincludetest=true"))
+        assertTrue(text.contains("-Pafter="))
+        assertTrue(text.contains("-Ptop="))
+        assertTrue(text.contains("-Pmin-revs="))
+        assertTrue(text.contains("-Pmin-coupling="))
     }
 
     @Test

@@ -1,5 +1,18 @@
 package no.f12.codenavigator
 
+import no.f12.codenavigator.analysis.CoupledPair
+import no.f12.codenavigator.analysis.FileAge
+import no.f12.codenavigator.analysis.FileChurn
+import no.f12.codenavigator.analysis.Hotspot
+import no.f12.codenavigator.analysis.ModuleAuthors
+import no.f12.codenavigator.navigation.CallDirection
+import no.f12.codenavigator.navigation.CallTreeNode
+import no.f12.codenavigator.navigation.ClassDetail
+import no.f12.codenavigator.navigation.ClassInfo
+import no.f12.codenavigator.navigation.InterfaceRegistry
+import no.f12.codenavigator.navigation.PackageDependencies
+import no.f12.codenavigator.navigation.SymbolInfo
+
 object LlmFormatter {
 
     fun formatClasses(classes: List<ClassInfo>): String =
@@ -43,6 +56,21 @@ object LlmFormatter {
             "$pkg $arrow ${related.joinToString(",")}"
         }
     }
+
+    fun formatHotspots(hotspots: List<Hotspot>): String =
+        hotspots.joinToString("\n") { "${it.file} revisions=${it.revisions} churn=${it.totalChurn}" }
+
+    fun formatCoupling(pairs: List<CoupledPair>): String =
+        pairs.joinToString("\n") { "${it.entity} -- ${it.coupled} degree=${it.degree}% shared=${it.sharedRevs} avg=${it.avgRevs}" }
+
+    fun formatAge(ages: List<FileAge>): String =
+        ages.joinToString("\n") { "${it.file} age=${it.ageMonths}months last=${it.lastChangeDate}" }
+
+    fun formatAuthors(modules: List<ModuleAuthors>): String =
+        modules.joinToString("\n") { "${it.file} authors=${it.authors} revisions=${it.revisions}" }
+
+    fun formatChurn(churn: List<FileChurn>): String =
+        churn.joinToString("\n") { "${it.file} added=${it.added} deleted=${it.deleted} commits=${it.commits}" }
 
     private fun StringBuilder.renderChildren(children: List<CallTreeNode>, direction: CallDirection, depth: Int) {
         val indent = "  ".repeat(depth)

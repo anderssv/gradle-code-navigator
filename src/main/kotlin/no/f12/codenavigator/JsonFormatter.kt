@@ -1,5 +1,21 @@
 package no.f12.codenavigator
 
+import no.f12.codenavigator.analysis.CoupledPair
+import no.f12.codenavigator.analysis.FileAge
+import no.f12.codenavigator.analysis.FileChurn
+import no.f12.codenavigator.analysis.Hotspot
+import no.f12.codenavigator.analysis.ModuleAuthors
+import no.f12.codenavigator.navigation.CallDirection
+import no.f12.codenavigator.navigation.CallGraph
+import no.f12.codenavigator.navigation.CallTreeBuilder
+import no.f12.codenavigator.navigation.CallTreeNode
+import no.f12.codenavigator.navigation.ClassDetail
+import no.f12.codenavigator.navigation.ClassInfo
+import no.f12.codenavigator.navigation.InterfaceRegistry
+import no.f12.codenavigator.navigation.MethodRef
+import no.f12.codenavigator.navigation.PackageDependencies
+import no.f12.codenavigator.navigation.SymbolInfo
+
 @JvmInline
 private value class JsonRaw(val json: String)
 
@@ -81,6 +97,54 @@ object JsonFormatter {
             jsonObject(
                 "package" to pkg,
                 key to JsonRaw(jsonStringArray(related)),
+            )
+        }
+
+    fun formatHotspots(hotspots: List<Hotspot>): String =
+        jsonArray(hotspots) { h ->
+            jsonObject(
+                "file" to h.file,
+                "revisions" to h.revisions,
+                "totalChurn" to h.totalChurn,
+            )
+        }
+
+    fun formatCoupling(pairs: List<CoupledPair>): String =
+        jsonArray(pairs) { p ->
+            jsonObject(
+                "entity" to p.entity,
+                "coupled" to p.coupled,
+                "degree" to p.degree,
+                "sharedRevs" to p.sharedRevs,
+                "avgRevs" to p.avgRevs,
+            )
+        }
+
+    fun formatAge(ages: List<FileAge>): String =
+        jsonArray(ages) { a ->
+            jsonObject(
+                "file" to a.file,
+                "ageMonths" to a.ageMonths,
+                "lastChangeDate" to a.lastChangeDate.toString(),
+            )
+        }
+
+    fun formatAuthors(modules: List<ModuleAuthors>): String =
+        jsonArray(modules) { m ->
+            jsonObject(
+                "file" to m.file,
+                "authors" to m.authors,
+                "revisions" to m.revisions,
+            )
+        }
+
+    fun formatChurn(churn: List<FileChurn>): String =
+        jsonArray(churn) { c ->
+            jsonObject(
+                "file" to c.file,
+                "added" to c.added,
+                "deleted" to c.deleted,
+                "commits" to c.commits,
             )
         }
 

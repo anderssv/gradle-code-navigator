@@ -1,5 +1,20 @@
 package no.f12.codenavigator
 
+import no.f12.codenavigator.analysis.CoupledPair
+import no.f12.codenavigator.analysis.FileChurn
+import no.f12.codenavigator.analysis.Hotspot
+import no.f12.codenavigator.navigation.CallDirection
+import no.f12.codenavigator.navigation.CallTreeNode
+import no.f12.codenavigator.navigation.ClassDetail
+import no.f12.codenavigator.navigation.ClassInfo
+import no.f12.codenavigator.navigation.FieldDetail
+import no.f12.codenavigator.navigation.ImplementorInfo
+import no.f12.codenavigator.navigation.InterfaceRegistry
+import no.f12.codenavigator.navigation.MethodDetail
+import no.f12.codenavigator.navigation.MethodRef
+import no.f12.codenavigator.navigation.PackageDependencies
+import no.f12.codenavigator.navigation.SymbolInfo
+import no.f12.codenavigator.navigation.SymbolKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -111,5 +126,46 @@ class LlmFormatterTest {
         val result = LlmFormatter.formatPackageDeps(deps, listOf("com.example.model"), true)
 
         assertEquals("com.example.model <- com.example.api,com.example.service", result)
+    }
+
+    // === Hotspot formatting ===
+
+    @Test
+    fun `formats hotspots compactly`() {
+        val hotspots = listOf(
+            Hotspot("src/Foo.kt", 10, 150),
+            Hotspot("src/Bar.kt", 5, 30),
+        )
+
+        val result = LlmFormatter.formatHotspots(hotspots)
+
+        assertEquals("src/Foo.kt revisions=10 churn=150\nsrc/Bar.kt revisions=5 churn=30", result)
+    }
+
+    // === Coupling formatting ===
+
+    @Test
+    fun `formats coupling compactly`() {
+        val pairs = listOf(
+            CoupledPair("src/Foo.kt", "src/Bar.kt", 85, 10, 12),
+        )
+
+        val result = LlmFormatter.formatCoupling(pairs)
+
+        assertEquals("src/Foo.kt -- src/Bar.kt degree=85% shared=10 avg=12", result)
+    }
+
+    // === Churn formatting ===
+
+    @Test
+    fun `formats churn compactly`() {
+        val churn = listOf(
+            FileChurn("src/Foo.kt", 100, 50, 10),
+            FileChurn("src/Bar.kt", 30, 10, 5),
+        )
+
+        val result = LlmFormatter.formatChurn(churn)
+
+        assertEquals("src/Foo.kt added=100 deleted=50 commits=10\nsrc/Bar.kt added=30 deleted=10 commits=5", result)
     }
 }

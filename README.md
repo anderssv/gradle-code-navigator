@@ -1,6 +1,6 @@
 # Code Navigator
 
-A Gradle plugin that provides bytecode-level code exploration for JVM projects. It analyzes compiled `.class` files to offer class listing, symbol search, call graph traversal, class detail inspection, interface implementation lookup, and package dependency analysis.
+A Gradle plugin that provides bytecode-level code navigation and git history analysis for JVM projects. It analyzes compiled `.class` files for structural navigation (class listing, symbol search, call graph traversal, class detail inspection, interface implementation lookup, package dependency analysis) and git logs for behavioral analysis (hotspots, change coupling, code age, author distribution, churn).
 
 Built primarily for use by **coding agents** (AI assistants that write and refactor code), though it is equally useful for human developers. Works with any JVM language (Kotlin, Java, Scala, etc.) since it operates on compiled `.class` files using [ASM](https://asm.ow2.io/).
 
@@ -22,13 +22,21 @@ Beyond call graphs, it provides structured answers to common navigation question
 - **"Who implements this interface?"** -- `cnavInterfaces` finds all implementors.
 - **"How do packages depend on each other?"** -- `cnavDeps` shows package-level dependency edges.
 
+And git history analysis questions (no compilation needed):
+
+- **"Which files change the most?"** -- `cnavHotspots` ranks files by revision count and churn.
+- **"Which files change together?"** -- `cnavCoupling` finds temporal coupling between files.
+- **"How stale is this code?"** -- `cnavAge` shows time since last change per file.
+- **"Who works on what?"** -- `cnavAuthors` shows distinct contributor count per file.
+- **"Where is the most churn?"** -- `cnavChurn` shows lines added/deleted per file.
+
 All output is compact, structured text that fits easily into an agent's context window.
 
 ## Getting started
 
 Copy-paste this to your agent:
 
-> Add the no.f12.code-navigator plugin to this project. After installing, run `./gradlew cnavAgentHelp` for full usage instructions optimized for AI agents. Run `./gradlew cnavHelp` to see all available navigation tasks and their parameters.
+> Add the no.f12.code-navigator plugin to this project. After installing, run `./gradlew cnavAgentHelp` for full usage instructions optimized for AI agents. Navigation tasks (cnavListClasses, cnavCallers, etc.) analyze compiled bytecode and require `classes` to be built. Analysis tasks (cnavHotspots, cnavCoupling, cnavAge, cnavAuthors, cnavChurn) analyze git history and work without compilation. Run `./gradlew cnavHelp` to see all available tasks and their parameters.
 
 The `cnavAgentHelp` task prints agent-optimized instructions covering workflow, parameters, JSON schemas, and output extraction tips. You can also use its output as the starting point for a custom agent skill if your tool supports it (e.g. a Claude Code skill or Cursor rule).
 
@@ -46,7 +54,12 @@ No configuration is needed. The plugin registers tasks that operate on the `main
 
 ## Tasks
 
-All tasks (except `cnavHelp`) depend on the `classes` task, so bytecode is compiled automatically before analysis.
+The plugin provides two categories of tasks:
+
+- **Navigation tasks** analyze compiled bytecode and depend on the `classes` task (bytecode is compiled automatically before analysis).
+- **Analysis tasks** analyze git history and do **not** require compilation.
+
+### Navigation Tasks
 
 ### cnavHelp
 
@@ -187,15 +200,66 @@ com.example.service
   -> com.example.repository
 ```
 
+### Analysis Tasks (Git History)
+
+These tasks analyze git history and do **not** require compilation. All accept `-Pafter=YYYY-MM-DD` to set the analysis window (default: 1 year ago).
+
+### cnavHotspots
+
+Ranks files by revision count and total churn (lines added + deleted). Highlights files that change frequently and are complex.
+
+```bash
+./gradlew cnavHotspots
+./gradlew cnavHotspots -Pmin-revs=5 -Ptop=20
+```
+
+### cnavCoupling
+
+Finds files that change together (temporal coupling). High coupling may indicate hidden dependencies.
+
+```bash
+./gradlew cnavCoupling
+./gradlew cnavCoupling -Pmin-coupling=50 -Pmin-shared-revs=10
+```
+
+### cnavAge
+
+Shows time since last change per file. Old code may be stable — or forgotten.
+
+```bash
+./gradlew cnavAge
+./gradlew cnavAge -Ptop=20
+```
+
+### cnavAuthors
+
+Shows distinct contributor count per file. Files with many authors may need more review attention.
+
+```bash
+./gradlew cnavAuthors
+./gradlew cnavAuthors -Pmin-revs=3 -Ptop=20
+```
+
+### cnavChurn
+
+Shows lines added and deleted per file. High churn files are where most development effort goes.
+
+```bash
+./gradlew cnavChurn
+./gradlew cnavChurn -Ptop=20
+```
+
 ## How it works
 
 1. **Bytecode scanning** -- Walks all `.class` files from the main source set's output directories. Uses ASM's `ClassVisitor` and `MethodVisitor` to extract class metadata, symbols, and call edges.
 
 2. **Call graph construction** -- Builds a bidirectional call graph (`caller -> callees` and `callee -> callers`) from method invocation instructions in bytecode.
 
-3. **Caching** -- Class index results are cached to disk with timestamp-based freshness checking, so repeated queries on unchanged code are fast.
+3. **Git log parsing** -- Runs `git log --numstat` and parses the output to extract per-file revision counts, author lists, and line-level churn data.
 
-4. **Filtering** -- All search tasks accept regex patterns and match case-insensitively against relevant fields (class name, source path, symbol name, package name).
+4. **Caching** -- Class index results are cached to disk with timestamp-based freshness checking, so repeated queries on unchanged code are fast.
+
+5. **Filtering** -- All search tasks accept regex patterns and match case-insensitively against relevant fields (class name, source path, symbol name, package name).
 
 ## Building from source
 

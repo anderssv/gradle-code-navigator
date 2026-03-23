@@ -1,5 +1,20 @@
 package no.f12.codenavigator
 
+import no.f12.codenavigator.analysis.CoupledPair
+import no.f12.codenavigator.analysis.FileChurn
+import no.f12.codenavigator.analysis.Hotspot
+import no.f12.codenavigator.navigation.CallDirection
+import no.f12.codenavigator.navigation.CallGraph
+import no.f12.codenavigator.navigation.ClassDetail
+import no.f12.codenavigator.navigation.ClassInfo
+import no.f12.codenavigator.navigation.FieldDetail
+import no.f12.codenavigator.navigation.ImplementorInfo
+import no.f12.codenavigator.navigation.InterfaceRegistry
+import no.f12.codenavigator.navigation.MethodDetail
+import no.f12.codenavigator.navigation.MethodRef
+import no.f12.codenavigator.navigation.PackageDependencies
+import no.f12.codenavigator.navigation.SymbolInfo
+import no.f12.codenavigator.navigation.SymbolKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -312,6 +327,77 @@ class JsonFormatterTest {
 
         assertEquals(
             """[{"package":"com.example.domain","dependents":["com.example.ktor","com.example.services"]}]""",
+            result,
+        )
+    }
+
+    // === Hotspot formatting ===
+
+    @Test
+    fun `empty hotspots produce empty JSON array`() {
+        val result = JsonFormatter.formatHotspots(emptyList())
+
+        assertEquals("[]", result)
+    }
+
+    @Test
+    fun `hotspots produce JSON array with file, revisions, totalChurn`() {
+        val hotspots = listOf(
+            Hotspot("src/Foo.kt", 10, 150),
+            Hotspot("src/Bar.kt", 5, 30),
+        )
+
+        val result = JsonFormatter.formatHotspots(hotspots)
+
+        assertEquals(
+            """[{"file":"src/Foo.kt","revisions":10,"totalChurn":150},{"file":"src/Bar.kt","revisions":5,"totalChurn":30}]""",
+            result,
+        )
+    }
+
+    // === Coupling formatting ===
+
+    @Test
+    fun `empty coupling produces empty JSON array`() {
+        val result = JsonFormatter.formatCoupling(emptyList())
+
+        assertEquals("[]", result)
+    }
+
+    @Test
+    fun `coupling produces JSON with entity, coupled, degree, sharedRevs, avgRevs`() {
+        val pairs = listOf(
+            CoupledPair("src/Foo.kt", "src/Bar.kt", 85, 10, 12),
+        )
+
+        val result = JsonFormatter.formatCoupling(pairs)
+
+        assertEquals(
+            """[{"entity":"src/Foo.kt","coupled":"src/Bar.kt","degree":85,"sharedRevs":10,"avgRevs":12}]""",
+            result,
+        )
+    }
+
+    // === Churn formatting ===
+
+    @Test
+    fun `empty churn produces empty JSON array`() {
+        val result = JsonFormatter.formatChurn(emptyList())
+
+        assertEquals("[]", result)
+    }
+
+    @Test
+    fun `churn produces JSON with file, added, deleted, commits`() {
+        val churn = listOf(
+            FileChurn("src/Foo.kt", 100, 50, 10),
+            FileChurn("src/Bar.kt", 30, 10, 5),
+        )
+
+        val result = JsonFormatter.formatChurn(churn)
+
+        assertEquals(
+            """[{"file":"src/Foo.kt","added":100,"deleted":50,"commits":10},{"file":"src/Bar.kt","added":30,"deleted":10,"commits":5}]""",
             result,
         )
     }
