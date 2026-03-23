@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.10
+
+- Add Maven plugin (`code-navigator-maven-plugin`) with full feature parity — all 17 goals available via `mvn cnav:<goal>`
+- Restructure source layout to separate roots: `src/core/kotlin/` (shared), `src/gradle/kotlin/`, `src/maven/kotlin/`
+- Extract shared Config data classes for all tasks (used by both Gradle and Maven parameter parsing)
+- Extract `ClassDetailScanner` from `FindClassDetailTask` for reuse across build tools
+- Configure Maven Central publishing with GPG signing, source jars, and Dokka javadoc
+- Update release process in AGENTS.md for dual Gradle + Maven publishing
+
 ## 0.1.9
 
 - Fix: cnavDsm returning empty results — rename `-Pdepth` to `-Pdsm-depth` to avoid Gradle built-in property collision
