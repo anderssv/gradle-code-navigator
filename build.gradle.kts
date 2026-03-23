@@ -20,7 +20,7 @@ gradlePlugin {
                 "call graph traversal, class detail inspection, interface implementation lookup, " +
                 "and package dependency analysis. Designed for coding agents and human developers."
             tags.set(listOf("code-navigation", "bytecode", "call-graph", "analysis", "architecture"))
-            implementationClass = "no.f12.codenavigator.CodeNavigatorPlugin"
+            implementationClass = "no.f12.codenavigator.gradle.CodeNavigatorPlugin"
             compatibility {
                 features {
                     configurationCache = true
@@ -43,4 +43,12 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+sourceSets {
+    main {
+        kotlin {
+            setSrcDirs(listOf("src/core/kotlin", "src/gradle/kotlin"))
+        }
+    }
 }

@@ -1,0 +1,70 @@
+package no.f12.codenavigator.analysis
+
+import no.f12.codenavigator.OutputFormat
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import java.time.LocalDate
+
+class ChurnConfigTest {
+
+    @Test
+    fun `parses all properties from map`() {
+        val props = mapOf(
+            "after" to "2024-06-01",
+            "top" to "10",
+            "no-follow" to "",
+            "format" to "json",
+        )
+
+        val config = ChurnConfig.parse(props)
+
+        assertEquals(LocalDate.of(2024, 6, 1), config.after)
+        assertEquals(10, config.top)
+        assertEquals(false, config.followRenames)
+        assertEquals(OutputFormat.JSON, config.format)
+    }
+
+    @Test
+    fun `defaults top to 50 when absent`() {
+        val config = ChurnConfig.parse(emptyMap())
+
+        assertEquals(50, config.top)
+    }
+
+    @Test
+    fun `defaults after to approximately one year ago when absent`() {
+        val config = ChurnConfig.parse(emptyMap())
+
+        val expectedApprox = LocalDate.now().minusYears(1)
+        assertTrue(config.after.isEqual(expectedApprox) || config.after.isAfter(expectedApprox.minusDays(1)))
+    }
+
+    @Test
+    fun `defaults followRenames to true when no-follow absent`() {
+        val config = ChurnConfig.parse(emptyMap())
+
+        assertEquals(true, config.followRenames)
+    }
+
+    @Test
+    fun `sets followRenames to false when no-follow present`() {
+        val config = ChurnConfig.parse(mapOf("no-follow" to null))
+
+        assertEquals(false, config.followRenames)
+    }
+
+    @Test
+    fun `parses LLM format`() {
+        val config = ChurnConfig.parse(mapOf("llm" to "true"))
+
+        assertEquals(OutputFormat.LLM, config.format)
+    }
+
+    @Test
+    fun `defaults to TEXT format`() {
+        val config = ChurnConfig.parse(emptyMap())
+
+        assertEquals(OutputFormat.TEXT, config.format)
+    }
+}

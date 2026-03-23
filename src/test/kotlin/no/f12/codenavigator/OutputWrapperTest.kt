@@ -31,4 +31,29 @@ class OutputWrapperTest {
 
         assertEquals("---CNAV_BEGIN---\ncom.example.Foo Foo.kt\n---CNAV_END---", result)
     }
+
+    @Test
+    fun `OutputFormat defaults to TEXT when both are null`() {
+        assertEquals(OutputFormat.TEXT, OutputFormat.from(format = null, llm = null))
+    }
+
+    @Test
+    fun `OutputFormat returns JSON when format is json`() {
+        assertEquals(OutputFormat.JSON, OutputFormat.from(format = "json", llm = null))
+    }
+
+    @Test
+    fun `OutputFormat returns LLM when llm is true`() {
+        assertEquals(OutputFormat.LLM, OutputFormat.from(format = null, llm = true))
+    }
+
+    @Test
+    fun `OutputFormat LLM takes precedence over JSON`() {
+        assertEquals(OutputFormat.LLM, OutputFormat.from(format = "json", llm = true))
+    }
+
+    @Test
+    fun `OutputFormat returns TEXT when llm is false`() {
+        assertEquals(OutputFormat.TEXT, OutputFormat.from(format = null, llm = false))
+    }
 }
