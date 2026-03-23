@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.9
+
+- Fix: cnavDsm returning empty results — rename `-Pdepth` to `-Pdsm-depth` to avoid Gradle built-in property collision
+- Fix: stale `-Pdepth` references in README for cnavCallers/cnavCallees (should be `-Pmaxdepth`)
+- Add integration test for DsmDependencyExtractor against real compiled Kotlin classes
+
 ## 0.1.8
 
 - Port DSM (Dependency Structure Matrix) from dsm-plugin into `navigation` package
