@@ -23,7 +23,7 @@ class BuildToolTest {
         assertEquals("cnavCoupling", BuildTool.GRADLE.taskName("coupling"))
         assertEquals("cnavHelp", BuildTool.GRADLE.taskName("help"))
         assertEquals("cnavAgentHelp", BuildTool.GRADLE.taskName("agent-help"))
-        assertEquals("cnavHelpConfig", BuildTool.GRADLE.taskName("help-config"))
+        assertEquals("cnavHelpConfig", BuildTool.GRADLE.taskName("config-help"))
     }
 
     @Test

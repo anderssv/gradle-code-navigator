@@ -112,6 +112,30 @@ Shows help text for all available tasks.
 mvn cnav:help
 ```
 
+### agent-help
+
+Shows detailed instructions for AI coding agents on how to use code-navigator effectively. Includes recommended workflows, task selection guidance, JSON schemas, and tips for optimal results.
+
+```bash
+# Gradle
+./gradlew cnavAgentHelp
+
+# Maven
+mvn cnav:agent-help
+```
+
+### config-help
+
+Lists all available configuration parameters with defaults and which tasks they apply to.
+
+```bash
+# Gradle
+./gradlew cnavHelpConfig
+
+# Maven
+mvn cnav:config-help
+```
+
 ### list-classes
 
 Lists all classes in the project with their source files.

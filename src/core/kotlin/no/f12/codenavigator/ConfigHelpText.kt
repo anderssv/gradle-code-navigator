@@ -2,9 +2,9 @@ package no.f12.codenavigator
 
 object ConfigHelpText {
     fun generate(tool: BuildTool = BuildTool.GRADLE): String = buildString {
+        val t = { goal: String -> tool.taskName(goal) }
         val p = { name: String, value: String -> tool.param(name, value) }
         val pf = { name: String -> tool.paramFlag(name) }
-        val t = { goal: String -> tool.taskName(goal) }
         val propType = when (tool) {
             BuildTool.GRADLE -> "Gradle project properties (-P flags)"
             BuildTool.MAVEN -> "Maven system properties (-D flags)"

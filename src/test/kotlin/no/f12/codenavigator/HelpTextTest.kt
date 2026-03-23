@@ -20,6 +20,7 @@ class HelpTextTest {
         assertTrue(text.contains("cnavDeps"))
         assertTrue(text.contains("cnavDsm"))
         assertTrue(text.contains("cnavHelp"))
+        assertTrue(text.contains("cnavAgentHelp"))
         assertTrue(text.contains("cnavHelpConfig"))
         assertTrue(text.contains("cnavHotspots"))
         assertTrue(text.contains("cnavCoupling"))
@@ -42,7 +43,8 @@ class HelpTextTest {
         assertTrue(text.contains("cnav:package-deps"))
         assertTrue(text.contains("cnav:dsm"))
         assertTrue(text.contains("cnav:help"))
-        assertTrue(text.contains("cnav:help-config"))
+        assertTrue(text.contains("cnav:agent-help"))
+        assertTrue(text.contains("cnav:config-help"))
         assertTrue(text.contains("cnav:hotspots"))
         assertTrue(text.contains("cnav:coupling"))
         assertTrue(text.contains("cnav:code-age"))
@@ -75,5 +77,13 @@ class HelpTextTest {
 
         assertTrue(gradleText.contains("./gradlew cnavFindClass -Ppattern=Service"))
         assertTrue(mavenText.contains("mvn cnav:find-class -Dpattern=Service"))
+    }
+
+    @Test
+    fun `default parameter is GRADLE for backward compatibility`() {
+        val defaultText = HelpText.generate()
+        val gradleText = HelpText.generate(BuildTool.GRADLE)
+
+        assertTrue(defaultText == gradleText, "Default should produce same output as explicit GRADLE")
     }
 }

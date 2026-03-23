@@ -38,7 +38,7 @@ enum class BuildTool(
             "coupling" to "cnavCoupling",
             "help" to "cnavHelp",
             "agent-help" to "cnavAgentHelp",
-            "help-config" to "cnavHelpConfig",
+            "config-help" to "cnavHelpConfig",
         )
     }
 }

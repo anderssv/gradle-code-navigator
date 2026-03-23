@@ -111,4 +111,12 @@ class ConfigHelpTextTest {
 
         assertTrue(text.contains("default:"), "Should show default values")
     }
+
+    @Test
+    fun `default parameter is GRADLE for backward compatibility`() {
+        val defaultText = ConfigHelpText.generate()
+        val gradleText = ConfigHelpText.generate(BuildTool.GRADLE)
+
+        assertTrue(defaultText == gradleText, "Default should produce same output as explicit GRADLE")
+    }
 }

@@ -91,7 +91,7 @@ object AgentHelpText {
         appendLine("  Help:")
         appendLine("  ${t("help")}                  Full task documentation")
         appendLine("  ${t("agent-help")}             AI agent usage guide")
-        appendLine("  ${t("help-config")}            All configuration parameters")
+        appendLine("  ${t("config-help")}            All configuration parameters")
         appendLine()
         appendLine("--- Global Parameters ---")
         appendLine()
