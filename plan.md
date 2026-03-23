@@ -144,10 +144,157 @@ Ensure both plugins support the same commands, parameters, and produce equivalen
 - **Config parse coverage**: Since both plugins delegate to the same `XxxConfig.parse()` functions, parity at the config layer is already guaranteed. The risk is in the Mojo/Task wiring — forgetting to wire a parameter or misnaming a goal.
 - **Generated documentation**: Auto-generate the parameter table (like `ConfigHelpText`) from the config data classes so docs can't drift from implementation.
 
+## 23. `cnavXray` — function-level hotspots (Very high value)
+
+Inspired by CodeScene's "X-Ray" feature. File-level hotspots are too coarse — a large file may have one or two methods that account for most churn. X-Ray drills into git diff hunks and maps them to methods (using bytecode line number tables) to produce method-level hotspot rankings.
+
+- **Question**: "Which specific methods within a file are causing the most churn?"
+- **Needs**: Git history + bytecode (line number tables from class files to map hunks to methods)
+- **Builder**: `XRayBuilder.build(commits, classDir, targetFile) -> List<MethodHotspot(className, methodName, revisions, churn)>`
+- **Parameters**: `-Pfile=<path>` (required — X-Ray a specific file), `-Pafter=YYYY-MM-DD`, `-Ptop=N`
+- **Why high value**: Far more actionable than file-level hotspots for AI agents suggesting refactoring. Since we already have call graph infrastructure and git log parsing, this reuses both.
+
+## 24. `cnavCycles` — dependency cycle detection (High value, low effort)
+
+Detect and report circular dependencies between packages (or classes). We already compute the DSM which can visualize cycles, but an explicit cycle detection task reports them directly — much more useful for automation and AI agents than reading a matrix.
+
+- **Question**: "Are there circular dependencies that should be broken?"
+- **Needs**: Bytecode only (reuses existing `DsmDependencyExtractor` and `PackageDependencyBuilder`)
+- **Builder**: `CycleDetector.findCycles(packageDeps) -> List<Cycle(packages: List<String>)>` — uses Tarjan's algorithm or DFS
+- **Parameters**: `-Proot-package=<prefix>`, `-Pincludetest=true`
+- **Output**: Each cycle listed with the packages involved, sorted by cycle length
+- **Why high value**: Cycle detection is one of the most requested architecture checks (ArchUnit, NDepend, Structure101 all feature it). Low effort since we already have the dependency graph.
+
+## 25. `cnavCohesion` — class cohesion / LCOM (High value)
+
+Measures Lack of Cohesion of Methods (LCOM) per class. Analyzes which methods access which instance fields from bytecode. A class where methods cluster into distinct groups that don't share fields has low cohesion — it's doing too many things and should be split.
+
+- **Question**: "Which classes are doing too many things and should be split?"
+- **Needs**: Bytecode only (field access patterns from ASM visitor)
+- **Builder**: `CohesionAnalyzer.analyze(classDir) -> List<ClassCohesion(className, lcom: Int, methodCount: Int, fieldCount: Int, clusters: Int)>`
+- **Parameters**: `-Pfilter=<regex>`, `-Pmin-methods=N` (skip trivial classes, default 3), `-Ptop=N`
+- **Output**: Classes ranked by LCOM descending. Optionally show the method/field clusters.
+- **Why high value**: Strong signal for refactoring. Computable from bytecode we already parse. One of CodeScene's "code health" factors.
+
+## 26. `cnavRank` — type/method importance ranking via PageRank (High value, low effort)
+
+Apply PageRank to the existing call graph to identify the most "load-bearing" types and methods. Types with high rank are depended upon transitively by many others — a bug there is most catastrophic.
+
+- **Question**: "Which types/methods are the most critical in the codebase?"
+- **Needs**: Bytecode only (reuses existing call graph)
+- **Builder**: `TypeRanker.rank(callGraph) -> List<RankedType(className, rank: Double, inDegree: Int, outDegree: Int)>`
+- **Parameters**: `-Ptop=N` (default 30), `-Pprojectonly=true`, `-Pmethods=true` (rank methods instead of types)
+- **Why high value**: Useful for AI agents to understand which classes are central vs peripheral. Also useful for prioritizing test coverage. Easy to implement since we already build the call graph.
+
+## 27. `cnavDead` — dead code detection (High value, low effort)
+
+Identify classes, methods, or fields that are never referenced by any other code in the project. Reports "potential dead code" since reflection-based usage can't be detected from bytecode alone.
+
+- **Question**: "What code can safely be removed?"
+- **Needs**: Bytecode only (reuses existing call graph and symbol index)
+- **Builder**: `DeadCodeFinder.find(callGraph, symbolIndex, classIndex) -> List<DeadCode(className, memberName?, kind: CLASS|METHOD|FIELD)>`
+- **Parameters**: `-Pfilter=<regex>`, `-Pinclude-fields=true`, `-Pexclude=<regex>` (exclude known entry points like `main`, `@Test`, Mojo/Task classes)
+- **Caveats**: Must document that reflection, serialization, and framework magic (Spring beans, etc.) may cause false positives.
+- **Why high value**: Very actionable for cleanup. AI agents can suggest removal with confidence when bytecode analysis shows zero references.
+
+## 28. Complexity trends over time (High value, medium effort)
+
+Track the complexity of hotspot files across git history. Instead of a snapshot, show whether a file is *deteriorating*, *stable*, or *improving*. Uses indentation-based complexity (proxy for cyclomatic complexity, works without full parsing) measured at each historical version.
+
+- **Question**: "Is this hotspot getting harder to maintain over time, or are we keeping it under control?"
+- **Needs**: Git history (fetches file content at historical versions via `git show`)
+- **Builder**: `ComplexityTrendBuilder.build(file, commits) -> List<ComplexityPoint(date, complexity, revisionHash)>`
+- **Parameters**: `-Pfile=<path>` (required), `-Pafter=YYYY-MM-DD`, `-Psamples=N` (number of historical points)
+- **Could extend**: `cnavHotspots` with a `-Ptrend=true` flag, or be a standalone `cnavTrend` task
+- **Why high value**: The direction of complexity change is more informative than an absolute value. A rising-complexity hotspot is the #1 refactoring target.
+
+## 29. Coupling comparison — temporal vs structural (High value, medium effort)
+
+Compare temporal coupling (files that change together, from git) with structural coupling (files that depend on each other, from bytecode). The mismatches are where the most interesting architectural insights hide:
+
+- **Temporal coupling WITHOUT structural coupling** → hidden dependencies (shared config, copy-paste, implicit contracts)
+- **Structural coupling WITHOUT temporal coupling** → potentially unused/dead dependencies
+
+- **Question**: "Are there hidden dependencies not visible in the code structure?"
+- **Needs**: Both git history and bytecode
+- **Builder**: `CouplingComparisonBuilder.build(temporalCoupling, structuralDeps) -> List<CouplingMismatch(fileA, fileB, temporalDegree, structurallyLinked: Boolean, kind: HIDDEN_DEP|UNUSED_DEP)>`
+- **Parameters**: Same as `cnavCoupling` + bytecode class dirs
+- **Why high value**: Genuinely novel analysis from Tornhill's "Software Design X-Rays" that no other build plugin offers. Extremely useful for AI agents reasoning about refactoring.
+
+## 30. Knowledge distribution / bus factor (Medium-high value, low effort)
+
+Extends `cnavAuthors` with proportional ownership. Instead of just counting distinct contributors, compute each developer's share of contributions per file. Identifies "knowledge islands" where a single developer wrote >80% of the code.
+
+- **Question**: "If developer X leaves, what parts of the codebase are at risk?"
+- **Needs**: Git history only
+- **Builder**: `KnowledgeDistributionBuilder.build(commits) -> List<FileOwnership(file, mainAuthor, mainAuthorShare: Double, totalAuthors: Int, busFactor: Int)>`
+- **Parameters**: `-Pafter`, `-Ptop=N`, `-Prisk-threshold=N` (percentage, default 80)
+- **Could extend**: `cnavAuthors` with a `-Pownership=true` flag
+- **Why useful**: For AI agents, knowing who the expert is for a given file is immediately actionable. For teams, bus factor risks are critical planning info.
+
+## 31. Stability/instability metrics — Robert C. Martin (Medium-high value, low effort)
+
+For each package, compute Afferent Coupling (Ca = who depends on me), Efferent Coupling (Ce = who I depend on), Instability I = Ce/(Ca+Ce), and Abstractness A = abstract types / total types. The "distance from main sequence" D = |A + I - 1| measures how well a package balances stability and abstractness.
+
+- **Question**: "Are our package dependencies well-structured?"
+- **Needs**: Bytecode only (extends `package-deps` data)
+- **Builder**: `StabilityAnalyzer.analyze(packageDeps, classIndex) -> List<PackageMetrics(pkg, ca, ce, instability, abstractness, distance)>`
+- **Parameters**: `-Proot-package=<prefix>`
+- **Why useful**: Well-established Clean Architecture metrics. Packages in the "zone of pain" (stable + concrete) or "zone of uselessness" (unstable + abstract) are worth flagging.
+
+## 32. Shotgun surgery detection (Medium-high value, medium effort)
+
+Identify commits where a single logical change touches many files across many packages — a code smell indicating poor encapsulation. Aggregates git history to find recurring patterns of widespread changes.
+
+- **Question**: "Which kinds of changes cause the most widespread ripple effects?"
+- **Needs**: Git history (optionally enriched with bytecode package structure)
+- **Builder**: `ShotgunSurgeryDetector.detect(commits, minFiles, minPackages) -> List<ShotgunCommit(hash, date, author, filesChanged, packagesChanged, files: List<String>)>`
+- **Parameters**: `-Pafter`, `-Pmin-files=N` (default 8), `-Pmin-packages=N` (default 3), `-Ptop=N`
+- **Why useful**: Identifies poor encapsulation patterns. An AI agent could flag "this change pattern suggests concept X is spread across too many packages."
+
+## 33. Refactoring targets — composite risk score (Medium value, medium effort)
+
+Combine hotspot data (change frequency), code complexity (from bytecode or indentation), coupling degree, and author count into a single prioritized "refactoring score" per file. Answers the question every team lead asks: "where should we invest refactoring effort for maximum payoff?"
+
+- **Question**: "What are the top refactoring targets in the codebase?"
+- **Needs**: Both git history and bytecode
+- **Builder**: `RefactoringTargetBuilder.build(hotspots, complexity, coupling, authors) -> List<RefactoringTarget(file, score, components: Map<String, Double>)>`
+- **Parameters**: `-Pafter`, `-Ptop=N`, weights for each factor
+- **Depends on**: Multiple other analyses (hotspots, cohesion, coupling, authors)
+- **Why useful**: The "killer feature" of CodeScene — combining signals into an actionable priority list.
+
+## 34. Layer violation detection (Medium value, medium effort)
+
+Given user-defined architectural layers (e.g., controller → service → persistence), detect violations where a lower layer depends on a higher one. Provides a declarative way to check layer rules without writing ArchUnit test code.
+
+- **Question**: "Does the code respect our intended architectural boundaries?"
+- **Needs**: Bytecode only
+- **Configuration**: Layer definitions in build config (e.g., `cnav.layers = ["controller", "service", "domain", "persistence"]`) or a properties file
+- **Builder**: `LayerViolationDetector.detect(packageDeps, layerConfig) -> List<Violation(from, to, fromLayer, toLayer)>`
+- **Why useful**: Architecture enforcement without requiring ArchUnit dependency or test code. More of a reporting/checking concern than analysis.
+
+## 35. Knowledge loss / former contributor risk (Medium value, low effort)
+
+Identify code primarily written by developers who are no longer active (haven't committed in N months). Flags modules where the dominant contributor has gone silent.
+
+- **Question**: "Which parts of the codebase are maintained by people who may have left?"
+- **Needs**: Git history only
+- **Builder**: `KnowledgeLossDetector.detect(commits, inactiveMonths) -> List<AtRiskFile(file, mainAuthor, lastAuthorCommit, authorShare, isActive: Boolean)>`
+- **Parameters**: `-Pinactive-months=N` (default 6), `-Ptop=N`
+- **Why useful**: Risk assessment for team planning. Less actionable for AI agents day-to-day.
+
+## 36. Developer coordination / fragmentation (Low-medium value, low effort)
+
+Measures how scattered contributions are across a file. High fragmentation (many authors each contributing small pieces) correlates with higher defect risk compared to concentrated ownership. Extends Code Maat's `fragmentation` metric.
+
+- **Question**: "Where are coordination bottlenecks in the codebase?"
+- **Needs**: Git history only
+- **Builder**: `FragmentationAnalyzer.analyze(commits) -> List<FileFragmentation(file, fragmentation: Double, authors: Int, revisions: Int)>`
+- **Parameters**: `-Pafter`, `-Ptop=N`
+- **Why useful**: More relevant for large teams. Can be combined with other metrics (hotspots, authors) for richer analysis.
+
 ## Future ideas (not yet planned)
 
 - **Cross-referencing hotspots with bytecode data**: Combine `cnavHotspots` with `cnavCallers`/`cnavDeps` to answer "hotspot files and their structural dependencies". Would require mapping git file paths to bytecode class names via the source file metadata already extracted.
 - **Entity ownership / main developer**: Who "owns" each file by contribution weight (`-a entity-ownership` and `-a main-dev` in Code Maat). Useful for "who should I ask about this code?" Could be added as a mode on `cnavAuthors`.
 - **Architectural-level grouping**: Code Maat's `-g` flag to aggregate file-level results by logical component/layer. Would allow running hotspots, coupling, etc. at the sub-system level instead of individual files.
-- **Temporal coupling with structural coupling overlay**: Visualize where temporal coupling (from git) aligns or conflicts with structural coupling (from bytecode). Files that change together but have no call-graph relationship may indicate a missing abstraction.
-- **Fragmentation analysis**: Code Maat's `fragmentation` metric — measures how scattered contributions are across a module. High fragmentation = many authors each contributing small pieces = higher defect risk than concentrated ownership.
