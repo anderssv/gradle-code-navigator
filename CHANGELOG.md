@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.7
+
+- Add 5 git history analysis tasks (no compilation required):
+  - `cnavHotspots` — files ranked by revision count and churn
+  - `cnavCoupling` — temporal coupling between files
+  - `cnavAge` — time since last change per file
+  - `cnavAuthors` — distinct contributors per file
+  - `cnavChurn` — lines added/deleted per file
+- Add shared git infrastructure: `GitLogParser`, `GitLogRunner`
+- Reorganize codebase into `navigation` (bytecode) and `analysis` (git history) subpackages
+- Update JSON and LLM formatters with analysis output support
+- Update `cnavHelp` and `cnavAgentHelp` with git task documentation
+
 ## 0.1.6
 
 - Update README with `cnavAgentHelp` as primary agent entry point
