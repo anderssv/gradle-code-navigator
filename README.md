@@ -53,7 +53,7 @@ Apply the plugin in your `build.gradle.kts`:
 
 ```kotlin
 plugins {
-    id("no.f12.code-navigator") version "0.1.0"
+    id("no.f12.code-navigator") version "0.1.8"
 }
 ```
 

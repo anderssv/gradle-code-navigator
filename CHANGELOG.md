@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.8
+
+- Port DSM (Dependency Structure Matrix) from dsm-plugin into `navigation` package
+  - Bytecode scanning with `DsmDependencyExtractor` (ASM-based)
+  - `DsmMatrixBuilder` with cyclic dependency detection
+  - Text, HTML, JSON, and LLM output formats
+  - `cnavDsm` task with `-Proot-package=`, `-Pdepth=`, `-Pdsm-html=` properties
+- Enable git rename tracking by default (`-M` flag), opt out with `-Pno-follow`
+  - `GitLogParser` handles both full-path and brace rename syntax
+- Add `cnavHelpConfig` task listing all `-P` configuration parameters with defaults
+- Update HelpText, AgentHelpText, README, and AGENTS.md
+
 ## 0.1.7
 
 - Add 5 git history analysis tasks (no compilation required):
