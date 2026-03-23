@@ -1,6 +1,7 @@
 package no.f12.codenavigator.maven
 
 import no.f12.codenavigator.AgentHelpText
+import no.f12.codenavigator.BuildTool
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugins.annotations.Mojo
 
@@ -8,6 +9,6 @@ import org.apache.maven.plugins.annotations.Mojo
 class AgentHelpMojo : AbstractMojo() {
 
     override fun execute() {
-        println(AgentHelpText.generate())
+        println(AgentHelpText.generate(BuildTool.MAVEN))
     }
 }

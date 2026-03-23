@@ -1,41 +1,49 @@
 package no.f12.codenavigator
 
 object ConfigHelpText {
-    fun generate(): String = buildString {
+    fun generate(tool: BuildTool = BuildTool.GRADLE): String = buildString {
+        val p = { name: String, value: String -> tool.param(name, value) }
+        val pf = { name: String -> tool.paramFlag(name) }
+        val t = { goal: String -> tool.taskName(goal) }
+        val propType = when (tool) {
+            BuildTool.GRADLE -> "Gradle project properties (-P flags)"
+            BuildTool.MAVEN -> "Maven system properties (-D flags)"
+        }
+
         appendLine("=== code-navigator: Configuration Reference ===")
         appendLine()
-        appendLine("All parameters are passed as Gradle project properties (-P flags).")
-        appendLine("Example: ./gradlew cnavFindClass -Ppattern=Service -Pformat=json")
+        appendLine("All parameters are passed as $propType.")
+        appendLine("Example: ${tool.usage("find-class", p("pattern", "Service"), p("format", "json"))}")
         appendLine()
         appendLine("--- Global Parameters (all tasks) ---")
         appendLine()
-        appendLine("  -Pformat=json             Output as machine-readable JSON")
-        appendLine("  -Pllm=true                Output in compact, token-efficient LLM format")
+        appendLine("  ${p("format", "json")}             Output as machine-readable JSON")
+        appendLine("  ${p("llm", "true")}                Output in compact, token-efficient LLM format")
         appendLine()
         appendLine("--- Navigation Tasks ---")
         appendLine()
-        appendLine("  -Ppattern=<regex>         Class/symbol regex (cnavFindClass, cnavFindSymbol, cnavClass, cnavInterfaces)")
-        appendLine("  -Pmethod=<regex>          Method regex (cnavCallers, cnavCallees)")
-        appendLine("  -Pmaxdepth=<N>            Max call tree depth (cnavCallers, cnavCallees)")
-        appendLine("  -Pprojectonly=true        Hide JDK/stdlib classes (cnavCallers, cnavCallees, cnavDeps)")
-        appendLine("  -Preverse=true            Show reverse dependencies (cnavDeps)")
-        appendLine("  -Ppackage=<regex>         Filter packages by regex (cnavDeps)")
-        appendLine("  -Pincludetest=true        Include test source set (cnavInterfaces)")
+        appendLine("  ${p("pattern", "<regex>")}         Class/symbol regex (${t("find-class")}, ${t("find-symbol")}, ${t("class-detail")}, ${t("find-interfaces")})")
+        appendLine("  ${p("method", "<regex>")}          Method regex (${t("find-callers")}, ${t("find-callees")})")
+        appendLine("  ${p("maxdepth", "<N>")}            Max call tree depth (${t("find-callers")}, ${t("find-callees")})")
+        appendLine("  ${p("projectonly", "true")}        Hide JDK/stdlib classes (${t("find-callers")}, ${t("find-callees")}, ${t("package-deps")})")
+        appendLine("  ${p("reverse", "true")}            Show reverse dependencies (${t("package-deps")})")
+        appendLine("  ${p("package", "<regex>")}         Filter packages by regex (${t("package-deps")})")
+        appendLine("  ${p("includetest", "true")}        Include test source set (${t("find-interfaces")})")
         appendLine()
         appendLine("--- DSM (Dependency Structure Matrix) ---")
         appendLine()
-        appendLine("  -Proot-package=<pkg>      Only include packages under this prefix (cnavDsm, default: all)")
-        appendLine("  -Pdsm-depth=<N>           Package grouping depth (cnavDsm, default: 2)")
-        appendLine("  -Pdsm-html=<path>         Write interactive HTML matrix to file (cnavDsm)")
+        appendLine("  ${p("root-package", "<pkg>")}      Only include packages under this prefix (${t("dsm")}, default: all)")
+        appendLine("  ${p("dsm-depth", "<N>")}           Package grouping depth (${t("dsm")}, default: 2)")
+        appendLine("  ${p("dsm-html", "<path>")}         Write interactive HTML matrix to file (${t("dsm")})")
         appendLine()
         appendLine("--- Git History Analysis ---")
         appendLine()
-        appendLine("  -Pafter=YYYY-MM-DD        Only consider commits after this date (default: 1 year ago)")
-        appendLine("  -Pno-follow               Disable git rename tracking (renames tracked by default)")
-        appendLine("  -Ptop=<N>                 Max results (cnavHotspots, cnavAge, cnavAuthors, cnavChurn, default: 50)")
-        appendLine("  -Pmin-revs=<N>            Min revisions to include (cnavHotspots, cnavAuthors, default: 1)")
-        appendLine("  -Pmin-shared-revs=<N>     Min shared commits (cnavCoupling, default: 5)")
-        appendLine("  -Pmin-coupling=<N>        Min coupling degree % (cnavCoupling, default: 30)")
-        appendLine("  -Pmax-changeset-size=<N>  Skip commits touching more files (cnavCoupling, default: 30)")
+        appendLine("  ${p("after", "YYYY-MM-DD")}        Only consider commits after this date (default: 1 year ago)")
+        appendLine("  ${pf("no-follow")}               Disable git rename tracking (renames tracked by default)")
+        appendLine("  ${p("top", "<N>")}                 Max results (${t("hotspots")}, ${t("code-age")}, ${t("authors")}, ${t("churn")}, default: 50)")
+        appendLine("  ${p("min-revs", "<N>")}            Min revisions to include (${t("hotspots")}, ${t("authors")}, default: 1)")
+        appendLine("  ${p("min-shared-revs", "<N>")}     Min shared commits (${t("coupling")}, default: 5)")
+        appendLine("  ${p("min-coupling", "<N>")}        Min coupling degree % (${t("coupling")}, default: 30)")
+        appendLine("  ${p("max-changeset-size", "<N>")}  Skip commits touching more files (${t("coupling")}, default: 30)")
     }
 }

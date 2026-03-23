@@ -1,5 +1,6 @@
 package no.f12.codenavigator.gradle
 
+import no.f12.codenavigator.BuildTool
 import no.f12.codenavigator.ConfigHelpText
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
@@ -10,6 +11,6 @@ abstract class ConfigHelpTask : DefaultTask() {
 
     @TaskAction
     fun showConfig() {
-        logger.lifecycle(ConfigHelpText.generate())
+        logger.lifecycle(ConfigHelpText.generate(BuildTool.GRADLE))
     }
 }

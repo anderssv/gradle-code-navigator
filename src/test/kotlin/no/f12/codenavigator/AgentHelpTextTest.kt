@@ -2,12 +2,13 @@ package no.f12.codenavigator
 
 import kotlin.test.Test
 import kotlin.test.assertTrue
+import kotlin.test.assertFalse
 
 class AgentHelpTextTest {
 
     @Test
-    fun `agent help text contains all task names`() {
-        val text = AgentHelpText.generate()
+    fun `Gradle agent help text contains all task names with Gradle names`() {
+        val text = AgentHelpText.generate(BuildTool.GRADLE)
 
         // Navigation tasks
         assertTrue(text.contains("cnavListClasses"))
@@ -29,16 +30,49 @@ class AgentHelpTextTest {
     }
 
     @Test
-    fun `agent help text recommends LLM format for agents`() {
-        val text = AgentHelpText.generate()
+    fun `Maven agent help text contains all task names with Maven names`() {
+        val text = AgentHelpText.generate(BuildTool.MAVEN)
+
+        assertTrue(text.contains("cnav:list-classes"))
+        assertTrue(text.contains("cnav:find-class"))
+        assertTrue(text.contains("cnav:find-symbol"))
+        assertTrue(text.contains("cnav:find-callers"))
+        assertTrue(text.contains("cnav:find-callees"))
+        assertTrue(text.contains("cnav:class-detail"))
+        assertTrue(text.contains("cnav:find-interfaces"))
+        assertTrue(text.contains("cnav:package-deps"))
+        assertTrue(text.contains("cnav:dsm"))
+        assertTrue(text.contains("cnav:hotspots"))
+        assertTrue(text.contains("cnav:coupling"))
+        assertTrue(text.contains("cnav:code-age"))
+        assertTrue(text.contains("cnav:authors"))
+        assertTrue(text.contains("cnav:churn"))
+    }
+
+    @Test
+    fun `Gradle agent help text uses -P parameters and gradlew command`() {
+        val text = AgentHelpText.generate(BuildTool.GRADLE)
 
         assertTrue(text.contains("-Pllm=true"))
         assertTrue(text.contains("-Pformat=json"))
+        assertTrue(text.contains("./gradlew"))
+    }
+
+    @Test
+    fun `Maven agent help text uses -D parameters and mvn command`() {
+        val text = AgentHelpText.generate(BuildTool.MAVEN)
+
+        assertTrue(text.contains("-Dllm=true"))
+        assertTrue(text.contains("-Dformat=json"))
+        assertTrue(text.contains("mvn"))
+        assertFalse(text.contains("./gradlew"), "Maven agent help should not contain ./gradlew")
+        assertFalse(text.contains("-Pllm"), "Maven agent help should not contain -P params")
+        assertFalse(text.contains("-Pformat"), "Maven agent help should not contain -P params")
     }
 
     @Test
     fun `agent help text includes workflow guidance`() {
-        val text = AgentHelpText.generate()
+        val text = AgentHelpText.generate(BuildTool.GRADLE)
 
         assertTrue(text.contains("ORIENT"))
         assertTrue(text.contains("FIND"))
@@ -50,16 +84,15 @@ class AgentHelpTextTest {
 
     @Test
     fun `agent help text includes performance tips`() {
-        val text = AgentHelpText.generate()
+        val text = AgentHelpText.generate(BuildTool.GRADLE)
 
         assertTrue(text.contains("Tips for Optimal Results"))
-        assertTrue(text.contains("-Pprojectonly=true"))
         assertTrue(text.contains("cached"))
     }
 
     @Test
-    fun `agent help text includes parameter examples`() {
-        val text = AgentHelpText.generate()
+    fun `Gradle agent help text includes Gradle parameter examples`() {
+        val text = AgentHelpText.generate(BuildTool.GRADLE)
 
         assertTrue(text.contains("-Ppattern="))
         assertTrue(text.contains("-Pmethod="))
@@ -77,8 +110,27 @@ class AgentHelpTextTest {
     }
 
     @Test
+    fun `Maven agent help text includes Maven parameter examples`() {
+        val text = AgentHelpText.generate(BuildTool.MAVEN)
+
+        assertTrue(text.contains("-Dpattern="))
+        assertTrue(text.contains("-Dmethod="))
+        assertTrue(text.contains("-Dmaxdepth="))
+        assertTrue(text.contains("-Dreverse=true"))
+        assertTrue(text.contains("-Dincludetest=true"))
+        assertTrue(text.contains("-Dafter="))
+        assertTrue(text.contains("-Dtop="))
+        assertTrue(text.contains("-Dmin-revs="))
+        assertTrue(text.contains("-Dmin-coupling="))
+        assertTrue(text.contains("-Dno-follow"))
+        assertTrue(text.contains("-Droot-package="))
+        assertTrue(text.contains("-Ddsm-depth="))
+        assertTrue(text.contains("-Ddsm-html="))
+    }
+
+    @Test
     fun `agent help text documents JSON schemas for each task`() {
-        val text = AgentHelpText.generate()
+        val text = AgentHelpText.generate(BuildTool.GRADLE)
 
         assertTrue(text.contains("className"), "Should document className field")
         assertTrue(text.contains("sourceFile"), "Should document sourceFile field")
@@ -93,9 +145,39 @@ class AgentHelpTextTest {
 
     @Test
     fun `agent help text includes jq examples`() {
-        val text = AgentHelpText.generate()
+        val text = AgentHelpText.generate(BuildTool.GRADLE)
 
         assertTrue(text.contains("jq"), "Should mention jq")
         assertTrue(text.contains("| jq"), "Should show pipe to jq")
+    }
+
+    @Test
+    fun `Gradle jq examples use gradlew command`() {
+        val text = AgentHelpText.generate(BuildTool.GRADLE)
+
+        assertTrue(text.contains("./gradlew cnavListClasses"))
+    }
+
+    @Test
+    fun `Maven jq examples use mvn command`() {
+        val text = AgentHelpText.generate(BuildTool.MAVEN)
+
+        assertTrue(text.contains("mvn cnav:list-classes"))
+    }
+
+    @Test
+    fun `default parameter is GRADLE for backward compatibility`() {
+        val defaultText = AgentHelpText.generate()
+        val gradleText = AgentHelpText.generate(BuildTool.GRADLE)
+
+        assertTrue(defaultText == gradleText, "Default should produce same output as explicit GRADLE")
+    }
+
+    @Test
+    fun `Maven extracting output section uses mvn command`() {
+        val text = AgentHelpText.generate(BuildTool.MAVEN)
+
+        assertTrue(text.contains("mvn cnav:list-classes"), "Maven extraction example should use mvn command")
+        assertFalse(text.contains("./gradlew cnavListClasses"), "Maven should not contain Gradle extraction examples")
     }
 }

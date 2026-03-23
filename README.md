@@ -100,20 +100,28 @@ The plugin provides two categories of tasks:
 
 ### Navigation Tasks
 
-### cnavHelp
+### help
 
 Shows help text for all available tasks.
 
 ```bash
+# Gradle
 ./gradlew cnavHelp
+
+# Maven
+mvn cnav:help
 ```
 
-### cnavListClasses
+### list-classes
 
 Lists all classes in the project with their source files.
 
 ```bash
+# Gradle
 ./gradlew cnavListClasses
+
+# Maven
+mvn cnav:list-classes
 ```
 
 Output:
@@ -130,33 +138,48 @@ com.example.model.Order         | com/example/model/Order.kt
 
 Results are cached to disk and reused when class files have not changed.
 
-### cnavFindClass
+### find-class
 
 Searches for classes matching a regex pattern. Matches against both class name and source file path (case-insensitive).
 
 ```bash
+# Gradle
 ./gradlew cnavFindClass -Ppattern=Service
 ./gradlew cnavFindClass -Ppattern="domain\..*"
+
+# Maven
+mvn cnav:find-class -Dpattern=Service
+mvn cnav:find-class -Dpattern="domain\..*"
 ```
 
-### cnavFindSymbol
+### find-symbol
 
 Searches for methods and fields matching a regex pattern. Filters out constructors, synthetic methods, Kotlin property accessors, and data class boilerplate.
 
 ```bash
+# Gradle
 ./gradlew cnavFindSymbol -Ppattern=resetPassword
 ./gradlew cnavFindSymbol -Ppattern="find.*"
+
+# Maven
+mvn cnav:find-symbol -Dpattern=resetPassword
+mvn cnav:find-symbol -Dpattern="find.*"
 ```
 
 Output columns: `Package | Class | Symbol | Kind | Source File`
 
-### cnavCallers
+### find-callers
 
 Shows who calls a given method as an indented tree. Walks callers transitively up to a configurable depth.
 
 ```bash
+# Gradle
 ./gradlew cnavCallers -Pmethod=resetPassword
 ./gradlew cnavCallers -Pmethod=".*Service\.find.*" -Pmaxdepth=5
+
+# Maven
+mvn cnav:find-callers -Dmethod=resetPassword
+mvn cnav:find-callers -Dmethod=".*Service\.find.*" -Dmaxdepth=5
 ```
 
 Output:
@@ -167,22 +190,32 @@ UserService.resetPassword
     <- Router.configure (Router.kt)
 ```
 
-### cnavCallees
+### find-callees
 
 Shows what a method calls as an indented tree. Walks callees transitively up to a configurable depth.
 
 ```bash
+# Gradle
 ./gradlew cnavCallees -Pmethod="Controller\.handle.*"
 ./gradlew cnavCallees -Pmethod="Service\.create" -Pmaxdepth=5
+
+# Maven
+mvn cnav:find-callees -Dmethod="Controller\.handle.*"
+mvn cnav:find-callees -Dmethod="Service\.create" -Dmaxdepth=5
 ```
 
-### cnavClass
+### class-detail
 
 Shows a class signature: fields with types, methods with parameter and return types, superclass, and implemented interfaces.
 
 ```bash
+# Gradle
 ./gradlew cnavClass -Ppattern=ResetPasswordService
 ./gradlew cnavClass -Ppattern=".*Client"
+
+# Maven
+mvn cnav:class-detail -Dpattern=ResetPasswordService
+mvn cnav:class-detail -Dpattern=".*Client"
 ```
 
 Output:
@@ -201,13 +234,18 @@ Methods:
   resetPassword(String): void
 ```
 
-### cnavInterfaces
+### find-interfaces
 
 Finds classes that implement a given interface.
 
 ```bash
+# Gradle
 ./gradlew cnavInterfaces -Ppattern=Repository
 ./gradlew cnavInterfaces -Ppattern=".*Client"
+
+# Maven
+mvn cnav:find-interfaces -Dpattern=Repository
+mvn cnav:find-interfaces -Dpattern=".*Client"
 ```
 
 Output:
@@ -218,13 +256,18 @@ Output:
   com.example.repository.UserRepository (UserRepository.kt)
 ```
 
-### cnavDeps
+### package-deps
 
-Shows package-level dependencies. Without parameters, shows all packages. With `-Ppackage`, filters to matching packages.
+Shows package-level dependencies. Without parameters, shows all packages. With `-Ppackage` / `-Dpackage`, filters to matching packages.
 
 ```bash
+# Gradle
 ./gradlew cnavDeps
 ./gradlew cnavDeps -Ppackage=services
+
+# Maven
+mvn cnav:package-deps
+mvn cnav:package-deps -Dpackage=services
 ```
 
 Output:
@@ -239,65 +282,96 @@ com.example.service
   -> com.example.repository
 ```
 
-### cnavDsm
+### dsm
 
 Shows a Dependency Structure Matrix (DSM) — a compact grid showing how packages depend on each other. Each cell shows how many references flow from row to column. Highlights cyclic dependencies with class-level detail.
 
 ```bash
+# Gradle
 ./gradlew cnavDsm
 ./gradlew cnavDsm -Proot-package=com.example -Pdsm-depth=3
 ./gradlew cnavDsm -Pdsm-html=build/dsm.html
+
+# Maven
+mvn cnav:dsm
+mvn cnav:dsm -Droot-package=com.example -Ddsm-depth=3
+mvn cnav:dsm -Ddsm-html=target/dsm.html
 ```
 
-Use `-Pdsm-html=<path>` to generate an interactive HTML matrix with color-coded cells (green = forward, red = backward/cyclic) and hover tooltips showing class-level dependencies.
+Use `-Pdsm-html=<path>` (Gradle) or `-Ddsm-html=<path>` (Maven) to generate an interactive HTML matrix with color-coded cells (green = forward, red = backward/cyclic) and hover tooltips showing class-level dependencies.
 
 ### Analysis Tasks (Git History)
 
-These tasks analyze git history and do **not** require compilation. All accept `-Pafter=YYYY-MM-DD` to set the analysis window (default: 1 year ago). Git rename tracking is enabled by default; use `-Pno-follow` to disable it.
+These tasks analyze git history and do **not** require compilation. All accept `-Pafter=YYYY-MM-DD` (Gradle) or `-Dafter=YYYY-MM-DD` (Maven) to set the analysis window (default: 1 year ago). Git rename tracking is enabled by default; use `-Pno-follow` (Gradle) or `-Dno-follow` (Maven) to disable it.
 
-### cnavHotspots
+### hotspots
 
 Ranks files by revision count and total churn (lines added + deleted). Highlights files that change frequently and are complex.
 
 ```bash
+# Gradle
 ./gradlew cnavHotspots
 ./gradlew cnavHotspots -Pmin-revs=5 -Ptop=20
+
+# Maven
+mvn cnav:hotspots
+mvn cnav:hotspots -Dmin-revs=5 -Dtop=20
 ```
 
-### cnavCoupling
+### coupling
 
 Finds files that change together (temporal coupling). High coupling may indicate hidden dependencies.
 
 ```bash
+# Gradle
 ./gradlew cnavCoupling
 ./gradlew cnavCoupling -Pmin-coupling=50 -Pmin-shared-revs=10
+
+# Maven
+mvn cnav:coupling
+mvn cnav:coupling -Dmin-coupling=50 -Dmin-shared-revs=10
 ```
 
-### cnavAge
+### code-age
 
 Shows time since last change per file. Old code may be stable — or forgotten.
 
 ```bash
+# Gradle
 ./gradlew cnavAge
 ./gradlew cnavAge -Ptop=20
+
+# Maven
+mvn cnav:code-age
+mvn cnav:code-age -Dtop=20
 ```
 
-### cnavAuthors
+### authors
 
 Shows distinct contributor count per file. Files with many authors may need more review attention.
 
 ```bash
+# Gradle
 ./gradlew cnavAuthors
 ./gradlew cnavAuthors -Pmin-revs=3 -Ptop=20
+
+# Maven
+mvn cnav:authors
+mvn cnav:authors -Dmin-revs=3 -Dtop=20
 ```
 
-### cnavChurn
+### churn
 
 Shows lines added and deleted per file. High churn files are where most development effort goes.
 
 ```bash
+# Gradle
 ./gradlew cnavChurn
 ./gradlew cnavChurn -Ptop=20
+
+# Maven
+mvn cnav:churn
+mvn cnav:churn -Dtop=20
 ```
 
 ## How it works

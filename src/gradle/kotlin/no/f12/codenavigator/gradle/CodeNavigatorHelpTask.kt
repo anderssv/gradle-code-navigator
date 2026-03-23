@@ -1,5 +1,6 @@
 package no.f12.codenavigator.gradle
 
+import no.f12.codenavigator.BuildTool
 import no.f12.codenavigator.HelpText
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
@@ -10,6 +11,6 @@ abstract class CodeNavigatorHelpTask : DefaultTask() {
 
     @TaskAction
     fun showHelp() {
-        logger.lifecycle(HelpText.generate())
+        logger.lifecycle(HelpText.generate(BuildTool.GRADLE))
     }
 }
