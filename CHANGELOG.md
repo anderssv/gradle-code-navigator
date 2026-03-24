@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.17
+
+- Improve agent help text: lead with one-shot accuracy benefit, add "When to Use What" decision guide
+
 ## 0.1.16
 
 - Fix: set JVM toolchain to 21 so the published plugin works on Java 21+ (0.1.14 was accidentally compiled targeting JVM 25)
