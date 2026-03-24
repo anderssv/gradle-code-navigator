@@ -42,7 +42,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.version>2.1.10</kotlin.version>
         <maven.compiler.release>21</maven.compiler.release>
-        <asm.version>9.7.1</asm.version>
+        <asm.version>9.9.1</asm.version>
     </properties>
 
     <dependencies>
