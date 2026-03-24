@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.18
+
+- Add `cnavUsages` task / `cnav:find-usages` goal — bytecode-based search for project references to external types and methods
+  - Three usage kinds: METHOD_CALL (visitMethodInsn), FIELD_ACCESS (visitFieldInsn), TYPE_REFERENCE (visitTypeInsn + descriptor parsing)
+  - Parameters: `-Powner=<class>` (FQN of type), `-Pmethod=<name>` (specific method), `-Ptype=<class>` (all type references)
+  - Owner-aware matching — distinguishes same-named methods on different types
+  - Finds Kotlin property accessors by bytecode name (e.g., `getMonthNumber` for `.monthNumber`)
+  - TEXT, JSON, and LLM output formats
+- Update help texts (HelpText, ConfigHelpText, AgentHelpText) with `cnavUsages` documentation, migration workflow guidance, and JSON schema
+
 ## 0.1.17
 
 - Improve agent help text: lead with one-shot accuracy benefit, add "When to Use What" decision guide
