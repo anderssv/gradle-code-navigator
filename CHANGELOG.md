@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.20
+
+- **Fix:** Rename `-Powner` to `-PownerClass` (Gradle) / `-DownerClass` (Maven) in `cnavUsages` / `cnav:find-usages`. The old `-Powner` parameter collided with Gradle's built-in `owner` property, causing the value to be silently ignored.
+
 ## 0.1.19
 
 - Add `-Pcycles=true` parameter to `cnavDsm` / `cnav:dsm` — outputs only cyclic dependencies with class-level edges in both directions, skipping the full DSM matrix. Supports TEXT, JSON, and LLM formats.

@@ -11,10 +11,10 @@ object UsageFormatter {
             }
     }
 
-    fun noResultsGuidance(owner: String?, method: String?, type: String?): String {
+    fun noResultsGuidance(ownerClass: String?, method: String?, type: String?): String {
         val target = buildString {
-            if (owner != null) {
-                append(owner)
+            if (ownerClass != null) {
+                append(ownerClass)
                 if (method != null) append(".$method")
             } else {
                 append(type)
@@ -23,8 +23,8 @@ object UsageFormatter {
         return buildString {
             appendLine("No usages found for '$target'.")
             appendLine("Hint: Ensure the value is a fully-qualified class name (e.g., com.example.MyClass).")
-            if (owner != null) {
-                appendLine("Hint: Try -Ptype=$owner to also search type references, casts, and signatures.")
+            if (ownerClass != null) {
+                appendLine("Hint: Try -Ptype=$ownerClass to also search type references, casts, and signatures.")
             }
         }.trimEnd()
     }

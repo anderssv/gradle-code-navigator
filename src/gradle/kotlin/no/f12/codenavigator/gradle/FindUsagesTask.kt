@@ -20,14 +20,14 @@ abstract class FindUsagesTask : DefaultTask() {
 
     @TaskAction
     fun findUsages() {
-        val owner = project.findProperty("owner")?.toString()
+        val ownerClass = project.findProperty("ownerClass")?.toString()
         val method = project.findProperty("method")?.toString()
         val type = project.findProperty("type")?.toString()
 
-        if (owner == null && type == null) {
+        if (ownerClass == null && type == null) {
             throw GradleException(
-                "Missing required property. Provide either 'owner' or 'type'.\n" +
-                    "Usage: ./gradlew cnavUsages -Powner=<class> [-Pmethod=<name>]\n" +
+                "Missing required property. Provide either 'ownerClass' or 'type'.\n" +
+                    "Usage: ./gradlew cnavUsages -PownerClass=<class> [-Pmethod=<name>]\n" +
                     "       ./gradlew cnavUsages -Ptype=<class>"
             )
         }
@@ -38,13 +38,13 @@ abstract class FindUsagesTask : DefaultTask() {
         val mainSourceSet = sourceSets.getByName("main")
         val classDirectories = mainSourceSet.output.classesDirs.files.toList()
 
-        val result = UsageScanner.scan(classDirectories, owner = owner, method = method, type = type)
+        val result = UsageScanner.scan(classDirectories, ownerClass = ownerClass, method = method, type = type)
         val reportFile = File(project.layout.buildDirectory.asFile.get(), "cnav/skipped-files.txt")
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { logger.warn(it) }
         val usages = result.data
 
         if (usages.isEmpty()) {
-            logger.lifecycle(UsageFormatter.noResultsGuidance(owner, method, type))
+            logger.lifecycle(UsageFormatter.noResultsGuidance(ownerClass, method, type))
             return
         }
 

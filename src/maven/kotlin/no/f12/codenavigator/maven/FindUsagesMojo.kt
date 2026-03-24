@@ -29,8 +29,8 @@ class FindUsagesMojo : AbstractMojo() {
     @Parameter(property = "llm")
     private var llm: Boolean? = null
 
-    @Parameter(property = "owner")
-    private var owner: String? = null
+    @Parameter(property = "ownerClass")
+    private var ownerClass: String? = null
 
     @Parameter(property = "method")
     private var method: String? = null
@@ -39,10 +39,10 @@ class FindUsagesMojo : AbstractMojo() {
     private var type: String? = null
 
     override fun execute() {
-        if (owner == null && type == null) {
+        if (ownerClass == null && type == null) {
             throw MojoFailureException(
-                "Missing required property. Provide either 'owner' or 'type'.\n" +
-                    "Usage: mvn cnav:find-usages -Downer=<class> [-Dmethod=<name>]\n" +
+                "Missing required property. Provide either 'ownerClass' or 'type'.\n" +
+                    "Usage: mvn cnav:find-usages -DownerClass=<class> [-Dmethod=<name>]\n" +
                     "       mvn cnav:find-usages -Dtype=<class>"
             )
         }
@@ -54,13 +54,13 @@ class FindUsagesMojo : AbstractMojo() {
         }
 
         val outputFormat = OutputFormat.from(format, llm)
-        val result = UsageScanner.scan(listOf(classesDir), owner = owner, method = method, type = type)
+        val result = UsageScanner.scan(listOf(classesDir), ownerClass = ownerClass, method = method, type = type)
         val reportFile = File(project.build.directory, "cnav/skipped-files.txt")
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { log.warn(it) }
         val usages = result.data
 
         if (usages.isEmpty()) {
-            println(UsageFormatter.noResultsGuidance(owner, method, type))
+            println(UsageFormatter.noResultsGuidance(ownerClass, method, type))
             return
         }
 

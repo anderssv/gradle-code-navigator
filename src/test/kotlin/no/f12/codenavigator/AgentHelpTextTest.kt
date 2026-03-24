@@ -172,18 +172,18 @@ class AgentHelpTextTest {
     }
 
     @Test
-    fun `Gradle agent help text includes owner and type parameters`() {
+    fun `Gradle agent help text includes ownerClass and type parameters`() {
         val text = AgentHelpText.generate(BuildTool.GRADLE)
 
-        assertTrue(text.contains("-Powner="), "Should list owner parameter")
+        assertTrue(text.contains("-PownerClass="), "Should list ownerClass parameter")
         assertTrue(text.contains("-Ptype="), "Should list type parameter")
     }
 
     @Test
-    fun `Maven agent help text includes owner and type parameters`() {
+    fun `Maven agent help text includes ownerClass and type parameters`() {
         val text = AgentHelpText.generate(BuildTool.MAVEN)
 
-        assertTrue(text.contains("-Downer="), "Should list owner parameter for Maven")
+        assertTrue(text.contains("-DownerClass="), "Should list ownerClass parameter for Maven")
         assertTrue(text.contains("-Dtype="), "Should list type parameter for Maven")
     }
 

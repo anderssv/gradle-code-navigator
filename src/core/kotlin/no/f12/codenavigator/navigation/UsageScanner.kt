@@ -27,7 +27,7 @@ enum class UsageKind {
 object UsageScanner {
     fun scan(
         classDirectories: List<File>,
-        owner: String? = null,
+        ownerClass: String? = null,
         method: String? = null,
         type: String? = null,
     ): ScanResult<List<UsageSite>> {
@@ -41,7 +41,7 @@ object UsageScanner {
                     .filter { it.isFile && it.extension == "class" }
                     .forEach { classFile ->
                         try {
-                            extractUsages(classFile, owner, method, type, usages)
+                            extractUsages(classFile, ownerClass, method, type, usages)
                         } catch (e: UnsupportedBytecodeVersionException) {
                             skipped.add(e)
                         }
@@ -53,7 +53,7 @@ object UsageScanner {
 
     private fun extractUsages(
         classFile: File,
-        owner: String?,
+        ownerClass: String?,
         method: String?,
         type: String?,
         usages: MutableList<UsageSite>,
@@ -127,7 +127,7 @@ object UsageScanner {
                             instrDescriptor: String, isInterface: Boolean,
                         ) {
                             val instrOwnerDot = instrOwner.replace('/', '.')
-                            val ownerMatched = matchesOwner(instrOwnerDot, owner) && matchesMethod(instrName, method)
+                            val ownerMatched = matchesOwner(instrOwnerDot, ownerClass) && matchesMethod(instrName, method)
                             val typeMatched = type != null && matchesType(instrOwnerDot, type) && matchesMethod(instrName, method)
                             if (ownerMatched || typeMatched) {
                                 usages.add(
@@ -149,7 +149,7 @@ object UsageScanner {
                             instrDescriptor: String,
                         ) {
                             val instrOwnerDot = instrOwner.replace('/', '.')
-                            val ownerMatched = matchesOwner(instrOwnerDot, owner) && matchesMethod(instrName, method)
+                            val ownerMatched = matchesOwner(instrOwnerDot, ownerClass) && matchesMethod(instrName, method)
                             val typeMatched = type != null && matchesType(instrOwnerDot, type) && matchesMethod(instrName, method)
                             if (ownerMatched || typeMatched) {
                                 usages.add(

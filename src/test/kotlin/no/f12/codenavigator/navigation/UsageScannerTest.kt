@@ -35,7 +35,7 @@ class UsageScannerTest {
 
         val usages = UsageScanner.scan(
             listOf(classesDir),
-            owner = "com.example.Target",
+            ownerClass = "com.example.Target",
             method = "process",
         ).data
 
@@ -55,7 +55,7 @@ class UsageScannerTest {
 
         val usages = UsageScanner.scan(
             listOf(classesDir),
-            owner = "com.example.NonExistent",
+            ownerClass = "com.example.NonExistent",
             method = "missing",
         ).data
 
@@ -75,7 +75,7 @@ class UsageScannerTest {
 
         val usages = UsageScanner.scan(
             listOf(classesDir),
-            owner = "com.example.Target",
+            ownerClass = "com.example.Target",
             method = "process",
         ).data
 
@@ -97,7 +97,7 @@ class UsageScannerTest {
 
         val usages = UsageScanner.scan(
             listOf(classesDir),
-            owner = "com.example.Target",
+            ownerClass = "com.example.Target",
         ).data
 
         assertEquals(2, usages.size)
@@ -118,7 +118,7 @@ class UsageScannerTest {
 
         val usages = UsageScanner.scan(
             listOf(classesDir),
-            owner = "com.example.Target",
+            ownerClass = "com.example.Target",
             method = "name",
         ).data
 
@@ -140,7 +140,7 @@ class UsageScannerTest {
 
         val usages = UsageScanner.scan(
             listOf(classesDir),
-            owner = "com.example.Constants",
+            ownerClass = "com.example.Constants",
             method = "MAX_SIZE",
         ).data
 
@@ -340,7 +340,7 @@ class UsageScannerTest {
 
         val allUsages = UsageScanner.scan(
             listOf(classesDir),
-            owner = "com.external.Library",
+            ownerClass = "com.external.Library",
             method = "process",
         ).data
 
@@ -353,7 +353,7 @@ class UsageScannerTest {
     }
 
     @Test
-    fun `owner filter matches case-insensitively`() {
+    fun `ownerClass filter matches case-insensitively`() {
         writeClassWithCalls(
             "com/example/Caller", "Caller.kt",
             "doWork", listOf(Call("com/example/Target", "process", "()V")),
@@ -361,7 +361,7 @@ class UsageScannerTest {
 
         val usages = UsageScanner.scan(
             listOf(classesDir),
-            owner = "COM.EXAMPLE.TARGET",
+            ownerClass = "COM.EXAMPLE.TARGET",
             method = "process",
         ).data
 
@@ -380,7 +380,7 @@ class UsageScannerTest {
 
         val usages = UsageScanner.scan(
             listOf(classesDir),
-            owner = "com.example.Target",
+            ownerClass = "com.example.Target",
             method = "process",
         ).data
 
@@ -394,7 +394,7 @@ class UsageScannerTest {
     fun `empty class directory produces no usages`() {
         val usages = UsageScanner.scan(
             listOf(classesDir),
-            owner = "com.example.Target",
+            ownerClass = "com.example.Target",
         ).data
 
         assertTrue(usages.isEmpty())
@@ -409,7 +409,7 @@ class UsageScannerTest {
 
         val usages = UsageScanner.scan(
             listOf(classesDir),
-            owner = "com.example.Target",
+            ownerClass = "com.example.Target",
             method = "process",
         ).data
 
@@ -427,7 +427,7 @@ class UsageScannerTest {
 
         val usages = UsageScanner.scan(
             listOf(classesDir),
-            owner = "com.example.Target",
+            ownerClass = "com.example.Target",
             method = "process",
         ).data
 
