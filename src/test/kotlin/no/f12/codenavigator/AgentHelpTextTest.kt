@@ -174,6 +174,24 @@ class AgentHelpTextTest {
     }
 
     @Test
+    fun `agent help text emphasizes one-shot accuracy over iterative grep`() {
+        val text = AgentHelpText.generate(BuildTool.GRADLE)
+
+        assertTrue(text.contains("single"), "Should mention getting results in a single call")
+        assertTrue(text.contains("tool call"), "Should frame benefit in terms of tool call round-trips")
+        assertTrue(text.contains("correct on the first"), "Should emphasize correctness on first response")
+        assertTrue(text.contains("No iterative"), "Should explicitly state no iterative searching needed")
+    }
+
+    @Test
+    fun `agent help text includes when-to-use guidance`() {
+        val text = AgentHelpText.generate(BuildTool.GRADLE)
+
+        assertTrue(text.contains("Use code-navigator when"), "Should have when-to-use-cnav section")
+        assertTrue(text.contains("Use grep"), "Should have when-to-use-grep section")
+    }
+
+    @Test
     fun `Maven extracting output section uses mvn command`() {
         val text = AgentHelpText.generate(BuildTool.MAVEN)
 
