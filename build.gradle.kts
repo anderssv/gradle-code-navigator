@@ -51,4 +51,9 @@ sourceSets {
             setSrcDirs(listOf("src/core/kotlin", "src/gradle/kotlin"))
         }
     }
+    test {
+        kotlin {
+            setSrcDirs(listOf("src/test/kotlin", "src/gradleTest/kotlin"))
+        }
+    }
 }
