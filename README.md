@@ -105,6 +105,25 @@ Add the plugin to your `pom.xml`:
 
 No configuration is needed. Run `mvn cnav:config-help` to see all available configuration parameters. Maven goals use the `cnav:` prefix with kebab-case names (e.g. `mvn cnav:find-class -Dpattern=Service`).
 
+You can optionally configure persistent defaults via the `<configuration>` block:
+
+```xml
+<plugin>
+    <groupId>no.f12</groupId>
+    <artifactId>code-navigator-maven-plugin</artifactId>
+    <version>0.1.12</version>
+    <configuration>
+        <rootPackage>com.example</rootPackage>  <!-- default: "" (all packages) -->
+    </configuration>
+</plugin>
+```
+
+| Property      | Default | Description                                                                 |
+|---------------|---------|-----------------------------------------------------------------------------|
+| `rootPackage` | `""`    | Only include packages under this prefix (used by `cnav:dsm`). Empty = all.  |
+
+These defaults are used when the corresponding `-D` flag is not provided. A `-D` flag always overrides the configuration block.
+
 ## Tasks
 
 The plugin provides two categories of tasks:
