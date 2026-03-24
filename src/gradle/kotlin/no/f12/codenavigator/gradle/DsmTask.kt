@@ -25,6 +25,7 @@ abstract class DsmTask : DefaultTask() {
         val depth = project.findProperty("dsm-depth")?.toString()?.toIntOrNull() ?: 2
         val htmlPath = project.findProperty("dsm-html")?.toString()
         val format = project.outputFormat()
+        val cyclesOnly = project.findProperty("cycles")?.toString()?.toBoolean() ?: false
 
         val sourceSets = project.extensions.getByType(SourceSetContainer::class.java)
         val mainSourceSet = sourceSets.getByName("main")
@@ -36,10 +37,18 @@ abstract class DsmTask : DefaultTask() {
         val dependencies = result.data
         val matrix = DsmMatrixBuilder.build(dependencies, rootPackage, depth)
 
-        val output = when (format) {
-            OutputFormat.TEXT -> DsmFormatter.format(matrix)
-            OutputFormat.JSON -> JsonFormatter.formatDsm(matrix)
-            OutputFormat.LLM -> LlmFormatter.formatDsm(matrix)
+        val output = if (cyclesOnly) {
+            when (format) {
+                OutputFormat.TEXT -> DsmFormatter.formatCycles(matrix)
+                OutputFormat.JSON -> JsonFormatter.formatDsmCycles(matrix)
+                OutputFormat.LLM -> LlmFormatter.formatDsmCycles(matrix)
+            }
+        } else {
+            when (format) {
+                OutputFormat.TEXT -> DsmFormatter.format(matrix)
+                OutputFormat.JSON -> JsonFormatter.formatDsm(matrix)
+                OutputFormat.LLM -> LlmFormatter.formatDsm(matrix)
+            }
         }
         logger.lifecycle(OutputWrapper.wrap(output, format))
 

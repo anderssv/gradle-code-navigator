@@ -361,7 +361,9 @@ This is partially addressed by item 38 (full classpath scanning) which would let
 
 From real-world migration feedback: `cnavUsages -Ptype=ContextKt` returned "No usages found" because `-Ptype` only searched for type references (NEW, CHECKCAST, INSTANCEOF, descriptor types). Now `-Ptype` is comprehensive: it also matches method call and field instruction owners, so `-Ptype=ContextKt` finds calls to `ContextKt.locateResourceFile()`. Additionally, empty results now show guidance suggesting FQN checks and alternative parameters.
 
-## 42. `cnavCycleDetail` — dedicated cycle detail view (Medium value, low effort)
+## 42. ~~`cnavCycleDetail`~~ `-Pcycles=true` on `cnavDsm` — dedicated cycle detail view ✅ DONE
+
+Implemented as a `-Pcycles=true` parameter on the existing `cnavDsm` task (rather than a separate task). When `cycles=true`, skips the full DSM matrix and outputs only cycle details with class-level edges in both directions. Supports all three output formats (TEXT, JSON, LLM). Note: source file locations are not tracked in the DSM data model, so edges show class names only (not file:line).
 
 From real-world feedback: the DSM task crams cycle edge details into dense one-liners that are hard to read. A dedicated task that shows each cycle as clear A→B / B→A pairs with file locations would be more ergonomic.
 

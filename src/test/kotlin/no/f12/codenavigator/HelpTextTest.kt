@@ -82,6 +82,15 @@ class HelpTextTest {
     }
 
     @Test
+    fun `help text documents cycles parameter for DSM`() {
+        val gradleText = HelpText.generate(BuildTool.GRADLE)
+        val mavenText = HelpText.generate(BuildTool.MAVEN)
+
+        assertTrue(gradleText.contains("-Pcycles=true"), "Gradle help should document cycles parameter")
+        assertTrue(mavenText.contains("-Dcycles=true"), "Maven help should document cycles parameter")
+    }
+
+    @Test
     fun `default parameter is GRADLE for backward compatibility`() {
         val defaultText = HelpText.generate()
         val gradleText = HelpText.generate(BuildTool.GRADLE)

@@ -111,6 +111,7 @@ class AgentHelpTextTest {
         assertTrue(text.contains("-Proot-package="))
         assertTrue(text.contains("-Pdsm-depth="))
         assertTrue(text.contains("-Pdsm-html="))
+        assertTrue(text.contains("-Pcycles=true"))
     }
 
     @Test
@@ -130,6 +131,7 @@ class AgentHelpTextTest {
         assertTrue(text.contains("-Droot-package="))
         assertTrue(text.contains("-Ddsm-depth="))
         assertTrue(text.contains("-Ddsm-html="))
+        assertTrue(text.contains("-Dcycles=true"))
     }
 
     @Test

@@ -100,6 +100,25 @@ object LlmFormatter {
         }
     }
 
+    fun formatDsmCycles(matrix: DsmMatrix): String {
+        val cyclicPairs = matrix.findCyclicPairs()
+        if (cyclicPairs.isEmpty()) return "(no cycles)"
+
+        return cyclicPairs.joinToString("\n") { (a, b, counts) ->
+            val fwd = matrix.classDependencies[a to b]
+            val bwd = matrix.classDependencies[b to a]
+            val fwdStr = fwd?.sortedBy { "${it.first}-${it.second}" }
+                ?.joinToString(",") { "${it.first}->${it.second}" } ?: ""
+            val bwdStr = bwd?.sortedBy { "${it.first}-${it.second}" }
+                ?.joinToString(",") { "${it.first}->${it.second}" } ?: ""
+            buildString {
+                append("CYCLE $a<->$b ${counts.first}/${counts.second}")
+                if (fwdStr.isNotEmpty()) append("\n  $a->$b: $fwdStr")
+                if (bwdStr.isNotEmpty()) append("\n  $b->$a: $bwdStr")
+            }
+        }
+    }
+
     private fun StringBuilder.renderChildren(children: List<CallTreeNode>, direction: CallDirection, depth: Int) {
         val indent = "  ".repeat(depth)
         for (node in children) {

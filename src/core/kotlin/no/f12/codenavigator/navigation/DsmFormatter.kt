@@ -58,4 +58,28 @@ object DsmFormatter {
             }
         }.trimEnd()
     }
+
+    fun formatCycles(matrix: DsmMatrix): String {
+        val cyclicPairs = matrix.findCyclicPairs()
+        if (cyclicPairs.isEmpty()) return "No cyclic dependencies found."
+
+        return buildString {
+            cyclicPairs.forEachIndexed { idx, (a, b, counts) ->
+                if (idx > 0) appendLine()
+                val fwdLabel = if (counts.first == 1) "ref" else "refs"
+                val bwdLabel = if (counts.second == 1) "ref" else "refs"
+                appendLine("CYCLE: $a <-> $b (${counts.first} $fwdLabel / ${counts.second} $bwdLabel)")
+                appendLine("  $a -> $b:")
+                val fwd = matrix.classDependencies[a to b]
+                fwd?.sortedBy { "${it.first}-${it.second}" }?.forEach { (src, tgt) ->
+                    appendLine("    $a.$src -> $b.$tgt")
+                }
+                appendLine("  $b -> $a:")
+                val bwd = matrix.classDependencies[b to a]
+                bwd?.sortedBy { "${it.first}-${it.second}" }?.forEach { (src, tgt) ->
+                    appendLine("    $b.$src -> $a.$tgt")
+                }
+            }
+        }.trimEnd()
+    }
 }

@@ -7,6 +7,7 @@ data class DsmConfig(
     val depth: Int,
     val htmlPath: String?,
     val format: OutputFormat,
+    val cyclesOnly: Boolean,
 ) {
     companion object {
         fun parse(properties: Map<String, String?>): DsmConfig = DsmConfig(
@@ -17,6 +18,7 @@ data class DsmConfig(
                 format = properties["format"],
                 llm = properties["llm"]?.toBoolean(),
             ),
+            cyclesOnly = properties["cycles"]?.toBoolean() ?: false,
         )
     }
 }

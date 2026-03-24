@@ -59,4 +59,25 @@ class DsmConfigTest {
 
         assertEquals(OutputFormat.LLM, config.format)
     }
+
+    @Test
+    fun `parses cycles true as cyclesOnly true`() {
+        val config = DsmConfig.parse(mapOf("cycles" to "true"))
+
+        assertEquals(true, config.cyclesOnly)
+    }
+
+    @Test
+    fun `defaults cyclesOnly to false`() {
+        val config = DsmConfig.parse(emptyMap())
+
+        assertEquals(false, config.cyclesOnly)
+    }
+
+    @Test
+    fun `parses cycles false as cyclesOnly false`() {
+        val config = DsmConfig.parse(mapOf("cycles" to "false"))
+
+        assertEquals(false, config.cyclesOnly)
+    }
 }

@@ -48,6 +48,7 @@ object ConfigHelpText {
         appendLine("  ${p("root-package", "<pkg>")}      Only include packages under this prefix (${t("dsm")}, default: all)")
         appendLine("  ${p("dsm-depth", "<N>")}           Package grouping depth (${t("dsm")}, default: 2)")
         appendLine("  ${p("dsm-html", "<path>")}         Write interactive HTML matrix to file (${t("dsm")})")
+        appendLine("  ${p("cycles", "true")}              Show only cyclic dependencies with class-level edges (${t("dsm")})")
         appendLine()
         appendLine("--- Git History Analysis ---")
         appendLine()

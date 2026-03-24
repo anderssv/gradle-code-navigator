@@ -70,6 +70,7 @@ class ConfigHelpTextTest {
         assertTrue(text.contains("root-package="))
         assertTrue(text.contains("dsm-depth="))
         assertTrue(text.contains("dsm-html="))
+        assertTrue(text.contains("cycles=true"))
     }
 
     @Test

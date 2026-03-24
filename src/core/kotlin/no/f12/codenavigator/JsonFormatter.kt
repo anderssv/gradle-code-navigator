@@ -172,6 +172,30 @@ object JsonFormatter {
         return jsonObject("packages" to JsonRaw(packages), "cells" to JsonRaw(cells), "cycles" to JsonRaw(cyclesJson))
     }
 
+    fun formatDsmCycles(matrix: DsmMatrix): String {
+        val cycles = matrix.findCyclicPairs()
+        return jsonArray(cycles) { (a, b, counts) ->
+            val fwdEdges = matrix.classDependencies[a to b]
+            val bwdEdges = matrix.classDependencies[b to a]
+            jsonObject(
+                "packageA" to a,
+                "packageB" to b,
+                "forwardRefs" to counts.first,
+                "backwardRefs" to counts.second,
+                "forwardEdges" to JsonRaw(
+                    jsonArray(fwdEdges?.toList()?.sortedBy { "${it.first}-${it.second}" } ?: emptyList()) { (src, tgt) ->
+                        jsonObject("source" to src, "target" to tgt)
+                    },
+                ),
+                "backwardEdges" to JsonRaw(
+                    jsonArray(bwdEdges?.toList()?.sortedBy { "${it.first}-${it.second}" } ?: emptyList()) { (src, tgt) ->
+                        jsonObject("source" to src, "target" to tgt)
+                    },
+                ),
+            )
+        }
+    }
+
     fun formatUsages(usages: List<UsageSite>): String =
         jsonArray(usages.sortedWith(compareBy({ it.callerClass }, { it.callerMethod }))) { u ->
             jsonObject(

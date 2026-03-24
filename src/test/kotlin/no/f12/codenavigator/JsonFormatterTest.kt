@@ -452,4 +452,41 @@ class JsonFormatterTest {
         assertTrue(result.contains("\"api\""))
         assertTrue(result.contains("\"service\""))
     }
+
+    // === DSM cycles-only formatting ===
+
+    @Test
+    fun `dsm cycles-only with no cycles produces empty array`() {
+        val matrix = DsmMatrix(emptyList(), emptyMap(), emptyMap())
+
+        val result = JsonFormatter.formatDsmCycles(matrix)
+
+        assertEquals("[]", result)
+    }
+
+    @Test
+    fun `dsm cycles-only includes class edges in each direction`() {
+        val matrix = DsmMatrix(
+            packages = listOf("api", "service"),
+            cells = mapOf(
+                "api" to "service" to 2,
+                "service" to "api" to 1,
+            ),
+            classDependencies = mapOf(
+                ("api" to "service") to setOf("Controller" to "Service"),
+                ("service" to "api") to setOf("Service" to "Controller"),
+            ),
+        )
+
+        val result = JsonFormatter.formatDsmCycles(matrix)
+
+        assertTrue(result.contains("\"packageA\":\"api\""))
+        assertTrue(result.contains("\"packageB\":\"service\""))
+        assertTrue(result.contains("\"forwardRefs\":2"))
+        assertTrue(result.contains("\"backwardRefs\":1"))
+        assertTrue(result.contains("\"forwardEdges\""))
+        assertTrue(result.contains("\"backwardEdges\""))
+        assertTrue(result.contains("\"Controller\""))
+        assertTrue(result.contains("\"Service\""))
+    }
 }

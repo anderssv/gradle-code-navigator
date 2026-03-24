@@ -39,6 +39,9 @@ class DsmMojo : AbstractMojo() {
     @Parameter(property = "dsm-html")
     private var dsmHtml: String? = null
 
+    @Parameter(property = "cycles", defaultValue = "false")
+    private var cycles: Boolean = false
+
     override fun execute() {
         val classesDir = File(project.build.outputDirectory)
         if (!classesDir.exists()) {
@@ -53,10 +56,18 @@ class DsmMojo : AbstractMojo() {
         val dependencies = result.data
         val matrix = DsmMatrixBuilder.build(dependencies, rootPackage, dsmDepth)
 
-        val output = when (outputFormat) {
-            OutputFormat.TEXT -> DsmFormatter.format(matrix)
-            OutputFormat.JSON -> JsonFormatter.formatDsm(matrix)
-            OutputFormat.LLM -> LlmFormatter.formatDsm(matrix)
+        val output = if (cycles) {
+            when (outputFormat) {
+                OutputFormat.TEXT -> DsmFormatter.formatCycles(matrix)
+                OutputFormat.JSON -> JsonFormatter.formatDsmCycles(matrix)
+                OutputFormat.LLM -> LlmFormatter.formatDsmCycles(matrix)
+            }
+        } else {
+            when (outputFormat) {
+                OutputFormat.TEXT -> DsmFormatter.format(matrix)
+                OutputFormat.JSON -> JsonFormatter.formatDsm(matrix)
+                OutputFormat.LLM -> LlmFormatter.formatDsm(matrix)
+            }
         }
         println(OutputWrapper.wrap(output, outputFormat))
 

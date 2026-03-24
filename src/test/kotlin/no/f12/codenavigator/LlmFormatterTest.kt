@@ -211,4 +211,37 @@ class LlmFormatterTest {
 
         assertEquals("packages:api,service\napi->service:2\nservice->api:1\nCYCLES: api<->service", result)
     }
+
+    // === DSM cycles-only formatting ===
+
+    @Test
+    fun `formatDsmCycles with no cycles produces no-cycles message`() {
+        val matrix = DsmMatrix(emptyList(), emptyMap(), emptyMap())
+
+        val result = LlmFormatter.formatDsmCycles(matrix)
+
+        assertEquals("(no cycles)", result)
+    }
+
+    @Test
+    fun `formatDsmCycles shows compact cycle with class edges`() {
+        val matrix = DsmMatrix(
+            packages = listOf("api", "service"),
+            cells = mapOf(
+                "api" to "service" to 2,
+                "service" to "api" to 1,
+            ),
+            classDependencies = mapOf(
+                ("api" to "service") to setOf("Controller" to "Service"),
+                ("service" to "api") to setOf("Service" to "Controller"),
+            ),
+        )
+
+        val result = LlmFormatter.formatDsmCycles(matrix)
+
+        assertEquals(
+            "CYCLE api<->service 2/1\n  api->service: Controller->Service\n  service->api: Service->Controller",
+            result,
+        )
+    }
 }
