@@ -14,6 +14,17 @@ object ConfigHelpText {
         appendLine()
         appendLine("All parameters are passed as $propType.")
         appendLine("Example: ${tool.usage("find-class", p("pattern", "Service"), p("format", "json"))}")
+        if (tool == BuildTool.GRADLE) {
+            appendLine()
+            appendLine("--- Gradle Configuration Block (persistent defaults) ---")
+            appendLine()
+            appendLine("  codeNavigator {")
+            appendLine("      rootPackage = \"com.example\"   // default: \"\" (all packages)")
+            appendLine("  }")
+            appendLine()
+            appendLine("  Properties set in the config block are used as defaults.")
+            appendLine("  -P flags always override the config block.")
+        }
         appendLine()
         appendLine("--- Global Parameters (all tasks) ---")
         appendLine()

@@ -7,3 +7,6 @@ fun Project.outputFormat(): OutputFormat = OutputFormat.from(
     format = findProperty("format")?.toString(),
     llm = findProperty("llm")?.toString()?.toBoolean(),
 )
+
+fun Project.codeNavigatorExtension(): CodeNavigatorExtension =
+    extensions.getByType(CodeNavigatorExtension::class.java)

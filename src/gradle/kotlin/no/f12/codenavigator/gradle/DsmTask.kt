@@ -19,7 +19,8 @@ abstract class DsmTask : DefaultTask() {
 
     @TaskAction
     fun showDsm() {
-        val rootPackage = project.findProperty("root-package")?.toString() ?: ""
+        val extension = project.codeNavigatorExtension()
+        val rootPackage = extension.resolveRootPackage(project.findProperty("root-package"))
         val depth = project.findProperty("dsm-depth")?.toString()?.toIntOrNull() ?: 2
         val htmlPath = project.findProperty("dsm-html")?.toString()
         val format = project.outputFormat()

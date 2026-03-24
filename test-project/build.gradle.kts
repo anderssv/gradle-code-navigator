@@ -3,6 +3,10 @@ plugins {
     id("no.f12.code-navigator") version "0.1.13-SNAPSHOT"
 }
 
+codeNavigator {
+    rootPackage = "com.example"
+}
+
 repositories {
     mavenCentral()
 }

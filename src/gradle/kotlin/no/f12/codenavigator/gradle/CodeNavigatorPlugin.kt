@@ -6,6 +6,8 @@ import org.gradle.api.Project
 class CodeNavigatorPlugin : Plugin<Project> {
     override fun apply(project: Project) {
 
+        project.extensions.create("codeNavigator", CodeNavigatorExtension::class.java)
+
         // --- Navigation tasks (bytecode-based, require compilation) ---
 
         project.tasks.register("cnavListClasses", ListClassesTask::class.java) {

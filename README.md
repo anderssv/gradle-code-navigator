@@ -73,6 +73,20 @@ plugins {
 
 No configuration is needed. The plugin registers tasks that operate on the `main` source set's compiled output. Run `./gradlew cnavHelpConfig` to see all available configuration parameters.
 
+You can optionally configure persistent defaults via the `codeNavigator` block:
+
+```kotlin
+codeNavigator {
+    rootPackage = "com.example"  // default: "" (all packages)
+}
+```
+
+| Property      | Default | Description                                                                 |
+|---------------|---------|-----------------------------------------------------------------------------|
+| `rootPackage` | `""`    | Only include packages under this prefix (used by `cnavDsm`). Empty = all.  |
+
+These defaults are used when the corresponding `-P` flag is not provided. A `-P` flag always overrides the config block.
+
 ### Maven
 
 Add the plugin to your `pom.xml`:
