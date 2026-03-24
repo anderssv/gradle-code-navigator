@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.19
+
+- Add `-Pcycles=true` parameter to `cnavDsm` / `cnav:dsm` — outputs only cyclic dependencies with class-level edges in both directions, skipping the full DSM matrix. Supports TEXT, JSON, and LLM formats.
+- Make `-Ptype` in `cnavUsages` comprehensive — now also matches method call and field instruction owners, so `-Ptype=ContextKt` finds calls to `ContextKt.locateResourceFile()`. Empty results now show guidance suggesting FQN checks and alternative parameters.
+
 ## 0.1.18
 
 - Add `cnavUsages` task / `cnav:find-usages` goal — bytecode-based search for project references to external types and methods
