@@ -92,12 +92,22 @@ object LlmFormatter {
         }
 
     fun formatComplexity(results: List<ClassComplexity>): String =
-        results.joinToString("\n") { c ->
-            val outgoing = if (c.outgoingByClass.isEmpty()) "none"
-            else c.outgoingByClass.joinToString(",") { "${it.first}(${it.second})" }
-            val incoming = if (c.incomingByClass.isEmpty()) "none"
-            else c.incomingByClass.joinToString(",") { "${it.first}(${it.second})" }
-            "${c.className} out=${c.fanOut}/${c.distinctOutgoingClasses} in=${c.fanIn}/${c.distinctIncomingClasses} outgoing:[$outgoing] incoming:[$incoming]"
+        results.joinToString("\n\n") { c ->
+            buildString {
+                append("${c.className} out=${c.fanOut}/${c.distinctOutgoingClasses} in=${c.fanIn}/${c.distinctIncomingClasses}")
+                if (c.outgoingByClass.isEmpty()) {
+                    append("\n  outgoing: none")
+                } else {
+                    append("\n  outgoing:")
+                    c.outgoingByClass.forEach { append("\n    ${it.first}(${it.second})") }
+                }
+                if (c.incomingByClass.isEmpty()) {
+                    append("\n  incoming: none")
+                } else {
+                    append("\n  incoming:")
+                    c.incomingByClass.forEach { append("\n    ${it.first}(${it.second})") }
+                }
+            }
         }
 
     fun formatMetrics(metrics: MetricsResult): String = buildString {

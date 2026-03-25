@@ -76,3 +76,15 @@ Implemented as `-Poutside-package=<pkg>` parameter on `cnavUsages` / `cnav:find-
 ## ~~47. `cnavComplexity` — method-level fan-in/fan-out for a class (Medium value, low effort)~~ DONE
 
 Implemented as `cnavComplexity` (Gradle) / `cnav:complexity` (Maven). Shows fan-in/fan-out complexity per class — how many calls go out to other classes and how many come in from other classes, with counts grouped by target/source class. Parameters: `-Pclass=<pattern>` (required, regex), `-Pprojectonly=true` (default true), `-Pdetail=true`. Supports all three output formats (TEXT, JSON, LLM). Core analysis in `ClassComplexityAnalyzer`, formatting in `ComplexityFormatter`/`JsonFormatter`/`LlmFormatter`.
+
+## ~~44. Deduplicate `cnavUsages` output (Low effort, high polish)~~ DONE
+
+Fixed by switching `UsageScanner` from `mutableListOf<UsageSite>()` to `mutableSetOf<UsageSite>()` at the scanner level. Since `UsageSite` is a data class, set equality deduplicates automatically. Follows the same pattern as `DsmDependencyExtractor` which already used `mutableSetOf<PackageDependency>()`.
+
+## ~~45. Fix `cnavDsm` HTML path resolution (Low effort, bug fix)~~ DONE
+
+Fixed `DsmTask.kt` to use `project.file(config.htmlPath)` instead of `File(htmlPath)` so relative paths resolve against the project directory rather than the Gradle daemon's working directory. Maven `DsmMojo.kt` also fixed to use `File(project.basedir, config.htmlPath)`.
+
+## ~~52. Fix `cnavComplexity` LLM output readability (Low effort, high polish)~~ DONE
+
+Rewrote `LlmFormatter.formatComplexity()` to use multi-line format instead of cramming all outgoing/incoming types into a single line. Each class now shows its header line followed by indented `outgoing:` and `incoming:` sections with one type per line. Empty lists show `none` on the same line. Multiple classes are separated by blank lines.

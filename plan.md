@@ -229,21 +229,6 @@ A "what-if" mode would let you say "if I move class X to package Y, would the cy
 - **Builder**: `WhatIfSimulator.simulate(dsmResult, move: Pair<String, String>) -> WhatIfResult(resolvedCycles, remainingCycles, newCycles)`
 - **Why**: Turns the DSM from a diagnostic tool into a planning tool. The user reported "you still have to reason about the fix yourself" — this automates that reasoning.
 
-## 44. Deduplicate `cnavUsages` output (Low effort, high polish)
-
-From user feedback: when the same method is called multiple times from the same caller method, `cnavUsages` (especially with `-PownerClass`) produces duplicate lines. The `UsageScanner` collects into a `mutableListOf<UsageSite>()` and every matching bytecode instruction appends a new entry — no deduplication at any level. All formatters (text, JSON, LLM) pass through the raw list.
-
-- **Fix**: Deduplicate at the scanner level by switching to `mutableSetOf<UsageSite>()` (since `UsageSite` is a data class, set equality works automatically). Alternatively, deduplicate at the formatter level with `.distinct()` to preserve raw data for other consumers.
-- **Contrast**: The `DsmDependencyExtractor` already uses `mutableSetOf<PackageDependency>()` and has a test `produces unique dependencies per class pair` — `UsageScanner` should follow the same pattern.
-- **Key file**: `UsageScanner.kt` line 34
-
-## 45. Fix `cnavDsm` HTML path resolution (Low effort, bug fix)
-
-From user feedback: when using `-Pdsm-html=dsm.html` with a relative path, the HTML file is written to (and the logged path shows) the Gradle daemon's working directory instead of the project directory. This is because `DsmTask.kt` uses `File(htmlPath)` which resolves against the JVM's current working directory — which for the Gradle daemon is typically `~/.gradle/daemon/<version>/`.
-
-- **Fix**: Change `File(htmlPath)` to `project.file(htmlPath)` in `DsmTask.kt` line 56. Gradle's `project.file()` resolves relative paths against the project directory. The Maven `DsmMojo.kt` has the same pattern but Maven mojos typically run with cwd set to the project root, so the bug is less likely there — but should be fixed to `File(project.basedir, dsmHtml)` for correctness.
-- **Key files**: `DsmTask.kt` lines 55-59, `DsmMojo.kt` lines 74-79
-
 ## 46. `cnavTestHealth` — verify all test methods actually ran (High value, medium effort)
 
 From user feedback: a project had 19 silently skipped tests because test methods had non-`Unit` return types. The test framework silently ignored them — the suite looked green while tests weren't running.
@@ -330,12 +315,6 @@ Run all analysis tasks (both bytecode and git history) and produce a consolidate
 - **Parameters**: Inherits parameters from constituent tasks (e.g., `-Pafter`, `-Ptop`, `-Proot-package`). `-Pformat=json` produces a single JSON object with sections per analysis.
 - **Output**: Sections for each analysis, clearly delimited. TEXT format uses headers; JSON uses a top-level object with keys like `hotspots`, `coupling`, `rank`, `dead`, `dsm`.
 - **Why useful**: Agents and humans often want the full picture. Running 8 separate tasks is tedious and each invocation has Gradle/Maven startup overhead. A single task is faster (shared caching, one compilation) and produces a coherent snapshot.
-
-## 52. Fix `cnavComplexity` LLM output readability (Low effort, high polish)
-
-From user feedback: the `-Pllm=true` output crams the entire outgoing/incoming type list into a single line. For a class like `RAClientImpl` with 71 distinct outgoing types, this produces one massive unreadable line. The LLM formatter should use one-per-line format for outgoing/incoming lists, or at minimum break them into separate lines. Other formatters (TEXT, JSON) are fine.
-
-- **Key file**: `ComplexityFormatter.kt` (LLM format branch)
 
 ## 53. `cnavDead` — entry point awareness (Medium value, medium effort)
 

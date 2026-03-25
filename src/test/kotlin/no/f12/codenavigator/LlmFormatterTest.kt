@@ -23,6 +23,7 @@ import no.f12.codenavigator.navigation.DeadCodeKind
 import no.f12.codenavigator.navigation.MetricsResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class LlmFormatterTest {
 
@@ -319,9 +320,71 @@ class LlmFormatterTest {
         val result = LlmFormatter.formatComplexity(results)
 
         assertEquals(
-            "com.example.Service out=5/2 in=3/1 outgoing:[com.example.Repo(3),com.example.Cache(2)] incoming:[com.example.Controller(3)]",
+            "com.example.Service out=5/2 in=3/1\n" +
+                "  outgoing:\n" +
+                "    com.example.Repo(3)\n" +
+                "    com.example.Cache(2)\n" +
+                "  incoming:\n" +
+                "    com.example.Controller(3)",
             result,
         )
+    }
+
+    @Test
+    fun `formats complexity with no outgoing or incoming`() {
+        val results = listOf(
+            ClassComplexity(
+                className = "com.example.Orphan",
+                sourceFile = "Orphan.kt",
+                fanOut = 0,
+                fanIn = 0,
+                distinctOutgoingClasses = 0,
+                distinctIncomingClasses = 0,
+                outgoingByClass = emptyList(),
+                incomingByClass = emptyList(),
+            ),
+        )
+
+        val result = LlmFormatter.formatComplexity(results)
+
+        assertEquals(
+            "com.example.Orphan out=0/0 in=0/0\n" +
+                "  outgoing: none\n" +
+                "  incoming: none",
+            result,
+        )
+    }
+
+    @Test
+    fun `formats multiple complexity results separated by blank line`() {
+        val results = listOf(
+            ClassComplexity(
+                className = "com.example.A",
+                sourceFile = "A.kt",
+                fanOut = 1,
+                fanIn = 0,
+                distinctOutgoingClasses = 1,
+                distinctIncomingClasses = 0,
+                outgoingByClass = listOf("com.example.B" to 1),
+                incomingByClass = emptyList(),
+            ),
+            ClassComplexity(
+                className = "com.example.B",
+                sourceFile = "B.kt",
+                fanOut = 0,
+                fanIn = 1,
+                distinctOutgoingClasses = 0,
+                distinctIncomingClasses = 1,
+                outgoingByClass = emptyList(),
+                incomingByClass = listOf("com.example.A" to 1),
+            ),
+        )
+
+        val result = LlmFormatter.formatComplexity(results)
+
+        assertTrue(result.contains("com.example.A out=1/1 in=0/0"))
+        assertTrue(result.contains("com.example.B out=0/0 in=1/1"))
+        assertTrue(result.contains("\n\n"), "Classes should be separated by blank line")
     }
 
     // === Metrics formatting ===
