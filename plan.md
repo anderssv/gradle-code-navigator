@@ -391,6 +391,90 @@ From real-world feedback: the DSM tells you which cycles exist, but you still ha
 - **Builder**: `WhatIfSimulator.simulate(dsmResult, move: Pair<String, String>) -> WhatIfResult(resolvedCycles, remainingCycles, newCycles)`
 - **Why**: Turns the DSM from a diagnostic tool into a planning tool. The user reported "you still have to reason about the fix yourself" — this automates that reasoning.
 
+## 44. Deduplicate `cnavUsages` output (Low effort, high polish)
+
+From user feedback: when the same method is called multiple times from the same caller method, `cnavUsages` (especially with `-PownerClass`) produces duplicate lines. The `UsageScanner` collects into a `mutableListOf<UsageSite>()` and every matching bytecode instruction appends a new entry — no deduplication at any level. All formatters (text, JSON, LLM) pass through the raw list.
+
+- **Fix**: Deduplicate at the scanner level by switching to `mutableSetOf<UsageSite>()` (since `UsageSite` is a data class, set equality works automatically). Alternatively, deduplicate at the formatter level with `.distinct()` to preserve raw data for other consumers.
+- **Contrast**: The `DsmDependencyExtractor` already uses `mutableSetOf<PackageDependency>()` and has a test `produces unique dependencies per class pair` — `UsageScanner` should follow the same pattern.
+- **Key file**: `UsageScanner.kt` line 34
+
+## 45. Fix `cnavDsm` HTML path resolution (Low effort, bug fix)
+
+From user feedback: when using `-Pdsm-html=dsm.html` with a relative path, the HTML file is written to (and the logged path shows) the Gradle daemon's working directory instead of the project directory. This is because `DsmTask.kt` uses `File(htmlPath)` which resolves against the JVM's current working directory — which for the Gradle daemon is typically `~/.gradle/daemon/<version>/`.
+
+- **Fix**: Change `File(htmlPath)` to `project.file(htmlPath)` in `DsmTask.kt` line 56. Gradle's `project.file()` resolves relative paths against the project directory. The Maven `DsmMojo.kt` has the same pattern but Maven mojos typically run with cwd set to the project root, so the bug is less likely there — but should be fixed to `File(project.basedir, dsmHtml)` for correctness.
+- **Key files**: `DsmTask.kt` lines 55-59, `DsmMojo.kt` lines 74-79
+
+## 46. `cnavTestHealth` — verify all test methods actually ran (High value, medium effort)
+
+From user feedback: a project had 19 silently skipped tests because test methods had non-`Unit` return types. The test framework silently ignored them — the suite looked green while tests weren't running.
+
+Rather than trying to heuristically detect "suspicious" signatures (which is fragile and framework-specific), the robust approach is **count-and-verify**: count `@Test`-annotated methods from bytecode, compare against JUnit XML results from the actual test run, and flag the delta.
+
+### Approach: bytecode expected count vs. JUnit XML actual count
+
+1. **Bytecode scan** (pre-existing infrastructure): Use ASM `visitAnnotation()` on test class directories to find all methods annotated with `@Test` (JUnit 4: `org.junit.Test`, JUnit 5: `org.junit.jupiter.api.Test`, Kotlin Test: `kotlin.test.Test`). This is the "expected" set.
+2. **JUnit XML scan** (new): Parse the test result XML files written after `test` runs. Both Gradle (`build/test-results/test/TEST-*.xml`) and Maven (`target/surefire-reports/TEST-*.xml`) use the same JUnit XML format. Each `<testcase>` element represents a method that the framework actually attempted. This is the "actual" set.
+3. **Diff**: For each test class, report methods present in bytecode but absent from XML results. These are the silently skipped tests — regardless of *why* they were skipped.
+
+### Why this is more robust than signature heuristics
+
+- Catches **any** reason for silent skipping: wrong return type, wrong parameters, framework version incompatibilities, visibility issues, misconfigured test engines, etc.
+- No need to maintain a list of "known bad patterns" per framework version
+- Works for JUnit 4, JUnit 5, Kotlin Test, and any framework that writes JUnit XML results
+- Zero false positives: if a method ran, it appears in the XML
+
+### Task design
+
+- **Question**: "Did all `@Test`-annotated methods actually execute?"
+- **Needs**: Bytecode (test class dirs) + JUnit XML results (post-test-run)
+- **Lifecycle**: `dependsOn("test")` in Gradle / `@Execute(phase = LifecyclePhase.TEST)` in Maven — runs *after* tests complete
+- **Builder**: `TestHealthAnalyzer.analyze(testClassDirs, junitXmlDir) -> TestHealthReport(expected: Int, actual: Int, missing: List<MissingTest(className, methodName)>, extras: List<...>)`
+- **Parameters**:
+  - `-Pfilter=<regex>` to scope to specific test classes
+  - `-Presults-dir=<path>` to override the JUnit XML location (defaults to convention)
+- **Output**:
+  ```
+  Test Health: 142 expected, 123 ran, 19 missing
+
+  Missing tests (found in bytecode but not in test results):
+    com.example.UserServiceTest.shouldValidateEmail
+    com.example.UserServiceTest.shouldHashPassword
+    com.example.OrderTest.shouldCalculateTotal
+    ...
+  ```
+- **Additional checks** (secondary, from bytecode only — no XML needed):
+  - Test methods missing `@Test` annotation but named `test*` (possible forgotten annotation)
+  - Test classes with no `@Test` methods (empty test class)
+  - `@Disabled`/`@Ignore` inventory for awareness (expected to be absent from XML, but worth reporting)
+
+### Implementation notes
+
+- The `ClassDetailExtractor` already extracts method signatures and return types. It needs extension with `visitAnnotation()` to detect test annotations.
+- JUnit XML parsing is straightforward — the `<testsuite>` element has `tests`/`skipped`/`failures`/`errors` counts, and each `<testcase>` has `name` + `classname`.
+- Test source set directories are already accessed by `FindInterfaceImplsTask` when `includetest=true` — same pattern applies.
+- Both Gradle and Maven write the same XML format, so one parser handles both.
+
+## 47. `cnavComplexity` — method-level fan-in/fan-out for a class (Medium value, low effort)
+
+From user feedback: the DSM shows package-level dependencies, but a "method-level fan-in/fan-out" view for a specific class would help prioritize which classes are most entangled and need extraction first. Example: `cnavComplexity -Pclass=AdminRoutes` showing "47 outgoing calls to 12 distinct classes."
+
+- **Question**: "How entangled is this class? How many distinct classes does it depend on, and how many depend on it?"
+- **Needs**: Bytecode only (reuses existing `CallGraph`)
+- **Builder**: `ClassComplexityAnalyzer.analyze(callGraph, className) -> ClassComplexity(className, fanOut: Int, fanIn: Int, distinctOutgoingClasses: Int, distinctIncomingClasses: Int, outgoingCalls: List<CallDetail>, incomingCalls: List<CallDetail>)`
+- **Parameters**: `-Pclass=<pattern>` (required), `-Pprojectonly=true`, `-Pdetail=true` (show individual calls)
+- **Output example**:
+  ```
+  AdminRoutes
+    Fan-out: 47 calls to 12 distinct classes
+    Fan-in:  8 calls from 3 distinct classes
+    Top outgoing: UserRepository (14), SessionService (9), AdminService (8), ...
+    Top incoming: Application (4), TestSetup (3), HealthCheck (1)
+  ```
+- **Overlap with item #26 (`cnavRank`)**: `cnavRank` computes PageRank + inDegree/outDegree across the whole graph. This task is focused on a single class deep-dive — complementary, not redundant. `cnavRank` answers "what's most important globally" while `cnavComplexity` answers "how tangled is this specific class."
+- **Why useful**: When planning an extraction refactoring, knowing the fan-out count and which classes are called tells you exactly what interfaces you'll need. This is the structural counterpart to the behavioral data from `cnavHotspots`.
+
 ## Future ideas (not yet planned)
 
 - **Consider just failing on first file with wrong bytecode**: The current `ScanResult<T>` partial-fail approach adds complexity across scanners, caches, tasks, and mojos. A simpler alternative: fail fast on the first unsupported bytecode file with a clear error message. Less graceful but dramatically less code.
