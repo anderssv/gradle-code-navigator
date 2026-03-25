@@ -10,8 +10,8 @@ data class ComplexityConfig(
 ) {
     companion object {
         fun parse(properties: Map<String, String?>): ComplexityConfig = ComplexityConfig(
-            classPattern = properties["class"]
-                ?: throw IllegalArgumentException("Missing required property 'class'"),
+            classPattern = properties["classname"]
+                ?: throw IllegalArgumentException("Missing required property 'classname'"),
             projectOnly = properties["projectonly"]?.toBoolean() ?: true,
             detail = properties["detail"]?.toBoolean() ?: false,
             format = OutputFormat.from(

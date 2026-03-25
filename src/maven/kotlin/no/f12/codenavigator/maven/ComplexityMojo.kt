@@ -25,8 +25,8 @@ class ComplexityMojo : AbstractMojo() {
     @Parameter(defaultValue = "\${project}", readonly = true, required = true)
     private lateinit var project: MavenProject
 
-    @Parameter(property = "class")
-    private var `class`: String? = null
+    @Parameter(property = "classname")
+    private var classname: String? = null
 
     @Parameter(property = "projectonly")
     private var projectonly: String? = null
@@ -78,7 +78,7 @@ class ComplexityMojo : AbstractMojo() {
     }
 
     private fun buildPropertyMap(): Map<String, String?> = buildMap {
-        `class`?.let { put("class", it) }
+        classname?.let { put("classname", it) }
         projectonly?.let { put("projectonly", it) }
         detail?.let { put("detail", it) }
         format?.let { put("format", it) }

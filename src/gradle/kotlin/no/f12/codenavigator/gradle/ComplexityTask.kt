@@ -23,7 +23,7 @@ abstract class ComplexityTask : DefaultTask() {
     fun showComplexity() {
         val config = ComplexityConfig.parse(
             project.buildPropertyMap(
-                propertyNames = listOf("class", "projectonly", "detail", "format", "llm"),
+                propertyNames = listOf("classname", "projectonly", "detail", "format", "llm"),
                 flagNames = emptyList(),
             ),
         )

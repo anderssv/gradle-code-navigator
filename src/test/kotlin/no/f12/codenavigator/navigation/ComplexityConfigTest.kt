@@ -10,7 +10,7 @@ class ComplexityConfigTest {
     @Test
     fun `parses all properties from map`() {
         val props = mapOf(
-            "class" to "AdminRoutes",
+            "classname" to "AdminRoutes",
             "projectonly" to "false",
             "detail" to "true",
             "format" to "json",
@@ -25,7 +25,7 @@ class ComplexityConfigTest {
     }
 
     @Test
-    fun `requires class property - throws on missing`() {
+    fun `requires classname property - throws on missing`() {
         assertFailsWith<IllegalArgumentException> {
             ComplexityConfig.parse(emptyMap())
         }
@@ -33,28 +33,28 @@ class ComplexityConfigTest {
 
     @Test
     fun `defaults projectOnly to true when absent`() {
-        val config = ComplexityConfig.parse(mapOf("class" to "Foo"))
+        val config = ComplexityConfig.parse(mapOf("classname" to "Foo"))
 
         assertEquals(true, config.projectOnly)
     }
 
     @Test
     fun `defaults detail to false when absent`() {
-        val config = ComplexityConfig.parse(mapOf("class" to "Foo"))
+        val config = ComplexityConfig.parse(mapOf("classname" to "Foo"))
 
         assertEquals(false, config.detail)
     }
 
     @Test
     fun `defaults to TEXT format`() {
-        val config = ComplexityConfig.parse(mapOf("class" to "Foo"))
+        val config = ComplexityConfig.parse(mapOf("classname" to "Foo"))
 
         assertEquals(OutputFormat.TEXT, config.format)
     }
 
     @Test
     fun `parses LLM format`() {
-        val config = ComplexityConfig.parse(mapOf("class" to "Foo", "llm" to "true"))
+        val config = ComplexityConfig.parse(mapOf("classname" to "Foo", "llm" to "true"))
 
         assertEquals(OutputFormat.LLM, config.format)
     }
