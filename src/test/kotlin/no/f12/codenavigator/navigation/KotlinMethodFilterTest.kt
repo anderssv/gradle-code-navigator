@@ -69,10 +69,19 @@ class KotlinMethodFilterTest {
         assertTrue(KotlinMethodFilter.isGenerated("hashCode-impl"))
         assertTrue(KotlinMethodFilter.isGenerated("toString-impl"))
         assertTrue(KotlinMethodFilter.isGenerated("equals-impl0"))
+        assertTrue(KotlinMethodFilter.isGenerated("constructor-impl"))
     }
 
     @Test
     fun `excludes main entry point`() {
         assertTrue(KotlinMethodFilter.isGenerated("main"))
+    }
+
+    @Test
+    fun `excludes name-mangled copy methods for inline value class parameters`() {
+        assertTrue(KotlinMethodFilter.isGenerated("copy-H3nQObg"))
+        assertTrue(KotlinMethodFilter.isGenerated("copy-H3nQObg\$default"))
+        assertTrue(KotlinMethodFilter.isGenerated("copy-abc123XY"))
+        assertTrue(KotlinMethodFilter.isGenerated("copy-abc123XY\$default"))
     }
 }
