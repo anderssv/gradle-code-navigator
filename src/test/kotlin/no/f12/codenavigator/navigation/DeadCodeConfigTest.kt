@@ -3,6 +3,7 @@ package no.f12.codenavigator.navigation
 import no.f12.codenavigator.OutputFormat
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -63,5 +64,26 @@ class DeadCodeConfigTest {
         val config = DeadCodeConfig.parse(mapOf("exclude" to "test"))
 
         assertTrue(config.exclude!!.containsMatchIn("MyTest"))
+    }
+
+    @Test
+    fun `defaults classesOnly to false when absent`() {
+        val config = DeadCodeConfig.parse(emptyMap())
+
+        assertFalse(config.classesOnly)
+    }
+
+    @Test
+    fun `parses classesOnly as true`() {
+        val config = DeadCodeConfig.parse(mapOf("classes-only" to "true"))
+
+        assertTrue(config.classesOnly)
+    }
+
+    @Test
+    fun `parses classesOnly as false`() {
+        val config = DeadCodeConfig.parse(mapOf("classes-only" to "false"))
+
+        assertFalse(config.classesOnly)
     }
 }

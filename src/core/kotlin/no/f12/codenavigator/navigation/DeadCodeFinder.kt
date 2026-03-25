@@ -16,8 +16,9 @@ object DeadCodeFinder {
 
     fun find(
         graph: CallGraph,
-        filter: Regex? = null,
-        exclude: Regex? = null,
+        filter: Regex?,
+        exclude: Regex?,
+        classesOnly: Boolean,
     ): List<DeadCode> {
         val projectClasses = graph.projectClasses()
         if (projectClasses.isEmpty()) return emptyList()
@@ -42,7 +43,7 @@ object DeadCodeFinder {
         val results = mutableListOf<DeadCode>()
 
         for (cls in projectClasses) {
-            if (cls !in calledTypes) {
+            if (cls !in calledTypes && !isGeneratedClass(cls)) {
                 results.add(
                     DeadCode(
                         className = cls,
@@ -54,16 +55,21 @@ object DeadCodeFinder {
             }
         }
 
-        for (method in projectMethods) {
-            if (method.className in calledTypes && method !in calledMethods) {
-                results.add(
-                    DeadCode(
-                        className = method.className,
-                        memberName = method.methodName,
-                        kind = DeadCodeKind.METHOD,
-                        sourceFile = graph.sourceFileOf(method.className),
+        if (!classesOnly) {
+            for (method in projectMethods) {
+                if (method.className in calledTypes &&
+                    method !in calledMethods &&
+                    !KotlinMethodFilter.isGenerated(method.methodName)
+                ) {
+                    results.add(
+                        DeadCode(
+                            className = method.className,
+                            memberName = method.methodName,
+                            kind = DeadCodeKind.METHOD,
+                            sourceFile = graph.sourceFileOf(method.className),
+                        )
                     )
-                )
+                }
             }
         }
 
@@ -72,4 +78,7 @@ object DeadCodeFinder {
             .filter { item -> exclude == null || !exclude.containsMatchIn(item.className) }
             .sortedWith(compareBy({ it.kind }, { it.className }, { it.memberName ?: "" }))
     }
+
+    private fun isGeneratedClass(className: String): Boolean =
+        '$' in className
 }

@@ -36,6 +36,9 @@ class DeadCodeMojo : AbstractMojo() {
     @Parameter(property = "exclude")
     private var exclude: String? = null
 
+    @Parameter(property = "classes-only")
+    private var classesOnly: String? = null
+
     override fun execute() {
         val classesDir = File(project.build.outputDirectory)
         if (!classesDir.exists()) {
@@ -50,7 +53,12 @@ class DeadCodeMojo : AbstractMojo() {
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { log.warn(it) }
         val graph = result.data
 
-        val dead = DeadCodeFinder.find(graph, filter = config.filter, exclude = config.exclude)
+        val dead = DeadCodeFinder.find(
+            graph = graph,
+            filter = config.filter,
+            exclude = config.exclude,
+            classesOnly = config.classesOnly,
+        )
 
         if (dead.isEmpty()) {
             println("No potential dead code found.")
@@ -70,5 +78,6 @@ class DeadCodeMojo : AbstractMojo() {
         llm?.let { put("llm", it) }
         filter?.let { put("filter", it) }
         exclude?.let { put("exclude", it) }
+        classesOnly?.let { put("classes-only", it) }
     }
 }

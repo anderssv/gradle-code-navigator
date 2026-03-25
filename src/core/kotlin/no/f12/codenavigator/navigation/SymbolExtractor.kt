@@ -22,16 +22,7 @@ data class SymbolInfo(
 
 object SymbolExtractor {
 
-    private val EXCLUDED_METHODS = setOf(
-        "<init>", "<clinit>",
-        "toString", "hashCode", "equals",
-        "copy",
-    )
-
-    private val DATA_CLASS_COMPONENT = Regex("""^component\d+$""")
     private val KOTLIN_ACCESSOR = Regex("""^(get|set|is)[A-Z]""")
-    private val LAMBDA_METHOD = Regex("""\${'$'}lambda\${'$'}""")
-    private val SYNTHETIC_PREFIX = "access$"
     private val EXCLUDED_FIELDS = setOf("INSTANCE")
 
     fun extract(classFile: File): List<SymbolInfo> {
@@ -102,12 +93,8 @@ object SymbolExtractor {
     }
 
     private fun isExcludedMethod(name: String, access: Int): Boolean {
-        if (name in EXCLUDED_METHODS) return true
-        if (name.startsWith(SYNTHETIC_PREFIX)) return true
+        if (KotlinMethodFilter.isGenerated(name)) return true
         if (access and Opcodes.ACC_SYNTHETIC != 0) return true
-        if (DATA_CLASS_COMPONENT.matches(name)) return true
-        if (name.startsWith("copy$")) return true
-        if (LAMBDA_METHOD.containsMatchIn(name)) return true
         return false
     }
 

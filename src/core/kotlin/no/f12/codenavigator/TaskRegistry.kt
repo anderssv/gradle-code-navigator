@@ -52,6 +52,7 @@ object TaskRegistry {
     private val OUTSIDE_PACKAGE = ParamDef("outside-package", "<pkg>", "Exclude callers inside this package", flag = false, defaultValue = null)
     private val FILTER = ParamDef("filter", "<regex>", "Only show results matching this regex", flag = false, defaultValue = null)
     private val EXCLUDE = ParamDef("exclude", "<regex>", "Exclude results matching this regex", flag = false, defaultValue = null)
+    private val CLASSES_ONLY = ParamDef("classes-only", "true", "Show only unreferenced classes, skip dead methods", flag = false, defaultValue = null)
     private val CLASS = ParamDef("classname", "<pattern>", "Class name regex to analyze", flag = false, defaultValue = null)
     private val DETAIL = ParamDef("detail", "true", "Show individual call details", flag = false, defaultValue = null)
     private val MIN_SHARED_REVS = ParamDef("min-shared-revs", "<N>", "Min shared commits", flag = false, defaultValue = "5")
@@ -142,7 +143,7 @@ object TaskRegistry {
     val DEAD = TaskDef(
         goal = "dead",
         description = "Detect dead code (unreferenced classes and methods)",
-        params = FORMAT_PARAMS + listOf(FILTER, EXCLUDE),
+        params = FORMAT_PARAMS + listOf(FILTER, EXCLUDE, CLASSES_ONLY),
         requiresCompilation = true,
     )
 

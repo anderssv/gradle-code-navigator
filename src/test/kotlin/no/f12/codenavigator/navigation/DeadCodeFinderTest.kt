@@ -10,9 +10,7 @@ class DeadCodeFinderTest {
     fun `empty call graph produces empty result`() {
         val graph = callGraph()
 
-        val dead = DeadCodeFinder.find(graph)
-
-        assertTrue(dead.isEmpty())
+        val dead = DeadCodeFinder.find(graph, filter = null, exclude = null, classesOnly = false)
     }
     @Test
     fun `single class with no callers is dead`() {
@@ -21,7 +19,7 @@ class DeadCodeFinderTest {
             projectClasses = setOf("com.example.Lonely"),
         )
 
-        val dead = DeadCodeFinder.find(graph)
+        val dead = DeadCodeFinder.find(graph, filter = null, exclude = null, classesOnly = false)
 
         val deadClasses = dead.filter { it.kind == DeadCodeKind.CLASS }
         assertEquals(1, deadClasses.size)
@@ -34,7 +32,7 @@ class DeadCodeFinderTest {
             projectClasses = setOf("com.example.Caller", "com.example.Service"),
         )
 
-        val dead = DeadCodeFinder.find(graph)
+        val dead = DeadCodeFinder.find(graph, filter = null, exclude = null, classesOnly = false)
 
         val deadClassNames = dead.filter { it.kind == DeadCodeKind.CLASS }.map { it.className }
         assertTrue("com.example.Service" !in deadClassNames, "Service is called by Caller so should not be dead")
@@ -48,7 +46,7 @@ class DeadCodeFinderTest {
             projectClasses = setOf("com.example.Orphan", "com.example.Service", "com.example.Controller"),
         )
 
-        val dead = DeadCodeFinder.find(graph)
+        val dead = DeadCodeFinder.find(graph, filter = null, exclude = null, classesOnly = false)
 
         val deadClassNames = dead.filter { it.kind == DeadCodeKind.CLASS }.map { it.className }
         assertTrue("com.example.Orphan" in deadClassNames)
@@ -62,7 +60,7 @@ class DeadCodeFinderTest {
             projectClasses = setOf("com.example.Recursive"),
         )
 
-        val dead = DeadCodeFinder.find(graph)
+        val dead = DeadCodeFinder.find(graph, filter = null, exclude = null, classesOnly = false)
 
         val deadClassNames = dead.filter { it.kind == DeadCodeKind.CLASS }.map { it.className }
         assertTrue("com.example.Recursive" in deadClassNames, "Self-referencing class with no external callers is dead")
@@ -75,7 +73,7 @@ class DeadCodeFinderTest {
             projectClasses = setOf("com.example.Controller", "com.example.Service", "com.example.Repo"),
         )
 
-        val dead = DeadCodeFinder.find(graph)
+        val dead = DeadCodeFinder.find(graph, filter = null, exclude = null, classesOnly = false)
 
         val deadMethods = dead.filter { it.kind == DeadCodeKind.METHOD }
         val deadMethodNames = deadMethods.map { "${it.className}.${it.memberName}" }
@@ -90,7 +88,7 @@ class DeadCodeFinderTest {
             projectClasses = setOf("com.example.Controller", "com.example.Service"),
         )
 
-        val dead = DeadCodeFinder.find(graph)
+        val dead = DeadCodeFinder.find(graph, filter = null, exclude = null, classesOnly = false)
 
         val deadMethods = dead.filter { it.kind == DeadCodeKind.METHOD }
         assertTrue(deadMethods.isEmpty(), "Both process() and validate() are called by Controller, no dead methods")
@@ -103,7 +101,7 @@ class DeadCodeFinderTest {
             projectClasses = setOf("com.example.OrphanService", "com.example.OrphanUtil", "com.example.Repo"),
         )
 
-        val dead = DeadCodeFinder.find(graph, filter = Regex("Service"))
+        val dead = DeadCodeFinder.find(graph, filter = Regex("Service"), exclude = null, classesOnly = false)
 
         val deadClassNames = dead.map { it.className }
         assertTrue("com.example.OrphanService" in deadClassNames)
@@ -117,7 +115,7 @@ class DeadCodeFinderTest {
             projectClasses = setOf("com.example.Main", "com.example.TestHelper", "com.example.Service"),
         )
 
-        val dead = DeadCodeFinder.find(graph, exclude = Regex("Main|Test"))
+        val dead = DeadCodeFinder.find(graph, filter = null, exclude = Regex("Main|Test"), classesOnly = false)
 
         val deadClassNames = dead.map { it.className }
         assertTrue("com.example.Main" !in deadClassNames, "Main excluded by regex")
@@ -133,7 +131,7 @@ class DeadCodeFinderTest {
             projectClasses = setOf("com.example.Controller", "com.example.Service", "com.example.Repo", "com.example.Zombie"),
         )
 
-        val dead = DeadCodeFinder.find(graph)
+        val dead = DeadCodeFinder.find(graph, filter = null, exclude = null, classesOnly = false)
 
         val classes = dead.filter { it.kind == DeadCodeKind.CLASS }
         val methods = dead.filter { it.kind == DeadCodeKind.METHOD }
@@ -150,12 +148,83 @@ class DeadCodeFinderTest {
             projectClasses = setOf("com.example.Controller", "com.example.Service"),
         )
 
-        val dead = DeadCodeFinder.find(graph)
+        val dead = DeadCodeFinder.find(graph, filter = null, exclude = null, classesOnly = false)
 
         val deadMethods = dead.filter { it.kind == DeadCodeKind.METHOD }
         val deadMethodNames = deadMethods.map { "${it.className}.${it.memberName}" }
         assertTrue("com.example.Service.helper" in deadMethodNames, "helper() is only called within Service itself")
         assertTrue("com.example.Service.process" !in deadMethodNames, "process() is called by Controller")
+    }
+
+    @Test
+    fun `filters out Kotlin generated methods from dead method results`() {
+        val graph = callGraph(
+            method("com.example.Controller", "handle") to method("com.example.Service", "process"),
+            method("com.example.Service", "copy") to method("com.example.Repo", "save"),
+            method("com.example.Service", "hashCode") to method("com.example.Repo", "save"),
+            method("com.example.Service", "equals") to method("com.example.Repo", "save"),
+            method("com.example.Service", "toString") to method("com.example.Repo", "save"),
+            method("com.example.Service", "component1") to method("com.example.Repo", "save"),
+            method("com.example.Service", "copy\$default") to method("com.example.Repo", "save"),
+            method("com.example.Service", "access\$getDb\$p") to method("com.example.Repo", "save"),
+            method("com.example.Service", "<init>") to method("com.example.Repo", "save"),
+            method("com.example.Service", "<clinit>") to method("com.example.Repo", "save"),
+            method("com.example.Service", "unusedReal") to method("com.example.Repo", "save"),
+            projectClasses = setOf("com.example.Controller", "com.example.Service", "com.example.Repo"),
+        )
+
+        val dead = DeadCodeFinder.find(graph, filter = null, exclude = null, classesOnly = false)
+
+        val deadMethods = dead.filter { it.kind == DeadCodeKind.METHOD }
+        val deadMethodNames = deadMethods.map { it.memberName }
+        assertTrue("unusedReal" in deadMethodNames, "Real unused method should be reported")
+        assertTrue("copy" !in deadMethodNames, "Generated copy should be filtered")
+        assertTrue("hashCode" !in deadMethodNames, "Generated hashCode should be filtered")
+        assertTrue("equals" !in deadMethodNames, "Generated equals should be filtered")
+        assertTrue("toString" !in deadMethodNames, "Generated toString should be filtered")
+        assertTrue("component1" !in deadMethodNames, "Generated componentN should be filtered")
+        assertTrue("copy\$default" !in deadMethodNames, "Generated copy\$default should be filtered")
+        assertTrue("access\$getDb\$p" !in deadMethodNames, "Generated access\$ should be filtered")
+        assertTrue("<init>" !in deadMethodNames, "Constructor should be filtered")
+        assertTrue("<clinit>" !in deadMethodNames, "Static initializer should be filtered")
+    }
+
+    @Test
+    fun `filters out inner classes with dollar sign from dead class results`() {
+        val graph = callGraph(
+            method("com.example.Service", "process") to method("com.example.Repo", "save"),
+            method("com.example.Service\$Companion", "create") to method("com.example.Repo", "save"),
+            method("com.example.Service\$process\$1", "invokeSuspend") to method("com.example.Repo", "save"),
+            projectClasses = setOf(
+                "com.example.Service",
+                "com.example.Service\$Companion",
+                "com.example.Service\$process\$1",
+                "com.example.Repo",
+            ),
+        )
+
+        val dead = DeadCodeFinder.find(graph, filter = null, exclude = null, classesOnly = false)
+
+        val deadClasses = dead.filter { it.kind == DeadCodeKind.CLASS }.map { it.className }
+        assertTrue("com.example.Service" in deadClasses, "Service has no callers")
+        assertTrue("com.example.Service\$Companion" !in deadClasses, "Companion inner class should be filtered")
+        assertTrue("com.example.Service\$process\$1" !in deadClasses, "Coroutine inner class should be filtered")
+    }
+
+    @Test
+    fun `classesOnly suppresses all dead methods`() {
+        val graph = callGraph(
+            method("com.example.Controller", "handle") to method("com.example.Service", "process"),
+            method("com.example.Service", "unused") to method("com.example.Repo", "save"),
+            projectClasses = setOf("com.example.Controller", "com.example.Service", "com.example.Repo"),
+        )
+
+        val dead = DeadCodeFinder.find(graph, filter = null, exclude = null, classesOnly = true)
+
+        val deadMethods = dead.filter { it.kind == DeadCodeKind.METHOD }
+        val deadClasses = dead.filter { it.kind == DeadCodeKind.CLASS }
+        assertTrue(deadMethods.isEmpty(), "classesOnly should suppress all dead methods")
+        assertTrue(deadClasses.isNotEmpty(), "classesOnly should still report dead classes")
     }
 
     private fun callGraph(

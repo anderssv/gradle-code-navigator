@@ -23,7 +23,7 @@ abstract class DeadCodeTask : DefaultTask() {
     fun showDeadCode() {
         val config = DeadCodeConfig.parse(
             project.buildPropertyMap(
-                propertyNames = listOf("filter", "exclude", "format", "llm"),
+                propertyNames = listOf("filter", "exclude", "classes-only", "format", "llm"),
                 flagNames = emptyList(),
             ),
         )
@@ -38,7 +38,12 @@ abstract class DeadCodeTask : DefaultTask() {
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { logger.warn(it) }
         val graph = result.data
 
-        val dead = DeadCodeFinder.find(graph, filter = config.filter, exclude = config.exclude)
+        val dead = DeadCodeFinder.find(
+            graph = graph,
+            filter = config.filter,
+            exclude = config.exclude,
+            classesOnly = config.classesOnly,
+        )
 
         if (dead.isEmpty()) {
             logger.lifecycle("No potential dead code found.")
