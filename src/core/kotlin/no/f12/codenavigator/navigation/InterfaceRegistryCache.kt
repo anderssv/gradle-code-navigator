@@ -28,13 +28,13 @@ object InterfaceRegistryCache {
     }
 
     fun read(cacheFile: File): InterfaceRegistry {
-        val map = mutableMapOf<String, MutableList<ImplementorInfo>>()
+        val map = mutableMapOf<ClassName, MutableList<ImplementorInfo>>()
 
         cacheFile.useLines { lines ->
             lines.filter { it.isNotBlank() }.forEach { line ->
                 val parts = line.split(FIELD_SEPARATOR)
-                val interfaceName = parts[0]
-                val impl = ImplementorInfo(parts[1], parts[2])
+                val interfaceName = ClassName(parts[0])
+                val impl = ImplementorInfo(ClassName(parts[1]), parts[2])
                 map.getOrPut(interfaceName) { mutableListOf() }.add(impl)
             }
         }

@@ -278,14 +278,14 @@ class JsonFormatterTest {
     fun `interface with implementors produces nested structure`() {
         val registry = InterfaceRegistry(
             mapOf(
-                "com.example.Repository" to listOf(
-                    ImplementorInfo("com.example.SqlRepo", "SqlRepo.kt"),
-                    ImplementorInfo("com.example.FakeRepo", "FakeRepo.kt"),
+                ClassName("com.example.Repository") to listOf(
+                    ImplementorInfo(ClassName("com.example.SqlRepo"), "SqlRepo.kt"),
+                    ImplementorInfo(ClassName("com.example.FakeRepo"), "FakeRepo.kt"),
                 ),
             ),
         )
 
-        val result = JsonFormatter.formatInterfaces(registry, listOf("com.example.Repository"))
+        val result = JsonFormatter.formatInterfaces(registry, listOf(ClassName("com.example.Repository")))
 
         assertEquals(
             """[{"interface":"com.example.Repository","implementors":[""" +

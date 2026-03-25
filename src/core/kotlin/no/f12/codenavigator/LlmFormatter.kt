@@ -11,6 +11,7 @@ import no.f12.codenavigator.navigation.ClassComplexity
 import no.f12.codenavigator.navigation.CycleDetail
 import no.f12.codenavigator.navigation.ClassDetail
 import no.f12.codenavigator.navigation.ClassInfo
+import no.f12.codenavigator.navigation.ClassName
 import no.f12.codenavigator.navigation.InterfaceRegistry
 import no.f12.codenavigator.navigation.PackageDependencies
 import no.f12.codenavigator.navigation.SymbolInfo
@@ -40,10 +41,10 @@ object LlmFormatter {
             }
         }
 
-    fun formatInterfaces(registry: InterfaceRegistry, interfaceNames: List<String>): String =
+    fun formatInterfaces(registry: InterfaceRegistry, interfaceNames: List<ClassName>): String =
         interfaceNames.sorted().joinToString("\n") { name ->
             val impls = registry.implementorsOf(name).sortedBy { it.className }
-            "$name: ${impls.joinToString(",") { "${it.className}(${it.sourceFile})" }}"
+            "${name.value}: ${impls.joinToString(",") { "${it.className.value}(${it.sourceFile})" }}"
         }
 
     fun renderCallTrees(trees: List<CallTreeNode>, direction: CallDirection): String = buildString {

@@ -25,9 +25,9 @@ class InterfaceRegistryTest {
 
         val registry = InterfaceRegistry.build(listOf(tempDir.toFile())).data
 
-        val implementors = registry.implementorsOf("com.example.Repository")
+        val implementors = registry.implementorsOf(ClassName("com.example.Repository"))
         assertEquals(1, implementors.size)
-        assertEquals("com.example.UserRepository", implementors.first().className)
+        assertEquals("com.example.UserRepository", implementors.first().className.value)
         assertEquals("UserRepository.kt", implementors.first().sourceFile)
     }
 
@@ -38,7 +38,7 @@ class InterfaceRegistryTest {
 
         val registry = InterfaceRegistry.build(listOf(tempDir.toFile())).data
 
-        assertTrue(registry.implementorsOf("com.example.Repository").isEmpty())
+        assertTrue(registry.implementorsOf(ClassName("com.example.Repository")).isEmpty())
     }
 
     // [TEST-DONE] Returns empty set for interface with no implementors
@@ -58,7 +58,7 @@ class InterfaceRegistryTest {
 
         val registry = InterfaceRegistry.build(listOf(tempDir.toFile())).data
 
-        val names = registry.implementorsOf("com.example.Repository").map { it.className }
+        val names = registry.implementorsOf(ClassName("com.example.Repository")).map { it.className.value }
         assertEquals(listOf("com.example.OrderRepo", "com.example.UserRepo"), names)
     }
 
@@ -74,9 +74,9 @@ class InterfaceRegistryTest {
 
         val registry = InterfaceRegistry.build(listOf(tempDir.toFile())).data
 
-        assertEquals(1, registry.implementorsOf("com.example.Readable").size)
-        assertEquals(1, registry.implementorsOf("com.example.Writable").size)
-        assertEquals("com.example.FullRepo", registry.implementorsOf("com.example.Readable").first().className)
+        assertEquals(1, registry.implementorsOf(ClassName("com.example.Readable")).size)
+        assertEquals(1, registry.implementorsOf(ClassName("com.example.Writable")).size)
+        assertEquals("com.example.FullRepo", registry.implementorsOf(ClassName("com.example.Readable")).first().className.value)
     }
 
     // [TEST-DONE] Class implementing multiple interfaces appears under each
@@ -97,7 +97,7 @@ class InterfaceRegistryTest {
         val registry = InterfaceRegistry.build(listOf(tempDir.toFile())).data
 
         val matches = registry.findInterfaces("repo")
-        assertEquals(listOf("com.example.Repository"), matches)
+        assertEquals(listOf("com.example.Repository"), matches.map { it.value })
     }
 
     // [TEST-DONE] findInterfaces matches pattern case-insensitively
@@ -122,7 +122,7 @@ class InterfaceRegistryTest {
 
         val registry = InterfaceRegistry.build(listOf(tempDir.toFile())).data
 
-        val names = registry.implementorsOf("com.example.Callback").map { it.className }
+        val names = registry.implementorsOf(ClassName("com.example.Callback")).map { it.className.value }
         assertEquals(listOf("com.example.RealImpl"), names)
     }
 
@@ -136,7 +136,7 @@ class InterfaceRegistryTest {
 
         val registry = InterfaceRegistry.build(listOf(tempDir.toFile())).data
 
-        val names = registry.implementorsOf("com.example.Animal").map { it.className }
+        val names = registry.implementorsOf(ClassName("com.example.Animal")).map { it.className.value }
         assertEquals(listOf("com.example.Apple", "com.example.Mango", "com.example.Zebra"), names)
     }
 
@@ -162,7 +162,7 @@ class InterfaceRegistryTest {
 
         val registry = InterfaceRegistry.build(listOf(mainDir, testDir)).data
 
-        val names = registry.implementorsOf("com.example.Repository").map { it.className }
+        val names = registry.implementorsOf(ClassName("com.example.Repository")).map { it.className.value }
         assertEquals(listOf("com.example.FakeRepo", "com.example.RealRepo"), names)
     }
 

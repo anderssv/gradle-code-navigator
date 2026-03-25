@@ -11,6 +11,7 @@ import no.f12.codenavigator.navigation.CallTreeBuilder
 import no.f12.codenavigator.navigation.CallTreeNode
 import no.f12.codenavigator.navigation.ClassDetail
 import no.f12.codenavigator.navigation.ClassInfo
+import no.f12.codenavigator.navigation.ClassName
 import no.f12.codenavigator.navigation.InterfaceRegistry
 import no.f12.codenavigator.navigation.MethodRef
 import no.f12.codenavigator.navigation.PackageDependencies
@@ -82,13 +83,13 @@ object JsonFormatter {
     fun renderCallTrees(trees: List<CallTreeNode>): String =
         jsonArray(trees) { node -> renderCallNode(node) }
 
-    fun formatInterfaces(registry: InterfaceRegistry, interfaceNames: List<String>): String =
+    fun formatInterfaces(registry: InterfaceRegistry, interfaceNames: List<ClassName>): String =
         jsonArray(interfaceNames.sorted()) { name ->
             val implementors = registry.implementorsOf(name)
             jsonObject(
-                "interface" to name,
+                "interface" to name.value,
                 "implementors" to JsonRaw(jsonArray(implementors.sortedBy { it.className }) { impl ->
-                    jsonObject("className" to impl.className, "sourceFile" to impl.sourceFile)
+                    jsonObject("className" to impl.className.value, "sourceFile" to impl.sourceFile)
                 }),
             )
         }

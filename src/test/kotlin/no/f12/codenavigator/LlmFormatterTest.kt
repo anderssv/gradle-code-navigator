@@ -104,13 +104,13 @@ class LlmFormatterTest {
     @Test
     fun `formats interfaces compactly`() {
         val registry = InterfaceRegistry(mapOf(
-            "com.example.Repository" to listOf(
-                ImplementorInfo("com.example.SqlRepo", "SqlRepo.kt"),
-                ImplementorInfo("com.example.MemRepo", "MemRepo.kt"),
+            ClassName("com.example.Repository") to listOf(
+                ImplementorInfo(ClassName("com.example.SqlRepo"), "SqlRepo.kt"),
+                ImplementorInfo(ClassName("com.example.MemRepo"), "MemRepo.kt"),
             )
         ))
 
-        val result = LlmFormatter.formatInterfaces(registry, listOf("com.example.Repository"))
+        val result = LlmFormatter.formatInterfaces(registry, listOf(ClassName("com.example.Repository")))
 
         assertEquals("com.example.Repository: com.example.MemRepo(MemRepo.kt),com.example.SqlRepo(SqlRepo.kt)", result)
     }

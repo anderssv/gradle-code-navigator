@@ -40,12 +40,12 @@ class InterfaceRegistryCacheTest {
     fun `writes and reads back registry with implementors`() {
         val registry = InterfaceRegistry(
             mapOf(
-                "com.example.Repository" to listOf(
-                    ImplementorInfo("com.example.JpaRepository", "JpaRepository.kt"),
-                    ImplementorInfo("com.example.InMemoryRepository", "InMemoryRepository.kt"),
+                ClassName("com.example.Repository") to listOf(
+                    ImplementorInfo(ClassName("com.example.JpaRepository"), "JpaRepository.kt"),
+                    ImplementorInfo(ClassName("com.example.InMemoryRepository"), "InMemoryRepository.kt"),
                 ),
-                "com.example.Service" to listOf(
-                    ImplementorInfo("com.example.UserService", "UserService.kt"),
+                ClassName("com.example.Service") to listOf(
+                    ImplementorInfo(ClassName("com.example.UserService"), "UserService.kt"),
                 ),
             ),
         )
@@ -53,23 +53,23 @@ class InterfaceRegistryCacheTest {
         InterfaceRegistryCache.write(cacheFile, registry)
         val result = InterfaceRegistryCache.read(cacheFile)
 
-        val repoImpls = result.implementorsOf("com.example.Repository")
+        val repoImpls = result.implementorsOf(ClassName("com.example.Repository"))
         assertEquals(2, repoImpls.size)
-        assertEquals("com.example.JpaRepository", repoImpls[0].className)
+        assertEquals("com.example.JpaRepository", repoImpls[0].className.value)
         assertEquals("JpaRepository.kt", repoImpls[0].sourceFile)
-        assertEquals("com.example.InMemoryRepository", repoImpls[1].className)
+        assertEquals("com.example.InMemoryRepository", repoImpls[1].className.value)
 
-        val serviceImpls = result.implementorsOf("com.example.Service")
+        val serviceImpls = result.implementorsOf(ClassName("com.example.Service"))
         assertEquals(1, serviceImpls.size)
-        assertEquals("com.example.UserService", serviceImpls[0].className)
+        assertEquals("com.example.UserService", serviceImpls[0].className.value)
     }
 
     @Test
     fun `findInterfaces works on deserialized registry`() {
         val registry = InterfaceRegistry(
             mapOf(
-                "com.example.Repository" to listOf(
-                    ImplementorInfo("com.example.JpaRepository", "JpaRepository.kt"),
+                ClassName("com.example.Repository") to listOf(
+                    ImplementorInfo(ClassName("com.example.JpaRepository"), "JpaRepository.kt"),
                 ),
             ),
         )
@@ -79,7 +79,7 @@ class InterfaceRegistryCacheTest {
 
         val found = result.findInterfaces("Repository")
         assertEquals(1, found.size)
-        assertEquals("com.example.Repository", found[0])
+        assertEquals("com.example.Repository", found[0].value)
     }
 
     @Test
