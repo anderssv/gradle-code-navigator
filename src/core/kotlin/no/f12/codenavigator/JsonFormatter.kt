@@ -17,6 +17,7 @@ import no.f12.codenavigator.navigation.PackageDependencies
 import no.f12.codenavigator.navigation.SymbolInfo
 import no.f12.codenavigator.navigation.DsmMatrix
 import no.f12.codenavigator.navigation.RankedType
+import no.f12.codenavigator.navigation.ClassComplexity
 import no.f12.codenavigator.navigation.DeadCode
 import no.f12.codenavigator.navigation.UsageSite
 
@@ -228,6 +229,24 @@ object JsonFormatter {
                 "memberName" to d.memberName,
                 "kind" to d.kind.name.lowercase(),
                 "sourceFile" to d.sourceFile,
+            )
+        }
+
+    fun formatComplexity(results: List<ClassComplexity>): String =
+        jsonArray(results) { c ->
+            jsonObject(
+                "className" to c.className,
+                "sourceFile" to c.sourceFile,
+                "fanOut" to c.fanOut,
+                "fanIn" to c.fanIn,
+                "distinctOutgoingClasses" to c.distinctOutgoingClasses,
+                "distinctIncomingClasses" to c.distinctIncomingClasses,
+                "outgoingByClass" to JsonRaw(jsonArray(c.outgoingByClass) { (cls, count) ->
+                    jsonObject("className" to cls, "count" to count)
+                }),
+                "incomingByClass" to JsonRaw(jsonArray(c.incomingByClass) { (cls, count) ->
+                    jsonObject("className" to cls, "count" to count)
+                }),
             )
         }
 

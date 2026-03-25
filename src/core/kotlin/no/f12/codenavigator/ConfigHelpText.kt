@@ -90,6 +90,8 @@ object ConfigHelpText {
 
         val deadParams = collectTaskParams(TaskRegistry.DEAD, globalParamNames)
 
+        val complexityParams = collectTaskParams(TaskRegistry.COMPLEXITY, globalParamNames)
+
         val gitTasks = listOf(
             TaskRegistry.HOTSPOTS,
             TaskRegistry.CHURN,
@@ -104,6 +106,7 @@ object ConfigHelpText {
             Section("Type Ranking", rankParams),
             Section("DSM (Dependency Structure Matrix)", dsmParams),
             Section("Dead Code Detection", deadParams),
+            Section("Class Complexity", complexityParams),
             Section("Git History Analysis", gitParams),
         )
     }

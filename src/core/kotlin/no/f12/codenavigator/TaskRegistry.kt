@@ -52,6 +52,8 @@ object TaskRegistry {
     private val OUTSIDE_PACKAGE = ParamDef("outside-package", "<pkg>", "Exclude callers inside this package", flag = false, defaultValue = null)
     private val FILTER = ParamDef("filter", "<regex>", "Only show results matching this regex", flag = false, defaultValue = null)
     private val EXCLUDE = ParamDef("exclude", "<regex>", "Exclude results matching this regex", flag = false, defaultValue = null)
+    private val CLASS = ParamDef("class", "<pattern>", "Class name regex to analyze", flag = false, defaultValue = null)
+    private val DETAIL = ParamDef("detail", "true", "Show individual call details", flag = false, defaultValue = null)
     private val MIN_SHARED_REVS = ParamDef("min-shared-revs", "<N>", "Min shared commits", flag = false, defaultValue = "5")
     private val MIN_COUPLING = ParamDef("min-coupling", "<N>", "Min coupling degree %", flag = false, defaultValue = "30")
     private val MAX_CHANGESET_SIZE = ParamDef("max-changeset-size", "<N>", "Skip commits touching more files", flag = false, defaultValue = "30")
@@ -179,6 +181,13 @@ object TaskRegistry {
         requiresCompilation = false,
     )
 
+    val COMPLEXITY = TaskDef(
+        goal = "complexity",
+        description = "Show fan-in/fan-out complexity per class",
+        params = FORMAT_PARAMS + listOf(CLASS, PROJECTONLY, DETAIL),
+        requiresCompilation = true,
+    )
+
     val HELP = TaskDef(
         goal = "help",
         description = "Show help text with available tasks",
@@ -213,6 +222,7 @@ object TaskRegistry {
         FIND_USAGES,
         RANK,
         DEAD,
+        COMPLEXITY,
         HOTSPOTS,
         CHURN,
         CODE_AGE,

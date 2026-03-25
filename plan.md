@@ -272,25 +272,6 @@ Rather than trying to heuristically detect "suspicious" signatures (which is fra
 - Test source set directories are already accessed by `FindInterfaceImplsTask` when `includetest=true` — same pattern applies.
 - Both Gradle and Maven write the same XML format, so one parser handles both.
 
-## 47. `cnavComplexity` — method-level fan-in/fan-out for a class (Medium value, low effort)
-
-From user feedback: the DSM shows package-level dependencies, but a "method-level fan-in/fan-out" view for a specific class would help prioritize which classes are most entangled and need extraction first. Example: `cnavComplexity -Pclass=AdminRoutes` showing "47 outgoing calls to 12 distinct classes."
-
-- **Question**: "How entangled is this class? How many distinct classes does it depend on, and how many depend on it?"
-- **Needs**: Bytecode only (reuses existing `CallGraph`)
-- **Builder**: `ClassComplexityAnalyzer.analyze(callGraph, className) -> ClassComplexity(className, fanOut: Int, fanIn: Int, distinctOutgoingClasses: Int, distinctIncomingClasses: Int, outgoingCalls: List<CallDetail>, incomingCalls: List<CallDetail>)`
-- **Parameters**: `-Pclass=<pattern>` (required), `-Pprojectonly=true`, `-Pdetail=true` (show individual calls)
-- **Output example**:
-  ```
-  AdminRoutes
-    Fan-out: 47 calls to 12 distinct classes
-    Fan-in:  8 calls from 3 distinct classes
-    Top outgoing: UserRepository (14), SessionService (9), AdminService (8), ...
-    Top incoming: Application (4), TestSetup (3), HealthCheck (1)
-  ```
-- **Overlap with item #26 (`cnavRank`)**: `cnavRank` computes PageRank + inDegree/outDegree across the whole graph. This task is focused on a single class deep-dive — complementary, not redundant. `cnavRank` answers "what's most important globally" while `cnavComplexity` answers "how tangled is this specific class."
-- **Why useful**: When planning an extraction refactoring, knowing the fan-out count and which classes are called tells you exactly what interfaces you'll need. This is the structural counterpart to the behavioral data from `cnavHotspots`.
-
 ## 49. `cnavWhyDepends` — dependency edge explanation (High value, medium effort)
 
 From user feedback: the DSM tells you package A depends on package B, but not *why*. To break a cycle you need to know the specific fields, method parameters, return types, and local variable types that create the dependency. Currently this requires manual grepping.

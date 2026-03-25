@@ -7,6 +7,7 @@ import no.f12.codenavigator.analysis.Hotspot
 import no.f12.codenavigator.analysis.ModuleAuthors
 import no.f12.codenavigator.navigation.CallDirection
 import no.f12.codenavigator.navigation.CallTreeNode
+import no.f12.codenavigator.navigation.ClassComplexity
 import no.f12.codenavigator.navigation.ClassDetail
 import no.f12.codenavigator.navigation.ClassInfo
 import no.f12.codenavigator.navigation.InterfaceRegistry
@@ -87,6 +88,15 @@ object LlmFormatter {
         dead.joinToString("\n") { d ->
             val name = if (d.memberName != null) "${d.className}.${d.memberName}" else d.className
             "$name ${d.kind.name} ${d.sourceFile}"
+        }
+
+    fun formatComplexity(results: List<ClassComplexity>): String =
+        results.joinToString("\n") { c ->
+            val outgoing = if (c.outgoingByClass.isEmpty()) "none"
+            else c.outgoingByClass.joinToString(",") { "${it.first}(${it.second})" }
+            val incoming = if (c.incomingByClass.isEmpty()) "none"
+            else c.incomingByClass.joinToString(",") { "${it.first}(${it.second})" }
+            "${c.className} out=${c.fanOut}/${c.distinctOutgoingClasses} in=${c.fanIn}/${c.distinctIncomingClasses} outgoing:[$outgoing] incoming:[$incoming]"
         }
 
     fun formatDsm(matrix: DsmMatrix): String = buildString {

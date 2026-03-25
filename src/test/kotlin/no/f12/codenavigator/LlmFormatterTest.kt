@@ -17,6 +17,7 @@ import no.f12.codenavigator.navigation.SymbolInfo
 import no.f12.codenavigator.navigation.SymbolKind
 import no.f12.codenavigator.navigation.DsmMatrix
 import no.f12.codenavigator.navigation.RankedType
+import no.f12.codenavigator.navigation.ClassComplexity
 import no.f12.codenavigator.navigation.DeadCode
 import no.f12.codenavigator.navigation.DeadCodeKind
 import kotlin.test.Test
@@ -288,6 +289,36 @@ class LlmFormatterTest {
 
         assertEquals(
             "com.example.Orphan CLASS Orphan.kt\ncom.example.Service.unused METHOD Service.kt",
+            result,
+        )
+    }
+
+    // === Complexity formatting ===
+
+    @Test
+    fun `empty complexity list returns empty string`() {
+        assertEquals("", LlmFormatter.formatComplexity(emptyList()))
+    }
+
+    @Test
+    fun `formats complexity compactly`() {
+        val results = listOf(
+            ClassComplexity(
+                className = "com.example.Service",
+                sourceFile = "Service.kt",
+                fanOut = 5,
+                fanIn = 3,
+                distinctOutgoingClasses = 2,
+                distinctIncomingClasses = 1,
+                outgoingByClass = listOf("com.example.Repo" to 3, "com.example.Cache" to 2),
+                incomingByClass = listOf("com.example.Controller" to 3),
+            ),
+        )
+
+        val result = LlmFormatter.formatComplexity(results)
+
+        assertEquals(
+            "com.example.Service out=5/2 in=3/1 outgoing:[com.example.Repo(3),com.example.Cache(2)] incoming:[com.example.Controller(3)]",
             result,
         )
     }

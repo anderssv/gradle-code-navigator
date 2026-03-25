@@ -82,6 +82,12 @@ class CodeNavigatorPlugin : Plugin<Project> {
             dependsOn("classes")
         }
 
+        project.tasks.register("cnavComplexity", ComplexityTask::class.java) {
+            description = "Shows fan-in/fan-out complexity per class. Usage: -Pclass=<pattern> [-Pprojectonly=true] [-Pdetail=true]"
+            group = "code-navigator"
+            dependsOn("classes")
+        }
+
         project.tasks.register("cnavHelp", CodeNavigatorHelpTask::class.java) {
             description = "Shows available code-navigator tasks and their usage"
             group = "code-navigator"

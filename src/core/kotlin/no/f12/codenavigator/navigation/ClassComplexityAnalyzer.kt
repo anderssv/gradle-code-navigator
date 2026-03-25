@@ -1,0 +1,72 @@
+package no.f12.codenavigator.navigation
+
+data class ClassComplexity(
+    val className: String,
+    val sourceFile: String,
+    val fanOut: Int,
+    val fanIn: Int,
+    val distinctOutgoingClasses: Int,
+    val distinctIncomingClasses: Int,
+    val outgoingByClass: List<Pair<String, Int>>,
+    val incomingByClass: List<Pair<String, Int>>,
+)
+
+object ClassComplexityAnalyzer {
+    fun analyze(
+        graph: CallGraph,
+        classPattern: String,
+        projectOnly: Boolean = true,
+    ): List<ClassComplexity> {
+        val regex = Regex(classPattern)
+        val projectClasses = graph.projectClasses()
+        val matchingClasses = projectClasses.filter { regex.containsMatchIn(it) }
+
+        return matchingClasses.map { className ->
+            analyzeClass(graph, className, projectOnly, projectClasses)
+        }
+    }
+
+    private fun analyzeClass(
+        graph: CallGraph,
+        className: String,
+        projectOnly: Boolean,
+        projectClasses: Set<String>,
+    ): ClassComplexity {
+        val outgoing = mutableListOf<Pair<String, String>>()
+        val incoming = mutableListOf<Pair<String, String>>()
+
+        graph.forEachEdge { caller, callee ->
+            if (caller.className == className && callee.className != className) {
+                if (!projectOnly || callee.className in projectClasses) {
+                    outgoing.add(callee.className to callee.methodName)
+                }
+            }
+            if (callee.className == className && caller.className != className) {
+                if (!projectOnly || caller.className in projectClasses) {
+                    incoming.add(caller.className to caller.methodName)
+                }
+            }
+        }
+
+        val outgoingByClass = outgoing
+            .groupBy { it.first }
+            .map { (cls, calls) -> cls to calls.size }
+            .sortedByDescending { it.second }
+
+        val incomingByClass = incoming
+            .groupBy { it.first }
+            .map { (cls, calls) -> cls to calls.size }
+            .sortedByDescending { it.second }
+
+        return ClassComplexity(
+            className = className,
+            sourceFile = graph.sourceFileOf(className),
+            fanOut = outgoing.size,
+            fanIn = incoming.size,
+            distinctOutgoingClasses = outgoingByClass.size,
+            distinctIncomingClasses = incomingByClass.size,
+            outgoingByClass = outgoingByClass,
+            incomingByClass = incomingByClass,
+        )
+    }
+}

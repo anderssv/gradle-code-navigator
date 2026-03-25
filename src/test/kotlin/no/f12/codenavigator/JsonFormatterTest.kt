@@ -17,6 +17,7 @@ import no.f12.codenavigator.navigation.SymbolInfo
 import no.f12.codenavigator.navigation.SymbolKind
 import no.f12.codenavigator.navigation.DsmMatrix
 import no.f12.codenavigator.navigation.RankedType
+import no.f12.codenavigator.navigation.ClassComplexity
 import no.f12.codenavigator.navigation.DeadCode
 import no.f12.codenavigator.navigation.DeadCodeKind
 import kotlin.test.Test
@@ -543,5 +544,41 @@ class JsonFormatterTest {
         assertTrue(result.contains("\"className\":\"com.example.Service\""))
         assertTrue(result.contains("\"memberName\":\"unused\""))
         assertTrue(result.contains("\"kind\":\"method\""))
+    }
+
+    // === Complexity formatting ===
+
+    @Test
+    fun `empty complexity list produces empty JSON array`() {
+        val result = JsonFormatter.formatComplexity(emptyList())
+
+        assertEquals("[]", result)
+    }
+
+    @Test
+    fun `formats complexity as JSON with all fields`() {
+        val complexity = listOf(
+            ClassComplexity(
+                className = "com.example.Service",
+                sourceFile = "Service.kt",
+                fanOut = 5,
+                fanIn = 3,
+                distinctOutgoingClasses = 2,
+                distinctIncomingClasses = 1,
+                outgoingByClass = listOf("com.example.Repo" to 3, "com.example.Cache" to 2),
+                incomingByClass = listOf("com.example.Controller" to 3),
+            ),
+        )
+
+        val result = JsonFormatter.formatComplexity(complexity)
+
+        assertTrue(result.contains("\"className\":\"com.example.Service\""))
+        assertTrue(result.contains("\"sourceFile\":\"Service.kt\""))
+        assertTrue(result.contains("\"fanOut\":5"))
+        assertTrue(result.contains("\"fanIn\":3"))
+        assertTrue(result.contains("\"distinctOutgoingClasses\":2"))
+        assertTrue(result.contains("\"distinctIncomingClasses\":1"))
+        assertTrue(result.contains("\"outgoingByClass\":["))
+        assertTrue(result.contains("\"incomingByClass\":["))
     }
 }
