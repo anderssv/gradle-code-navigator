@@ -19,6 +19,7 @@ import no.f12.codenavigator.navigation.DsmMatrix
 import no.f12.codenavigator.navigation.RankedType
 import no.f12.codenavigator.navigation.ClassComplexity
 import no.f12.codenavigator.navigation.DeadCode
+import no.f12.codenavigator.navigation.MetricsResult
 import no.f12.codenavigator.navigation.UsageSite
 
 @JvmInline
@@ -249,6 +250,24 @@ object JsonFormatter {
                 }),
             )
         }
+
+    fun formatMetrics(metrics: MetricsResult): String =
+        jsonObject(
+            "totalClasses" to metrics.totalClasses,
+            "packageCount" to metrics.packageCount,
+            "averageFanIn" to metrics.averageFanIn,
+            "averageFanOut" to metrics.averageFanOut,
+            "cycleCount" to metrics.cycleCount,
+            "deadClassCount" to metrics.deadClassCount,
+            "deadMethodCount" to metrics.deadMethodCount,
+            "topHotspots" to JsonRaw(jsonArray(metrics.topHotspots) { h ->
+                jsonObject(
+                    "file" to h.file,
+                    "revisions" to h.revisions,
+                    "totalChurn" to h.totalChurn,
+                )
+            }),
+        )
 
     private fun renderCallNode(node: CallTreeNode): String {
         val children = jsonArray(node.children) { child -> renderCallNode(child) }

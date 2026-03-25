@@ -189,6 +189,13 @@ object TaskRegistry {
         requiresCompilation = true,
     )
 
+    val METRICS = TaskDef(
+        goal = "metrics",
+        description = "Quick project health snapshot: classes, packages, fan-in/out, cycles, dead code, hotspots",
+        params = FORMAT_PARAMS + listOf(AFTER, TOP, NO_FOLLOW, ROOT_PACKAGE),
+        requiresCompilation = true,
+    )
+
     val HELP = TaskDef(
         goal = "help",
         description = "Show help text with available tasks",
@@ -224,6 +231,7 @@ object TaskRegistry {
         RANK,
         DEAD,
         COMPLEXITY,
+        METRICS,
         HOTSPOTS,
         CHURN,
         CODE_AGE,

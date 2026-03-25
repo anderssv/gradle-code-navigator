@@ -28,6 +28,7 @@ class HelpTextTest {
         assertTrue(text.contains("cnavAge"))
         assertTrue(text.contains("cnavAuthors"))
         assertTrue(text.contains("cnavChurn"))
+        assertTrue(text.contains("cnavMetrics"))
     }
 
     @Test
@@ -52,6 +53,7 @@ class HelpTextTest {
         assertTrue(text.contains("cnav:code-age"))
         assertTrue(text.contains("cnav:authors"))
         assertTrue(text.contains("cnav:churn"))
+        assertTrue(text.contains("cnav:metrics"))
     }
 
     @Test
@@ -88,6 +90,21 @@ class HelpTextTest {
 
         assertTrue(gradleText.contains("-Pcycles=true"), "Gradle help should document cycles parameter")
         assertTrue(mavenText.contains("-Dcycles=true"), "Maven help should document cycles parameter")
+    }
+
+    @Test
+    fun `Gradle help text includes metrics task`() {
+        val text = HelpText.generate(BuildTool.GRADLE)
+
+        assertTrue(text.contains("cnavMetrics"), "Should list cnavMetrics task")
+        assertTrue(text.contains("project health snapshot"), "Should describe metrics purpose")
+    }
+
+    @Test
+    fun `Maven help text includes metrics task`() {
+        val text = HelpText.generate(BuildTool.MAVEN)
+
+        assertTrue(text.contains("cnav:metrics"), "Should list cnav:metrics task")
     }
 
     @Test

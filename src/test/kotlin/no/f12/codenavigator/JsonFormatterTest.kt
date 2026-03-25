@@ -20,6 +20,7 @@ import no.f12.codenavigator.navigation.RankedType
 import no.f12.codenavigator.navigation.ClassComplexity
 import no.f12.codenavigator.navigation.DeadCode
 import no.f12.codenavigator.navigation.DeadCodeKind
+import no.f12.codenavigator.navigation.MetricsResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -580,5 +581,53 @@ class JsonFormatterTest {
         assertTrue(result.contains("\"distinctIncomingClasses\":1"))
         assertTrue(result.contains("\"outgoingByClass\":["))
         assertTrue(result.contains("\"incomingByClass\":["))
+    }
+
+    // === Metrics formatting ===
+
+    @Test
+    fun `formats metrics as JSON object with all fields`() {
+        val metrics = MetricsResult(
+            totalClasses = 42,
+            packageCount = 5,
+            averageFanIn = 8.5,
+            averageFanOut = 3.2,
+            cycleCount = 2,
+            deadClassCount = 3,
+            deadMethodCount = 7,
+            topHotspots = listOf(
+                Hotspot("src/main/Foo.kt", 15, 200),
+            ),
+        )
+
+        val result = JsonFormatter.formatMetrics(metrics)
+
+        assertTrue(result.contains("\"totalClasses\":42"))
+        assertTrue(result.contains("\"packageCount\":5"))
+        assertTrue(result.contains("\"averageFanIn\":8.5"))
+        assertTrue(result.contains("\"averageFanOut\":3.2"))
+        assertTrue(result.contains("\"cycleCount\":2"))
+        assertTrue(result.contains("\"deadClassCount\":3"))
+        assertTrue(result.contains("\"deadMethodCount\":7"))
+        assertTrue(result.contains("\"topHotspots\":["))
+        assertTrue(result.contains("\"file\":\"src/main/Foo.kt\""))
+    }
+
+    @Test
+    fun `formats metrics with empty hotspots`() {
+        val metrics = MetricsResult(
+            totalClasses = 10,
+            packageCount = 2,
+            averageFanIn = 0.0,
+            averageFanOut = 0.0,
+            cycleCount = 0,
+            deadClassCount = 0,
+            deadMethodCount = 0,
+            topHotspots = emptyList(),
+        )
+
+        val result = JsonFormatter.formatMetrics(metrics)
+
+        assertTrue(result.contains("\"topHotspots\":[]"))
     }
 }

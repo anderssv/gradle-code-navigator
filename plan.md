@@ -440,6 +440,40 @@ From user feedback: the JSON output works well but schemas aren't versioned or d
 - **Alternative**: Include schemas in `cnavHelpConfig` or `cnavAgentHelp` output
 - **Why lower priority**: The JSON output is already self-describing, and agents can infer the schema from one example. Formal schemas mainly help tool integrations that want to pre-validate.
 
+## 62. Separate prod/test in output (High value, medium effort)
+
+From user feedback: all bytecode tasks mix production and test callers in a single list. For a class like `Poll` with 167 incoming references, it's hard to tell which are prod dependencies and which are test code. Users must mentally scan for "Test", "Fake", "Mother" etc.
+
+- **Approach**: Tag each caller/reference with `[test]` or `[prod]` based on which source set the class came from. The `ClassScanner` already receives separate class directories for main vs test source sets — propagate this metadata through to the call graph and formatters.
+- **Parameters**: `-Pprod-only=true` (filter to production callers only), `-Ptest-only=true` (filter to test callers only). Without either flag, show all with tags.
+- **Applies to**: `cnavCallers`, `cnavCallees`, `cnavUsages`, `cnavComplexity`, `cnavDead`, `cnavRank` — any task that reports caller/reference lists
+- **Implementation**: Add a `sourceSet: SourceSet` (enum: MAIN, TEST) field to `ClassInfo` during scanning. When building the call graph, propagate the source set to call edges. Formatters append `[test]`/`[prod]` tags.
+- **Why high value**: Makes every bytecode task output immediately actionable without manual filtering. Test-only dependencies on a class are normal and expected; only prod dependencies indicate coupling.
+
+## 63. Collapse Kotlin lambdas (Very high value, medium effort)
+
+From user feedback: Kotlin lambda inner classes (`$configureAdminRoutes$3$2`, `$configureParticipantRoutes$1$4`) inflate both call counts and distinct-class counts significantly. The 27 "distinct callers" of `PollsRepository` are really ~10 classes when lambdas are collapsed into their enclosing class.
+
+- **Approach**: Collapse lambda inner classes into their enclosing class by default. Anything matching `ClassName$...$N` (where the final segment is a number) rolls up to `ClassName`. Report the aggregate.
+- **Parameters**: `-Pcollapse-lambdas=false` to disable collapsing and show raw bytecode names
+- **Applies to**: `cnavComplexity`, `cnavCallers`, `cnavDead`, `cnavRank` — any task that counts or lists classes
+- **Implementation**: Add a `LambdaCollapser` utility that maps `Foo$bar$1$2` → `Foo`. Apply this during call graph construction or as a post-processing step before formatting. The `$` naming convention is reliable for Kotlin-compiled code.
+- **Output enhancement**: Show both raw and collapsed counts: `PollsRepository in=51/27 (collapsed: 51/10)` — the precise bytecode truth plus the "how many real classes" answer.
+- **Why highest value**: Affects all bytecode tasks simultaneously. Makes every result more intuitive for Kotlin projects. The lambda inflation is the single biggest source of noise in Kotlin bytecode analysis.
+
+## 64. Fan-in/fan-out interpretation guidance in agentHelp (Low effort, high polish)
+
+From user feedback: `cnavAgentHelp` explains what the tasks do but not how to interpret results. Agents (and humans) need guidelines to avoid false alarms — e.g., `PollsRepository` with high fan-in is normal for a core repository, not a god object.
+
+- **Add to agentHelp**: A "Result interpretation" section with heuristics:
+  - Fan-in > 20 on a concrete class → may indicate a god object or central service (investigate)
+  - Fan-in > 20 on an interface/abstract class → normal for core domain abstractions
+  - Fan-in > 20 on a repository → normal, repositories are meant to be widely used
+  - High fan-out → class depends on too many things, candidate for decomposition
+  - Dead code with framework annotations → likely false positive (entry point via reflection)
+  - Coupled files with high coupling degree but low shared revs → may be coincidence
+- **Key file**: `AgentHelpText.kt`
+
 ## Future ideas (not yet planned)
 
 - **Consider just failing on first file with wrong bytecode**: The current `ScanResult<T>` partial-fail approach adds complexity across scanners, caches, tasks, and mojos. A simpler alternative: fail fast on the first unsupported bytecode file with a clear error message. Less graceful but dramatically less code.

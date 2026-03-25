@@ -35,6 +35,7 @@ enum class BuildTool(
             "rank" to "cnavRank",
             "dead" to "cnavDead",
             "complexity" to "cnavComplexity",
+            "metrics" to "cnavMetrics",
             "hotspots" to "cnavHotspots",
             "churn" to "cnavChurn",
             "code-age" to "cnavAge",

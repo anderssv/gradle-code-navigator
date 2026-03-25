@@ -16,6 +16,7 @@ import no.f12.codenavigator.navigation.SymbolInfo
 import no.f12.codenavigator.navigation.DsmMatrix
 import no.f12.codenavigator.navigation.RankedType
 import no.f12.codenavigator.navigation.DeadCode
+import no.f12.codenavigator.navigation.MetricsResult
 import no.f12.codenavigator.navigation.UsageSite
 
 object LlmFormatter {
@@ -98,6 +99,21 @@ object LlmFormatter {
             else c.incomingByClass.joinToString(",") { "${it.first}(${it.second})" }
             "${c.className} out=${c.fanOut}/${c.distinctOutgoingClasses} in=${c.fanIn}/${c.distinctIncomingClasses} outgoing:[$outgoing] incoming:[$incoming]"
         }
+
+    fun formatMetrics(metrics: MetricsResult): String = buildString {
+        append("classes=${metrics.totalClasses}")
+        append(" packages=${metrics.packageCount}")
+        append(" avg-fan-in=${"%.1f".format(java.util.Locale.US, metrics.averageFanIn)}")
+        append(" avg-fan-out=${"%.1f".format(java.util.Locale.US, metrics.averageFanOut)}")
+        append(" cycles=${metrics.cycleCount}")
+        append(" dead-classes=${metrics.deadClassCount}")
+        append(" dead-methods=${metrics.deadMethodCount}")
+        if (metrics.topHotspots.isNotEmpty()) {
+            appendLine()
+            appendLine("hotspots:")
+            append(metrics.topHotspots.joinToString("\n") { "${it.file} revisions=${it.revisions} churn=${it.totalChurn}" })
+        }
+    }
 
     fun formatDsm(matrix: DsmMatrix): String = buildString {
         append("packages:${matrix.packages.joinToString(",")}")

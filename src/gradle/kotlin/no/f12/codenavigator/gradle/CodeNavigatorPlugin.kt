@@ -88,6 +88,12 @@ class CodeNavigatorPlugin : Plugin<Project> {
             dependsOn("classes")
         }
 
+        project.tasks.register("cnavMetrics", MetricsTask::class.java) {
+            description = "Quick project health snapshot: classes, packages, fan-in/out, cycles, dead code, hotspots"
+            group = "code-navigator"
+            dependsOn("classes")
+        }
+
         project.tasks.register("cnavHelp", CodeNavigatorHelpTask::class.java) {
             description = "Shows available code-navigator tasks and their usage"
             group = "code-navigator"

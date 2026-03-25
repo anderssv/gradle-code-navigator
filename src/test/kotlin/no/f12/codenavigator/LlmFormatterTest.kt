@@ -20,6 +20,7 @@ import no.f12.codenavigator.navigation.RankedType
 import no.f12.codenavigator.navigation.ClassComplexity
 import no.f12.codenavigator.navigation.DeadCode
 import no.f12.codenavigator.navigation.DeadCodeKind
+import no.f12.codenavigator.navigation.MetricsResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -319,6 +320,56 @@ class LlmFormatterTest {
 
         assertEquals(
             "com.example.Service out=5/2 in=3/1 outgoing:[com.example.Repo(3),com.example.Cache(2)] incoming:[com.example.Controller(3)]",
+            result,
+        )
+    }
+
+    // === Metrics formatting ===
+
+    @Test
+    fun `formats metrics compactly`() {
+        val metrics = MetricsResult(
+            totalClasses = 42,
+            packageCount = 5,
+            averageFanIn = 8.5,
+            averageFanOut = 3.2,
+            cycleCount = 2,
+            deadClassCount = 3,
+            deadMethodCount = 7,
+            topHotspots = listOf(
+                Hotspot("src/main/Foo.kt", 15, 200),
+                Hotspot("src/main/Bar.kt", 10, 100),
+            ),
+        )
+
+        val result = LlmFormatter.formatMetrics(metrics)
+
+        assertEquals(
+            "classes=42 packages=5 avg-fan-in=8.5 avg-fan-out=3.2 cycles=2 dead-classes=3 dead-methods=7\n" +
+                "hotspots:\n" +
+                "src/main/Foo.kt revisions=15 churn=200\n" +
+                "src/main/Bar.kt revisions=10 churn=100",
+            result,
+        )
+    }
+
+    @Test
+    fun `formats metrics without hotspots`() {
+        val metrics = MetricsResult(
+            totalClasses = 10,
+            packageCount = 2,
+            averageFanIn = 0.0,
+            averageFanOut = 0.0,
+            cycleCount = 0,
+            deadClassCount = 0,
+            deadMethodCount = 0,
+            topHotspots = emptyList(),
+        )
+
+        val result = LlmFormatter.formatMetrics(metrics)
+
+        assertEquals(
+            "classes=10 packages=2 avg-fan-in=0.0 avg-fan-out=0.0 cycles=0 dead-classes=0 dead-methods=0",
             result,
         )
     }

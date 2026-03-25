@@ -30,6 +30,9 @@ class AgentHelpTextTest {
         assertTrue(text.contains("cnavAge"))
         assertTrue(text.contains("cnavAuthors"))
         assertTrue(text.contains("cnavChurn"))
+
+        // Metrics task
+        assertTrue(text.contains("cnavMetrics"))
     }
 
     @Test
@@ -51,6 +54,7 @@ class AgentHelpTextTest {
         assertTrue(text.contains("cnav:code-age"))
         assertTrue(text.contains("cnav:authors"))
         assertTrue(text.contains("cnav:churn"))
+        assertTrue(text.contains("cnav:metrics"))
     }
 
     @Test
@@ -234,5 +238,23 @@ class AgentHelpTextTest {
 
         assertTrue(text.contains("mvn cnav:list-classes"), "Maven extraction example should use mvn command")
         assertFalse(text.contains("./gradlew cnavListClasses"), "Maven should not contain Gradle extraction examples")
+    }
+
+    @Test
+    fun `agent help text includes metrics in task reference`() {
+        val text = AgentHelpText.generate(BuildTool.GRADLE)
+
+        assertTrue(text.contains("cnavMetrics"), "Task reference should list cnavMetrics")
+        assertTrue(text.contains("health snapshot"), "Should describe metrics purpose")
+    }
+
+    @Test
+    fun `agent help text documents JSON schema for metrics`() {
+        val text = AgentHelpText.generate(BuildTool.GRADLE)
+
+        assertTrue(text.contains("\"totalClasses\""), "Should document totalClasses field")
+        assertTrue(text.contains("\"packageCount\""), "Should document packageCount field")
+        assertTrue(text.contains("\"averageFanIn\""), "Should document averageFanIn field")
+        assertTrue(text.contains("\"cycleCount\""), "Should document cycleCount field")
     }
 }
