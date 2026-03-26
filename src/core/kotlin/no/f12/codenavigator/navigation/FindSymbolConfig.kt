@@ -1,6 +1,6 @@
 package no.f12.codenavigator.navigation
 
-import no.f12.codenavigator.OutputFormat
+import no.f12.codenavigator.config.OutputFormat
 
 data class FindSymbolConfig(
     val pattern: String,

@@ -1,6 +1,6 @@
 package no.f12.codenavigator.analysis
 
-import no.f12.codenavigator.OutputFormat
+import no.f12.codenavigator.config.OutputFormat
 import java.time.LocalDate
 
 data class CodeAgeConfig(
