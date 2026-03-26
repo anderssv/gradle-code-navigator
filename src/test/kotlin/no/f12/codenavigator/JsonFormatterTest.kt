@@ -183,7 +183,7 @@ class JsonFormatterTest {
         val result = JsonFormatter.formatCallTree(graph, listOf(method), maxDepth = 3, CallDirection.CALLEES)
 
         assertEquals(
-            """[{"method":"com.example.Service.doWork","children":[]}]""",
+            """[{"method":"com.example.Service.doWork","sourceFile":"<unknown>","children":[]}]""",
             result,
         )
     }
@@ -194,13 +194,16 @@ class JsonFormatterTest {
         val callee = MethodRef(ClassName("com.example.Service"), "doWork")
         val graph = CallGraph(
             mapOf(caller to setOf(callee)),
-            sourceFiles = mapOf(ClassName("com.example.Service") to "Service.kt"),
+            sourceFiles = mapOf(
+                ClassName("com.example.Controller") to "Controller.kt",
+                ClassName("com.example.Service") to "Service.kt",
+            ),
         )
 
         val result = JsonFormatter.formatCallTree(graph, listOf(caller), maxDepth = 3, CallDirection.CALLEES)
 
         assertEquals(
-            """[{"method":"com.example.Controller.handle","children":[""" +
+            """[{"method":"com.example.Controller.handle","sourceFile":"Controller.kt","children":[""" +
                 """{"method":"com.example.Service.doWork","sourceFile":"Service.kt","children":[]}]}]""",
             result,
         )
@@ -213,13 +216,17 @@ class JsonFormatterTest {
         val c = MethodRef(ClassName("com.example.C"), "end")
         val graph = CallGraph(
             mapOf(a to setOf(b), b to setOf(c)),
-            sourceFiles = mapOf(ClassName("com.example.B") to "B.kt", ClassName("com.example.C") to "C.kt"),
+            sourceFiles = mapOf(
+                ClassName("com.example.A") to "A.kt",
+                ClassName("com.example.B") to "B.kt",
+                ClassName("com.example.C") to "C.kt",
+            ),
         )
 
         val result = JsonFormatter.formatCallTree(graph, listOf(a), maxDepth = 3, CallDirection.CALLEES)
 
         assertEquals(
-            """[{"method":"com.example.A.start","children":[""" +
+            """[{"method":"com.example.A.start","sourceFile":"A.kt","children":[""" +
                 """{"method":"com.example.B.middle","sourceFile":"B.kt","children":[""" +
                 """{"method":"com.example.C.end","sourceFile":"C.kt","children":[]}]}]}]""",
             result,
@@ -233,13 +240,17 @@ class JsonFormatterTest {
         val c = MethodRef(ClassName("com.example.C"), "end")
         val graph = CallGraph(
             mapOf(a to setOf(b), b to setOf(c)),
-            sourceFiles = mapOf(ClassName("com.example.B") to "B.kt", ClassName("com.example.C") to "C.kt"),
+            sourceFiles = mapOf(
+                ClassName("com.example.A") to "A.kt",
+                ClassName("com.example.B") to "B.kt",
+                ClassName("com.example.C") to "C.kt",
+            ),
         )
 
         val result = JsonFormatter.formatCallTree(graph, listOf(a), maxDepth = 1, CallDirection.CALLEES)
 
         assertEquals(
-            """[{"method":"com.example.A.start","children":[""" +
+            """[{"method":"com.example.A.start","sourceFile":"A.kt","children":[""" +
                 """{"method":"com.example.B.middle","sourceFile":"B.kt","children":[]}]}]""",
             result,
         )
@@ -257,7 +268,7 @@ class JsonFormatterTest {
         val result = JsonFormatter.formatCallTree(graph, listOf(a), maxDepth = 10, CallDirection.CALLEES)
 
         assertEquals(
-            """[{"method":"com.example.A.callB","children":[""" +
+            """[{"method":"com.example.A.callB","sourceFile":"A.kt","children":[""" +
                 """{"method":"com.example.B.callA","sourceFile":"B.kt","children":[""" +
                 """{"method":"com.example.A.callB","sourceFile":"A.kt","children":[]}]}]}]""",
             result,

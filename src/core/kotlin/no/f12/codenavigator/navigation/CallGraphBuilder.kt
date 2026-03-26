@@ -53,16 +53,17 @@ class CallGraph(
     private fun expandPropertyAccessors(pattern: String): Regex? {
         val escapedDotIndex = pattern.lastIndexOf("\\.")
         val plainDotIndex = if (escapedDotIndex < 0) pattern.lastIndexOf('.') else -1
-        val (prefixEnd, methodStart) = when {
-            escapedDotIndex >= 0 -> (escapedDotIndex + 2) to (escapedDotIndex + 2)
-            plainDotIndex >= 0 -> (plainDotIndex + 1) to (plainDotIndex + 1)
+        val (classEnd, methodStart) = when {
+            escapedDotIndex >= 0 -> escapedDotIndex to (escapedDotIndex + 2)
+            plainDotIndex >= 0 -> plainDotIndex to (plainDotIndex + 1)
             else -> return null
         }
-        val prefix = pattern.substring(0, prefixEnd)
+        val classPrefix = pattern.substring(0, classEnd)
         val methodPart = pattern.substring(methodStart)
         if (methodPart.isEmpty()) return null
         val capitalized = methodPart.replaceFirstChar { it.uppercase() }
-        val accessorPattern = "$prefix(?:get$capitalized|set$capitalized|is$capitalized)"
+        val innerClassSegment = """(?:\$\w+)*\."""
+        val accessorPattern = "$classPrefix$innerClassSegment(?:get$capitalized|set$capitalized|is$capitalized)"
         return Regex(accessorPattern, RegexOption.IGNORE_CASE)
     }
 

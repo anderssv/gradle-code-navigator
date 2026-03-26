@@ -217,7 +217,7 @@ class CallTreeBuilderTest {
     }
 
     @Test
-    fun `root node has no source file`() {
+    fun `root node has source file when available`() {
         val target = MethodRef(ClassName("com.example.Service"), "doWork")
         val graph = CallGraph(
             emptyMap(),
@@ -226,7 +226,7 @@ class CallTreeBuilderTest {
 
         val result = CallTreeBuilder.build(graph, listOf(target), maxDepth = 3, CallDirection.CALLERS)
 
-        assertEquals(null, result[0].sourceFile, "Root node should not have source file annotation")
+        assertEquals("Service.kt", result[0].sourceFile, "Root node should have source file resolved")
     }
 
     @Test

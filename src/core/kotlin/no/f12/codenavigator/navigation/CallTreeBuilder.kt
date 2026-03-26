@@ -29,7 +29,7 @@ object CallTreeBuilder {
         visited: MutableSet<MethodRef>,
         filter: ((MethodRef) -> Boolean)?,
     ): CallTreeNode {
-        val sourceFile = if (depth > 0) graph.sourceFileOf(method.className) else null
+        val sourceFile = graph.sourceFileOf(method.className)
         val depthCheck = depth < maxDepth
         val visitedCheck = method !in visited
         val children = if (depthCheck && visitedCheck) {

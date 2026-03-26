@@ -327,6 +327,32 @@ class CallGraphBuilderTest {
     }
 
     @Test
+    fun `findMethods expands property with fully qualified class name`() {
+        val getter = MethodRef(ClassName("no.mikill.greitt.AppDependencies"), "getParticipantService")
+        val graph = CallGraph(
+            mapOf(getter to emptySet()),
+        )
+
+        val result = graph.findMethods("AppDependencies.participantService")
+
+        assertEquals(1, result.size)
+        assertEquals("getParticipantService", result[0].methodName)
+    }
+
+    @Test
+    fun `findMethods expands property across inner class boundary`() {
+        val getter = MethodRef(ClassName("no.mikill.greitt.AppDependencies\$Services"), "getParticipantService")
+        val graph = CallGraph(
+            mapOf(getter to emptySet()),
+        )
+
+        val result = graph.findMethods("AppDependencies.participantService")
+
+        assertEquals(1, result.size)
+        assertEquals("getParticipantService", result[0].methodName)
+    }
+
+    @Test
     fun `multiple methods on same class each have independent caller chains`() {
         // UserService has: buildNotificationMessage, sendResetNotification, sendDeactivationNotification,
         //                  resetPassword, deactivateUser
