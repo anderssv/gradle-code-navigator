@@ -1,17 +1,14 @@
 package no.f12.codenavigator.navigation
 
 import no.f12.codenavigator.CacheFreshness
-
 import java.io.File
 
-object InterfaceRegistryCache {
+object InterfaceRegistryCache : FileCache<InterfaceRegistry>() {
 
-    private const val FIELD_SEPARATOR = "\t"
-
-    fun write(cacheFile: File, registry: InterfaceRegistry) {
+    override fun write(cacheFile: File, data: InterfaceRegistry) {
         CacheFreshness.atomicWrite(cacheFile) { file ->
             file.bufferedWriter().use { writer ->
-                registry.forEachEntry { interfaceName, implementors ->
+                data.forEachEntry { interfaceName, implementors ->
                     implementors.forEach { impl ->
                         writer.write(
                             listOf(
@@ -27,7 +24,7 @@ object InterfaceRegistryCache {
         }
     }
 
-    fun read(cacheFile: File): InterfaceRegistry {
+    override fun read(cacheFile: File): InterfaceRegistry {
         val map = mutableMapOf<ClassName, MutableList<ImplementorInfo>>()
 
         cacheFile.useLines { lines ->
@@ -42,20 +39,6 @@ object InterfaceRegistryCache {
         return InterfaceRegistry(map)
     }
 
-    fun isFresh(cacheFile: File, classDirectories: List<File>): Boolean =
-        CacheFreshness.isFresh(cacheFile, classDirectories)
-
-    fun getOrBuild(cacheFile: File, classDirectories: List<File>): ScanResult<InterfaceRegistry> {
-        if (isFresh(cacheFile, classDirectories)) {
-            try {
-                return ScanResult(read(cacheFile), emptyList())
-            } catch (_: Exception) {
-                cacheFile.delete()
-            }
-        }
-
-        val result = InterfaceRegistry.build(classDirectories)
-        write(cacheFile, result.data)
-        return result
-    }
+    override fun build(classDirectories: List<File>): ScanResult<InterfaceRegistry> =
+        InterfaceRegistry.build(classDirectories)
 }
