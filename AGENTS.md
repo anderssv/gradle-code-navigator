@@ -30,10 +30,13 @@ src/
 - `TaskRegistry.kt` — `ParamDef`/`TaskDef` DSL, all task+param definitions
 - `BuildTool.kt` — goal-to-task-name mapping (Gradle/Maven)
 - `JsonFormatter.kt`, `LlmFormatter.kt`, `TableFormatter.kt` — output formatters
-- `OutputWrapper.kt` — `OutputFormat` enum, wraps output with LLM markers
+- `OutputWrapper.kt` — wraps output with LLM markers
 - `AgentHelpText.kt` — generates `cnavAgentHelp` output
 - `HelpText.kt`, `ConfigHelpText.kt` — detailed help + config help
 - `CacheFreshness.kt` — cache staleness detection
+
+**`config/`** — dependency-free leaf package:
+- `OutputFormat.kt` — `OutputFormat` enum (TEXT/JSON/LLM), imported by all `*Config` classes
 
 **`navigation/`** — bytecode-based analysis (requires compiled `classes`):
 - **Scanning**: `ClassScanner`, `ClassInfoExtractor`, `ClassDetailExtractor`, `ClassDetailScanner`, `SymbolScanner`, `SymbolExtractor`, `UsageScanner`

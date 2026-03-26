@@ -2,26 +2,17 @@
 
 ## Self-analysis findings (from running code-navigator on itself)
 
-### S1. Break cyclic package dependencies — move `OutputFormat` (High value, low effort)
+### ~~S1. Break cyclic package dependencies — move `OutputFormat`~~ DONE
 
-The DSM at depth 4 reveals two bidirectional dependencies caused by `OutputFormat` living in the root `codenavigator` package while `*Config` classes in `navigation` and `analysis` import it:
-
-- `codenavigator` <-> `codenavigator.analysis` (10 refs each direction)
-- `codenavigator` <-> `codenavigator.navigation` (82 refs / 32 refs)
-
-Fix: Move `OutputFormat` into a location that both sub-packages can depend on without creating a cycle. Options: move into `navigation` (since it has the most dependents), create a `codenavigator.common` package, or change configs to store a raw `String` for format and resolve at the task layer.
+Created `no.f12.codenavigator.config` package as a dependency-free leaf. Moved `OutputFormat` there, breaking the `codenavigator` <-> `navigation`/`analysis` cycles caused by `*Config` classes importing from the root package. Updated 78 files.
 
 ### ~~S2. Dead classes — delete `CalleeTreeFormatter` and `CallerTreeFormatter`~~ DONE
 
 Deleted both wrapper classes. Updated 5 test files to use `CallTreeFormatter` directly.
 
-### S3. Reduce `JsonFormatter` / `LlmFormatter` complexity (Medium value, medium effort)
+### ~~S3. Remove resolution logic from `JsonFormatter`~~ DONE
 
-These are the two highest-complexity classes (fan-out 162/134, 26/20 methods each) and have 100% change coupling (17 shared commits). They do the same job in parallel for every output type.
-
-Options:
-- Extract per-feature format functions (e.g. `CallTreeJsonFormat`, `DsmJsonFormat`) to reduce method count per class
-- Introduce a `ResultFormatter` interface so the task layer uses polymorphism instead of `when(format)`
+Deleted `JsonFormatter.formatCallTree` which mixed `CallTreeBuilder.build()` resolution with formatting — violating the parsing/resolution/formatting separation. Updated 7 test call sites to call resolution then formatting separately. Removed 4 unused imports. Remaining ideas (extract per-feature format functions, `ResultFormatter` interface) are optional future work tracked in S6.
 
 ### ~~S4. Consolidate cache classes into generic `FileCache<T>`~~ DONE
 
