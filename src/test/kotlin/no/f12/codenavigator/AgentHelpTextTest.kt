@@ -418,4 +418,11 @@ class AgentHelpTextTest {
             "Maven Common Questions should use Maven task name $findUsagesTask",
         )
     }
+
+    @Test
+    fun `agent help text contains Result Interpretation section`() {
+        val text = AgentHelpText.generate(BuildTool.GRADLE)
+
+        assertTrue(text.contains("Result Interpretation"), "Should have a Result Interpretation section")
+    }
 }
