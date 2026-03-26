@@ -574,6 +574,41 @@ class UsageScannerTest {
         assertEquals("getAccountNumber", usages[0].targetName)
     }
 
+    // --- Simple name matching (consistent with other tasks) ---
+
+    @Test
+    fun `ownerClass simple name matches fully-qualified class name`() {
+        writeClassWithCalls(
+            "com/example/Caller", "Caller.kt",
+            "doWork", listOf(Call("com/example/Target", "process", "()V")),
+        )
+
+        val usages = UsageScanner.scan(
+            listOf(classesDir),
+            ownerClass = "Target",
+            method = "process",
+        ).data
+
+        assertEquals(1, usages.size)
+        assertEquals(ClassName("com.example.Target"), usages[0].targetOwner)
+    }
+
+    @Test
+    fun `type simple name matches fully-qualified class name`() {
+        writeClassWithTypeInsn(
+            "com/example/Caller", "Caller.kt",
+            "doWork", Opcodes.NEW, "com/example/Target",
+        )
+
+        val usages = UsageScanner.scan(
+            listOf(classesDir),
+            type = "Target",
+        ).data
+
+        assertTrue(usages.isNotEmpty())
+        assertEquals(ClassName("com.example.Target"), usages[0].targetOwner)
+    }
+
     // --- Outside-package filter ---
 
     @Test

@@ -40,6 +40,8 @@ object UsageScanner {
     ): ScanResult<List<UsageSite>> {
         val usages = mutableSetOf<UsageSite>()
         val skipped = mutableListOf<UnsupportedBytecodeVersionException>()
+        val ownerRegex = ownerClass?.let { Regex(it, RegexOption.IGNORE_CASE) }
+        val typeRegex = type?.let { Regex(it, RegexOption.IGNORE_CASE) }
 
         classDirectories
             .filter { it.exists() }
@@ -48,7 +50,7 @@ object UsageScanner {
                     .filter { it.isFile && it.extension == "class" }
                     .forEach { classFile ->
                         try {
-                            extractUsages(classFile, ownerClass, method, field, type, usages)
+                            extractUsages(classFile, ownerRegex, method, field, type, typeRegex, usages)
                         } catch (e: UnsupportedBytecodeVersionException) {
                             skipped.add(e)
                         }
@@ -60,10 +62,11 @@ object UsageScanner {
 
     private fun extractUsages(
         classFile: File,
-        ownerClass: String?,
+        ownerRegex: Regex?,
         method: String?,
         field: String?,
         type: String?,
+        typeRegex: Regex?,
         usages: MutableCollection<UsageSite>,
     ) {
         val reader = createClassReader(classFile)
@@ -87,9 +90,9 @@ object UsageScanner {
                     access: Int, name: String, descriptor: String,
                     signature: String?, value: Any?,
                 ): FieldVisitor? {
-                    if (type != null) {
+                    if (typeRegex != null) {
                         val referencedTypes = extractTypesFromDescriptor(descriptor)
-                        if (referencedTypes.any { matchesType(it, type) }) {
+                        if (referencedTypes.any { matchesType(it, typeRegex) }) {
                             usages.add(
                                 UsageSite(
                                     callerClass = callerClass,
@@ -112,15 +115,15 @@ object UsageScanner {
                 ): MethodVisitor {
                     val callerMethod = name
 
-                    if (type != null) {
+                    if (typeRegex != null) {
                         val referencedTypes = extractTypesFromDescriptor(descriptor)
-                        if (referencedTypes.any { matchesType(it, type) }) {
+                        if (referencedTypes.any { matchesType(it, typeRegex) }) {
                             usages.add(
                                 UsageSite(
                                     callerClass = callerClass,
                                     callerMethod = callerMethod,
                                     sourceFile = sourceFile,
-                                    targetOwner = ClassName(type),
+                                    targetOwner = ClassName(type!!),
                                     targetName = callerMethod,
                                     targetDescriptor = descriptor,
                                     kind = UsageKind.TYPE_REFERENCE,
@@ -135,9 +138,9 @@ object UsageScanner {
                             instrDescriptor: String, isInterface: Boolean,
                         ) {
                             val instrOwnerDot = instrOwner.replace('/', '.')
-                            val ownerMatched = field == null && matchesOwner(instrOwnerDot, ownerClass) && matchesMethod(instrName, method)
-                            val fieldMatched = field != null && matchesOwner(instrOwnerDot, ownerClass) && matchesFieldAccessor(instrName, field)
-                            val typeMatched = type != null && matchesType(instrOwnerDot, type) && matchesMethod(instrName, method)
+                            val ownerMatched = field == null && matchesOwner(instrOwnerDot, ownerRegex) && matchesMethod(instrName, method)
+                            val fieldMatched = field != null && matchesOwner(instrOwnerDot, ownerRegex) && matchesFieldAccessor(instrName, field)
+                            val typeMatched = typeRegex != null && matchesType(instrOwnerDot, typeRegex) && matchesMethod(instrName, method)
                             if (ownerMatched || fieldMatched || typeMatched) {
                                 usages.add(
                                     UsageSite(
@@ -158,9 +161,9 @@ object UsageScanner {
                             instrDescriptor: String,
                         ) {
                             val instrOwnerDot = instrOwner.replace('/', '.')
-                            val ownerMatched = field == null && matchesOwner(instrOwnerDot, ownerClass) && matchesMethod(instrName, method)
-                            val fieldMatched = field != null && matchesOwner(instrOwnerDot, ownerClass) && instrName == field
-                            val typeMatched = type != null && matchesType(instrOwnerDot, type) && matchesMethod(instrName, method)
+                            val ownerMatched = field == null && matchesOwner(instrOwnerDot, ownerRegex) && matchesMethod(instrName, method)
+                            val fieldMatched = field != null && matchesOwner(instrOwnerDot, ownerRegex) && instrName == field
+                            val typeMatched = typeRegex != null && matchesType(instrOwnerDot, typeRegex) && matchesMethod(instrName, method)
                             if (ownerMatched || fieldMatched || typeMatched) {
                                 usages.add(
                                     UsageSite(
@@ -178,7 +181,7 @@ object UsageScanner {
 
                         override fun visitTypeInsn(opcode: Int, instrType: String) {
                             val instrTypeDot = instrType.replace('/', '.')
-                            if (type != null && matchesType(instrTypeDot, type)) {
+                            if (typeRegex != null && matchesType(instrTypeDot, typeRegex)) {
                                 usages.add(
                                     UsageSite(
                                         callerClass = callerClass,
@@ -199,9 +202,9 @@ object UsageScanner {
         )
     }
 
-    private fun matchesOwner(actual: String, filter: String?): Boolean {
+    private fun matchesOwner(actual: String, filter: Regex?): Boolean {
         if (filter == null) return false
-        return actual.equals(filter, ignoreCase = true)
+        return filter.containsMatchIn(actual)
     }
 
     private fun matchesMethod(actual: String, filter: String?): Boolean {
@@ -216,8 +219,8 @@ object UsageScanner {
             methodName == "is$capitalized"
     }
 
-    private fun matchesType(actual: String, filter: String): Boolean =
-        actual.equals(filter, ignoreCase = true)
+    private fun matchesType(actual: String, filter: Regex): Boolean =
+        filter.containsMatchIn(actual)
 
     private fun extractTypesFromDescriptor(descriptor: String): List<String> {
         val type = runCatching { Type.getType(descriptor) }.getOrNull() ?: return emptyList()
