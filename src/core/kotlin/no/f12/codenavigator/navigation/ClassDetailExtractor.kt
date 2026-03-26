@@ -35,7 +35,7 @@ object ClassDetailExtractor {
 
     fun extract(classFile: File): ClassDetail {
         val reader = createClassReader(classFile)
-        var className = ""
+        var className = ClassName("")
         var sourceFile = "<unknown>"
         var superClass: ClassName? = null
         var interfaceList = emptyList<ClassName>()
@@ -53,7 +53,7 @@ object ClassDetailExtractor {
                     superName: String?,
                     interfaces: Array<out String>?,
                 ) {
-                    className = name.replace('/', '.')
+                    className = ClassName(name.replace('/', '.'))
                     superClass = superName
                         ?.takeIf { it != "java/lang/Object" }
                         ?.let { ClassName(it.replace('/', '.')) }
@@ -106,7 +106,7 @@ object ClassDetailExtractor {
         }
 
         return ClassDetail(
-            className = ClassName(className),
+            className = className,
             sourceFile = sourceFile,
             superClass = superClass,
             interfaces = interfaceList,
