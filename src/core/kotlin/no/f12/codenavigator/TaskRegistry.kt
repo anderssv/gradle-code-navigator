@@ -30,7 +30,7 @@ object TaskRegistry {
     val LLM = ParamDef("llm", "true", "Output in compact, token-efficient LLM format", flag = false, defaultValue = null)
     val PATTERN = ParamDef("pattern", "<regex>", "Class/symbol name regex", flag = false, defaultValue = null)
     val METHOD = ParamDef("method", "<regex>", "Method name regex", flag = false, defaultValue = null)
-    val MAXDEPTH = ParamDef("maxdepth", "<N>", "Max call tree depth", flag = false, defaultValue = null)
+    val MAXDEPTH = ParamDef("maxdepth", "<N>", "Max call tree depth", flag = false, defaultValue = "3")
     val PROJECTONLY = ParamDef("projectonly", "true", "Hide JDK/stdlib/library classes", flag = false, defaultValue = null)
     val TOP = ParamDef("top", "<N>", "Max results", flag = false, defaultValue = "50")
     val AFTER = ParamDef("after", "YYYY-MM-DD", "Only consider commits after this date", flag = false, defaultValue = "1 year ago")
@@ -192,7 +192,7 @@ object TaskRegistry {
     val COMPLEXITY = TaskDef(
         goal = "complexity",
         description = "Show fan-in/fan-out complexity per class",
-        params = FORMAT_PARAMS + listOf(CLASS, PROJECTONLY, DETAIL),
+        params = FORMAT_PARAMS + listOf(CLASS, PROJECTONLY, DETAIL, TOP),
         requiresCompilation = true,
     )
 

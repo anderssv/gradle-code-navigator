@@ -12,8 +12,7 @@ data class CallGraphConfig(
         fun parse(properties: Map<String, String?>): CallGraphConfig = CallGraphConfig(
             method = properties["method"]
                 ?: throw IllegalArgumentException("Missing required property 'method'"),
-            maxDepth = properties["maxdepth"]?.toIntOrNull()
-                ?: throw IllegalArgumentException("Missing required property 'maxdepth'"),
+            maxDepth = properties["maxdepth"]?.toIntOrNull() ?: 3,
             projectOnly = properties["projectonly"]?.toBoolean() ?: false,
             format = OutputFormat.from(
                 format = properties["format"],

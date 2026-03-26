@@ -35,12 +35,12 @@ class CallGraphConfigTest {
     }
 
     @Test
-    fun `throws when maxdepth is missing`() {
-        val exception = assertFailsWith<IllegalArgumentException> {
-            CallGraphConfig.parse(mapOf("method" to "com.example.MyClass.myMethod"))
-        }
+    fun `defaults maxdepth to 3 when not provided`() {
+        val config = CallGraphConfig.parse(
+            mapOf("method" to "com.example.MyClass.myMethod"),
+        )
 
-        assertEquals(true, exception.message?.contains("maxdepth"))
+        assertEquals(3, config.maxDepth)
     }
 
     @Test
