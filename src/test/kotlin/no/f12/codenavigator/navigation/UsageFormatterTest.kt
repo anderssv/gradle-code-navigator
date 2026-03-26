@@ -13,10 +13,10 @@ class UsageFormatterTest {
     fun `JSON formats single method call usage`() {
         val usages = listOf(
             UsageSite(
-                callerClass = "com.example.Caller",
+                callerClass = ClassName("com.example.Caller"),
                 callerMethod = "doWork",
                 sourceFile = "Caller.kt",
-                targetOwner = "com.example.Target",
+                targetOwner = ClassName("com.example.Target"),
                 targetName = "process",
                 targetDescriptor = "()V",
                 kind = UsageKind.METHOD_CALL,
@@ -47,10 +47,10 @@ class UsageFormatterTest {
     fun `LLM formats single method call usage`() {
         val usages = listOf(
             UsageSite(
-                callerClass = "com.example.Caller",
+                callerClass = ClassName("com.example.Caller"),
                 callerMethod = "doWork",
                 sourceFile = "Caller.kt",
-                targetOwner = "com.example.Target",
+                targetOwner = ClassName("com.example.Target"),
                 targetName = "process",
                 targetDescriptor = "()V",
                 kind = UsageKind.METHOD_CALL,
@@ -66,8 +66,8 @@ class UsageFormatterTest {
     @Test
     fun `LLM formats multiple usages on separate lines`() {
         val usages = listOf(
-            UsageSite("com.example.A", "fromA", "A.kt", "com.example.Target", "process", "()V", UsageKind.METHOD_CALL),
-            UsageSite("com.example.B", "fromB", "B.kt", "com.example.Target", "name", "Ljava/lang/String;", UsageKind.FIELD_ACCESS),
+            UsageSite(ClassName("com.example.A"), "fromA", "A.kt", ClassName("com.example.Target"), "process", "()V", UsageKind.METHOD_CALL),
+            UsageSite(ClassName("com.example.B"), "fromB", "B.kt", ClassName("com.example.Target"), "name", "Ljava/lang/String;", UsageKind.FIELD_ACCESS),
         )
 
         val result = LlmFormatter.formatUsages(usages)
@@ -82,7 +82,7 @@ class UsageFormatterTest {
     @Test
     fun `TEXT formats usages as readable list`() {
         val usages = listOf(
-            UsageSite("com.example.Caller", "doWork", "Caller.kt", "com.example.Target", "process", "()V", UsageKind.METHOD_CALL),
+            UsageSite(ClassName("com.example.Caller"), "doWork", "Caller.kt", ClassName("com.example.Target"), "process", "()V", UsageKind.METHOD_CALL),
         )
 
         val result = UsageFormatter.format(usages)
@@ -104,8 +104,8 @@ class UsageFormatterTest {
     @Test
     fun `JSON sorts usages by caller class then method`() {
         val usages = listOf(
-            UsageSite("com.example.Z", "z", "Z.kt", "com.example.Target", "process", "()V", UsageKind.METHOD_CALL),
-            UsageSite("com.example.A", "a", "A.kt", "com.example.Target", "process", "()V", UsageKind.METHOD_CALL),
+            UsageSite(ClassName("com.example.Z"), "z", "Z.kt", ClassName("com.example.Target"), "process", "()V", UsageKind.METHOD_CALL),
+            UsageSite(ClassName("com.example.A"), "a", "A.kt", ClassName("com.example.Target"), "process", "()V", UsageKind.METHOD_CALL),
         )
 
         val json = JsonFormatter.formatUsages(usages)

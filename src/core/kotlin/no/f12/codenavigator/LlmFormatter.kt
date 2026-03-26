@@ -83,7 +83,7 @@ object LlmFormatter {
 
     fun formatUsages(usages: List<UsageSite>): String =
         usages.sortedWith(compareBy({ it.callerClass }, { it.callerMethod }))
-            .joinToString("\n") { "${it.callerClass}.${it.callerMethod} -> ${it.targetOwner}.${it.targetName}${it.targetDescriptor} ${it.kind.name.lowercase()} ${it.sourceFile}" }
+            .joinToString("\n") { "${it.callerClass.value}.${it.callerMethod} -> ${it.targetOwner.value}.${it.targetName}${it.targetDescriptor} ${it.kind.name.lowercase()} ${it.sourceFile}" }
 
     fun formatRank(ranked: List<RankedType>): String =
         ranked.joinToString("\n") { "%.4f".format(it.rank).let { rank -> "${it.className.value} rank=$rank in=${it.inDegree} out=${it.outDegree}" } }

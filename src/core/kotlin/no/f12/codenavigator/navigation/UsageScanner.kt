@@ -9,10 +9,10 @@ import org.objectweb.asm.Type
 import java.io.File
 
 data class UsageSite(
-    val callerClass: String,
+    val callerClass: ClassName,
     val callerMethod: String,
     val sourceFile: String,
-    val targetOwner: String,
+    val targetOwner: ClassName,
     val targetName: String,
     val targetDescriptor: String,
     val kind: UsageKind,
@@ -28,7 +28,7 @@ object UsageScanner {
     fun filterOutsidePackage(usages: List<UsageSite>, outsidePackage: String?): List<UsageSite> {
         if (outsidePackage == null) return usages
         val prefix = if (outsidePackage.endsWith(".")) outsidePackage else "$outsidePackage."
-        return usages.filter { !it.callerClass.startsWith(prefix) }
+        return usages.filter { !it.callerClass.value.startsWith(prefix) }
     }
 
     fun scan(
@@ -65,7 +65,7 @@ object UsageScanner {
         usages: MutableCollection<UsageSite>,
     ) {
         val reader = createClassReader(classFile)
-        var callerClass = ""
+        var callerClass = ClassName("")
         var sourceFile = "<unknown>"
 
         reader.accept(
@@ -74,7 +74,7 @@ object UsageScanner {
                     version: Int, access: Int, name: String,
                     signature: String?, superName: String?, interfaces: Array<out String>?,
                 ) {
-                    callerClass = name.replace('/', '.')
+                    callerClass = ClassName(name.replace('/', '.'))
                 }
 
                 override fun visitSource(source: String?, debug: String?) {
@@ -118,7 +118,7 @@ object UsageScanner {
                                     callerClass = callerClass,
                                     callerMethod = callerMethod,
                                     sourceFile = sourceFile,
-                                    targetOwner = type,
+                                    targetOwner = ClassName(type),
                                     targetName = callerMethod,
                                     targetDescriptor = descriptor,
                                     kind = UsageKind.TYPE_REFERENCE,
@@ -141,7 +141,7 @@ object UsageScanner {
                                         callerClass = callerClass,
                                         callerMethod = callerMethod,
                                         sourceFile = sourceFile,
-                                        targetOwner = instrOwnerDot,
+                                        targetOwner = ClassName(instrOwnerDot),
                                         targetName = instrName,
                                         targetDescriptor = instrDescriptor,
                                         kind = UsageKind.METHOD_CALL,
@@ -163,7 +163,7 @@ object UsageScanner {
                                         callerClass = callerClass,
                                         callerMethod = callerMethod,
                                         sourceFile = sourceFile,
-                                        targetOwner = instrOwnerDot,
+                                        targetOwner = ClassName(instrOwnerDot),
                                         targetName = instrName,
                                         targetDescriptor = instrDescriptor,
                                         kind = UsageKind.FIELD_ACCESS,
@@ -180,7 +180,7 @@ object UsageScanner {
                                         callerClass = callerClass,
                                         callerMethod = callerMethod,
                                         sourceFile = sourceFile,
-                                        targetOwner = instrTypeDot,
+                                        targetOwner = ClassName(instrTypeDot),
                                         targetName = typeInsnName(opcode),
                                         targetDescriptor = "",
                                         kind = UsageKind.TYPE_REFERENCE,

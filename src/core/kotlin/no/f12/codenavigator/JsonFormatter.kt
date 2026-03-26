@@ -206,10 +206,10 @@ object JsonFormatter {
     fun formatUsages(usages: List<UsageSite>): String =
         jsonArray(usages.sortedWith(compareBy({ it.callerClass }, { it.callerMethod }))) { u ->
             jsonObject(
-                "callerClass" to u.callerClass,
+                "callerClass" to u.callerClass.value,
                 "callerMethod" to u.callerMethod,
                 "sourceFile" to u.sourceFile,
-                "targetOwner" to u.targetOwner,
+                "targetOwner" to u.targetOwner.value,
                 "targetMethod" to u.targetName,
                 "targetDescriptor" to u.targetDescriptor,
                 "kind" to u.kind.name.lowercase(),

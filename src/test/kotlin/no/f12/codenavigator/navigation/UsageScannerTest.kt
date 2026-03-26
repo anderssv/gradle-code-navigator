@@ -40,9 +40,9 @@ class UsageScannerTest {
         ).data
 
         assertEquals(1, usages.size)
-        assertEquals("com.example.Caller", usages[0].callerClass)
+        assertEquals(ClassName("com.example.Caller"), usages[0].callerClass)
         assertEquals("doWork", usages[0].callerMethod)
-        assertEquals("com.example.Target", usages[0].targetOwner)
+        assertEquals(ClassName("com.example.Target"), usages[0].targetOwner)
         assertEquals("process", usages[0].targetName)
     }
 
@@ -123,9 +123,9 @@ class UsageScannerTest {
         ).data
 
         assertEquals(1, usages.size)
-        assertEquals("com.example.Caller", usages[0].callerClass)
+        assertEquals(ClassName("com.example.Caller"), usages[0].callerClass)
         assertEquals("doWork", usages[0].callerMethod)
-        assertEquals("com.example.Target", usages[0].targetOwner)
+        assertEquals(ClassName("com.example.Target"), usages[0].targetOwner)
         assertEquals("name", usages[0].targetName)
         assertEquals(UsageKind.FIELD_ACCESS, usages[0].kind)
     }
@@ -164,7 +164,7 @@ class UsageScannerTest {
         ).data
 
         assertEquals(1, usages.size)
-        assertEquals("com.example.Target", usages[0].targetOwner)
+        assertEquals(ClassName("com.example.Target"), usages[0].targetOwner)
         assertEquals(UsageKind.TYPE_REFERENCE, usages[0].kind)
     }
 
@@ -197,7 +197,7 @@ class UsageScannerTest {
         ).data
 
         assertEquals(1, usages.size)
-        assertEquals("com.example.Caller", usages[0].callerClass)
+        assertEquals(ClassName("com.example.Caller"), usages[0].callerClass)
         assertEquals("doWork", usages[0].callerMethod)
         assertEquals(UsageKind.TYPE_REFERENCE, usages[0].kind)
     }
@@ -232,7 +232,7 @@ class UsageScannerTest {
         ).data
 
         assertEquals(1, usages.size)
-        assertEquals("com.example.Caller", usages[0].callerClass)
+        assertEquals(ClassName("com.example.Caller"), usages[0].callerClass)
         assertEquals("target", usages[0].targetName)
         assertEquals(UsageKind.TYPE_REFERENCE, usages[0].kind)
     }
@@ -301,7 +301,7 @@ class UsageScannerTest {
 
         val fieldAccesses = usages.filter { it.kind == UsageKind.FIELD_ACCESS }
         assertEquals(1, fieldAccesses.size)
-        assertEquals("com.example.Constants", fieldAccesses[0].targetOwner)
+        assertEquals(ClassName("com.example.Constants"), fieldAccesses[0].targetOwner)
         assertEquals("MAX_SIZE", fieldAccesses[0].targetName)
     }
 
@@ -319,9 +319,9 @@ class UsageScannerTest {
 
         val methodCalls = usages.filter { it.kind == UsageKind.METHOD_CALL }
         assertEquals(1, methodCalls.size)
-        assertEquals("com.example.Caller", methodCalls[0].callerClass)
+        assertEquals(ClassName("com.example.Caller"), methodCalls[0].callerClass)
         assertEquals("doWork", methodCalls[0].callerMethod)
-        assertEquals("com.example.ContextKt", methodCalls[0].targetOwner)
+        assertEquals(ClassName("com.example.ContextKt"), methodCalls[0].targetOwner)
         assertEquals("locateResourceFile", methodCalls[0].targetName)
     }
 
@@ -346,10 +346,10 @@ class UsageScannerTest {
 
         assertEquals(2, allUsages.size)
 
-        val projectSources = setOf("com.example.ProjectCaller")
+        val projectSources = setOf(ClassName("com.example.ProjectCaller"))
         val projectOnly = allUsages.filter { it.callerClass in projectSources }
         assertEquals(1, projectOnly.size)
-        assertEquals("com.example.ProjectCaller", projectOnly[0].callerClass)
+        assertEquals(ClassName("com.example.ProjectCaller"), projectOnly[0].callerClass)
     }
 
     @Test
@@ -481,7 +481,7 @@ class UsageScannerTest {
         val filtered = UsageScanner.filterOutsidePackage(allUsages, "com.example.ra")
 
         assertEquals(1, filtered.size)
-        assertEquals("com.example.services.ExternalCaller", filtered[0].callerClass)
+        assertEquals(ClassName("com.example.services.ExternalCaller"), filtered[0].callerClass)
     }
 
     @Test
@@ -546,7 +546,7 @@ class UsageScannerTest {
         val filtered = UsageScanner.filterOutsidePackage(allUsages, "com.example.ra")
 
         assertEquals(1, filtered.size)
-        assertEquals("com.example.rabbit.SimilarCaller", filtered[0].callerClass)
+        assertEquals(ClassName("com.example.rabbit.SimilarCaller"), filtered[0].callerClass)
     }
 
     // --- helpers ---
