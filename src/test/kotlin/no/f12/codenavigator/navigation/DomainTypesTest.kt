@@ -2,6 +2,8 @@ package no.f12.codenavigator.navigation
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class ClassNameTest {
 
@@ -39,6 +41,41 @@ class ClassNameTest {
         val b = ClassName("com.example.Foo")
 
         assertEquals(a, b)
+    }
+
+    @Test
+    fun `isGenerated is true for inner classes`() {
+        assertTrue(ClassName("com.example.Outer\$Inner").isGenerated())
+    }
+
+    @Test
+    fun `isGenerated is true for lambda classes`() {
+        assertTrue(ClassName("com.example.Service\$handle\$1").isGenerated())
+    }
+
+    @Test
+    fun `isGenerated is false for regular classes`() {
+        assertFalse(ClassName("com.example.MyService").isGenerated())
+    }
+
+    @Test
+    fun `isSynthetic is true for anonymous classes`() {
+        assertTrue(ClassName("com.example.Foo\$1").isSynthetic())
+    }
+
+    @Test
+    fun `isSynthetic is true for lambda classes`() {
+        assertTrue(ClassName("com.example.Service\$lambda\$1").isSynthetic())
+    }
+
+    @Test
+    fun `isSynthetic is false for named inner classes`() {
+        assertFalse(ClassName("com.example.Outer\$Inner").isSynthetic())
+    }
+
+    @Test
+    fun `isSynthetic is false for regular classes`() {
+        assertFalse(ClassName("com.example.MyService").isSynthetic())
     }
 }
 
