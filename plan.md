@@ -11,9 +11,9 @@ The DSM at depth 4 reveals two bidirectional dependencies caused by `OutputForma
 
 Fix: Move `OutputFormat` into a location that both sub-packages can depend on without creating a cycle. Options: move into `navigation` (since it has the most dependents), create a `codenavigator.common` package, or change configs to store a raw `String` for format and resolve at the task layer.
 
-### S2. Dead classes — delete `CalleeTreeFormatter` and `CallerTreeFormatter` (Low effort)
+### ~~S2. Dead classes — delete `CalleeTreeFormatter` and `CallerTreeFormatter`~~ DONE
 
-Both are reported as dead code. They were superseded by the shared `CallTreeFormatter`. Confirm no references exist and delete.
+Deleted both wrapper classes. Updated 5 test files to use `CallTreeFormatter` directly.
 
 ### S3. Reduce `JsonFormatter` / `LlmFormatter` complexity (Medium value, medium effort)
 
@@ -23,13 +23,13 @@ Options:
 - Extract per-feature format functions (e.g. `CallTreeJsonFormat`, `DsmJsonFormat`) to reduce method count per class
 - Introduce a `ResultFormatter` interface so the task layer uses polymorphism instead of `when(format)`
 
-### S4. Consolidate cache classes into generic `FileCache<T>` (Medium value, low effort)
+### ~~S4. Consolidate cache classes into generic `FileCache<T>`~~ DONE
 
-`CallGraphCache`, `InterfaceRegistryCache`, and `SymbolIndexCache` have 100% change coupling (6 shared commits) and identical `read()`/`write()`/`isFresh()` patterns. Extract a generic base to eliminate triplication.
+Extracted `FileCache<T>` abstract base class with shared `isFresh()`, `getOrBuild()`, and `FIELD_SEPARATOR`. Migrated all four caches (`ClassIndexCache`, `SymbolIndexCache`, `InterfaceRegistryCache`, `CallGraphCache`) to extend it. Unified `getOrScan`/`getOrBuild` naming to `getOrBuild` everywhere.
 
-### S5. Consolidate duplicated methods across extractors (Low effort)
+### ~~S5. Consolidate duplicated methods across extractors~~ DONE
 
-`SymbolExtractor` and `ClassDetailExtractor` both have `isAccessorForField` and `isExcludedMethod` methods. These should live in one place (likely `KotlinMethodFilter` or a shared utility).
+Moved `isAccessorForField`, `isExcludedMethod`, `KOTLIN_ACCESSOR`, and `EXCLUDED_FIELDS` into `KotlinMethodFilter`. Both `SymbolExtractor` and `ClassDetailExtractor` now delegate to it.
 
 ### S6. Split root package to clarify dependency direction (Medium value, medium effort)
 
