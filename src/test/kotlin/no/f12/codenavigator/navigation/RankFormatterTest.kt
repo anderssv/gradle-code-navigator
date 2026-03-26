@@ -16,8 +16,8 @@ class RankFormatterTest {
     @Test
     fun `formats ranked types as columnar table`() {
         val ranked = listOf(
-            RankedType("com.example.Core", 0.42, inDegree = 5, outDegree = 2),
-            RankedType("com.example.Service", 0.15, inDegree = 2, outDegree = 3),
+            RankedType(ClassName("com.example.Core"), 0.42, inDegree = 5, outDegree = 2),
+            RankedType(ClassName("com.example.Service"), 0.15, inDegree = 2, outDegree = 3),
         )
 
         val output = RankFormatter.format(ranked)
@@ -32,7 +32,7 @@ class RankFormatterTest {
     @Test
     fun `rank values are formatted to 4 decimal places`() {
         val ranked = listOf(
-            RankedType("com.example.Core", 0.42135678, inDegree = 1, outDegree = 0),
+            RankedType(ClassName("com.example.Core"), 0.42135678, inDegree = 1, outDegree = 0),
         )
 
         val output = RankFormatter.format(ranked)

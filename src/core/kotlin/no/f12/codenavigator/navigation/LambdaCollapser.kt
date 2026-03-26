@@ -5,15 +5,15 @@ object LambdaCollapser {
     private val TRAILING_NUMERIC_SEGMENT = Regex("""\$\d+$""")
     private val TRAILING_LOWERCASE_SEGMENT = Regex("""\$[a-z][^$]*$""")
 
-    fun collapse(className: String): String {
-        var result = className
+    fun collapse(className: ClassName): ClassName {
+        var result = className.value
         while (true) {
             val afterNumeric = result.replace(TRAILING_NUMERIC_SEGMENT, "")
             if (afterNumeric == result) break
             val afterFunction = afterNumeric.replace(TRAILING_LOWERCASE_SEGMENT, "")
             result = afterFunction
         }
-        return result
+        return ClassName(result)
     }
 
     fun collapseComplexity(results: List<ClassComplexity>): List<ClassComplexity> =
@@ -30,7 +30,7 @@ object LambdaCollapser {
 
     private fun collapseByClass(entries: List<Pair<String, Int>>): List<Pair<String, Int>> =
         entries
-            .groupBy { (className, _) -> collapse(className) }
+            .groupBy { (className, _) -> collapse(ClassName(className)).value }
             .map { (collapsed, group) -> collapsed to group.sumOf { it.second } }
             .sortedByDescending { it.second }
 }

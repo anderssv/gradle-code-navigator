@@ -45,8 +45,8 @@ class MetricsBuilderTest {
     @Test
     fun `computes average fan-in and fan-out from ranked types`() {
         val rankedTypes = listOf(
-            RankedType("com.example.Foo", 0.5, inDegree = 10, outDegree = 4),
-            RankedType("com.example.Bar", 0.3, inDegree = 6, outDegree = 2),
+            RankedType(ClassName("com.example.Foo"), 0.5, inDegree = 10, outDegree = 4),
+            RankedType(ClassName("com.example.Bar"), 0.3, inDegree = 6, outDegree = 2),
         )
 
         val result = MetricsBuilder.build(

@@ -7,47 +7,47 @@ class LambdaCollapserTest {
 
     @Test
     fun `regular class name is unchanged`() {
-        assertEquals("com.example.Service", LambdaCollapser.collapse("com.example.Service"))
+        assertEquals("com.example.Service", LambdaCollapser.collapse(ClassName("com.example.Service")).value)
     }
 
     @Test
     fun `lambda class Foo dollar 1 collapses to Foo`() {
-        assertEquals("com.example.Foo", LambdaCollapser.collapse("com.example.Foo\$1"))
+        assertEquals("com.example.Foo", LambdaCollapser.collapse(ClassName("com.example.Foo\$1")).value)
     }
 
     @Test
     fun `nested lambda collapses past function name to enclosing class`() {
-        assertEquals("com.example.Foo", LambdaCollapser.collapse("com.example.Foo\$bar\$1\$2"))
+        assertEquals("com.example.Foo", LambdaCollapser.collapse(ClassName("com.example.Foo\$bar\$1\$2")).value)
     }
 
     @Test
     fun `named inner class is unchanged`() {
-        assertEquals("com.example.Foo\$Bar", LambdaCollapser.collapse("com.example.Foo\$Bar"))
+        assertEquals("com.example.Foo\$Bar", LambdaCollapser.collapse(ClassName("com.example.Foo\$Bar")).value)
     }
 
     @Test
     fun `deep numeric nesting collapses to outermost class`() {
-        assertEquals("com.example.Foo", LambdaCollapser.collapse("com.example.Foo\$1\$2\$3"))
+        assertEquals("com.example.Foo", LambdaCollapser.collapse(ClassName("com.example.Foo\$1\$2\$3")).value)
     }
 
     @Test
     fun `lambda under named inner class collapses to named inner`() {
-        assertEquals("com.example.Foo\$Bar", LambdaCollapser.collapse("com.example.Foo\$Bar\$1"))
+        assertEquals("com.example.Foo\$Bar", LambdaCollapser.collapse(ClassName("com.example.Foo\$Bar\$1")).value)
     }
 
     @Test
     fun `class with digit in named segment is unchanged`() {
-        assertEquals("com.example.Foo\$V2", LambdaCollapser.collapse("com.example.Foo\$V2"))
+        assertEquals("com.example.Foo\$V2", LambdaCollapser.collapse(ClassName("com.example.Foo\$V2")).value)
     }
 
     @Test
     fun `fully qualified lambda collapses to enclosing class`() {
-        assertEquals("com.example.Service", LambdaCollapser.collapse("com.example.Service\$handle\$1"))
+        assertEquals("com.example.Service", LambdaCollapser.collapse(ClassName("com.example.Service\$handle\$1")).value)
     }
 
     @Test
     fun `lambda in function of named inner class collapses to inner class`() {
-        assertEquals("com.example.Foo\$Bar", LambdaCollapser.collapse("com.example.Foo\$Bar\$baz\$1"))
+        assertEquals("com.example.Foo\$Bar", LambdaCollapser.collapse(ClassName("com.example.Foo\$Bar\$baz\$1")).value)
     }
 
     @Test

@@ -86,7 +86,7 @@ object LlmFormatter {
             .joinToString("\n") { "${it.callerClass}.${it.callerMethod} -> ${it.targetOwner}.${it.targetName}${it.targetDescriptor} ${it.kind.name.lowercase()} ${it.sourceFile}" }
 
     fun formatRank(ranked: List<RankedType>): String =
-        ranked.joinToString("\n") { "%.4f".format(it.rank).let { rank -> "${it.className} rank=$rank in=${it.inDegree} out=${it.outDegree}" } }
+        ranked.joinToString("\n") { "%.4f".format(it.rank).let { rank -> "${it.className.value} rank=$rank in=${it.inDegree} out=${it.outDegree}" } }
 
     fun formatDead(dead: List<DeadCode>): String =
         dead.joinToString("\n") { d ->

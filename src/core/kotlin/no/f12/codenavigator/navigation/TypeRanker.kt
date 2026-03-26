@@ -1,7 +1,7 @@
 package no.f12.codenavigator.navigation
 
 data class RankedType(
-    val className: String,
+    val className: ClassName,
     val rank: Double,
     val inDegree: Int,
     val outDegree: Int,
@@ -13,13 +13,13 @@ object TypeRanker {
     private const val ITERATIONS = 20
 
     fun rank(graph: CallGraph, top: Int = Int.MAX_VALUE, projectOnly: Boolean = false, collapseLambdas: Boolean = false): List<RankedType> {
-        val collapse: (String) -> String = if (collapseLambdas) LambdaCollapser::collapse else { it -> it }
-        val typeEdges = mutableMapOf<String, MutableSet<String>>()
-        val allTypes = mutableSetOf<String>()
+        val collapse: (ClassName) -> ClassName = if (collapseLambdas) LambdaCollapser::collapse else { it -> it }
+        val typeEdges = mutableMapOf<ClassName, MutableSet<ClassName>>()
+        val allTypes = mutableSetOf<ClassName>()
 
         graph.forEachEdge { caller, callee ->
-            val from = collapse(caller.className.value)
-            val to = collapse(callee.className.value)
+            val from = collapse(caller.className)
+            val to = collapse(callee.className)
             if (from != to) {
                 typeEdges.getOrPut(from) { mutableSetOf() }.add(to)
             }
@@ -30,7 +30,7 @@ object TypeRanker {
         if (allTypes.isEmpty()) return emptyList()
 
         val types = if (projectOnly) {
-            val projectClasses = graph.projectClasses().map { collapse(it.value) }.toSet()
+            val projectClasses = graph.projectClasses().map { collapse(it) }.toSet()
             allTypes.filter { it in projectClasses }
         } else {
             allTypes.toList()
@@ -40,10 +40,10 @@ object TypeRanker {
         val n = types.size
         val typesSet = types.toSet()
         val initialRank = 1.0 / n
-        val ranks = mutableMapOf<String, Double>()
+        val ranks = mutableMapOf<ClassName, Double>()
         types.forEach { ranks[it] = initialRank }
 
-        val incomingEdges = mutableMapOf<String, MutableSet<String>>()
+        val incomingEdges = mutableMapOf<ClassName, MutableSet<ClassName>>()
         for ((from, targets) in typeEdges) {
             for (to in targets) {
                 if (to in typesSet && from in typesSet) {
@@ -53,7 +53,7 @@ object TypeRanker {
         }
 
         repeat(ITERATIONS) {
-            val newRanks = mutableMapOf<String, Double>()
+            val newRanks = mutableMapOf<ClassName, Double>()
             val base = (1.0 - DAMPING) / n
 
             for (type in types) {
@@ -73,8 +73,8 @@ object TypeRanker {
             }
         }
 
-        val inDegree = mutableMapOf<String, Int>()
-        val outDegree = mutableMapOf<String, Int>()
+        val inDegree = mutableMapOf<ClassName, Int>()
+        val outDegree = mutableMapOf<ClassName, Int>()
         for ((from, targets) in typeEdges) {
             if (from in typesSet) {
                 val filteredTargets = targets.count { it in typesSet }

@@ -265,8 +265,8 @@ class LlmFormatterTest {
     @Test
     fun `formats ranked types compactly`() {
         val ranked = listOf(
-            RankedType("com.example.Core", 0.42, inDegree = 5, outDegree = 2),
-            RankedType("com.example.Service", 0.15, inDegree = 2, outDegree = 3),
+            RankedType(ClassName("com.example.Core"), 0.42, inDegree = 5, outDegree = 2),
+            RankedType(ClassName("com.example.Service"), 0.15, inDegree = 2, outDegree = 3),
         )
 
         val result = LlmFormatter.formatRank(ranked)

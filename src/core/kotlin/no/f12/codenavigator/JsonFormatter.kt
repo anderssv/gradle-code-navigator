@@ -219,7 +219,7 @@ object JsonFormatter {
     fun formatRank(ranked: List<RankedType>): String =
         jsonArray(ranked) { r ->
             jsonObject(
-                "className" to r.className,
+                "className" to r.className.value,
                 "rank" to r.rank,
                 "inDegree" to r.inDegree,
                 "outDegree" to r.outDegree,
