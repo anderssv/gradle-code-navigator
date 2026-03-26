@@ -97,7 +97,7 @@ object CallGraphBuilder {
         sourceFiles: MutableMap<ClassName, String>,
     ) {
         val reader = createClassReader(classFile)
-        var ownerClassName = ""
+        var ownerClassName = ClassName("")
 
         reader.accept(
             object : ClassVisitor(Opcodes.ASM9) {
@@ -109,12 +109,12 @@ object CallGraphBuilder {
                     superName: String?,
                     interfaces: Array<out String>?,
                 ) {
-                    ownerClassName = name.replace('/', '.')
+                    ownerClassName = ClassName(name.replace('/', '.'))
                 }
 
                 override fun visitSource(source: String?, debug: String?) {
                     if (source != null) {
-                        sourceFiles[ClassName(ownerClassName)] = source
+                        sourceFiles[ownerClassName] = source
                     }
                 }
 
@@ -125,7 +125,7 @@ object CallGraphBuilder {
                     signature: String?,
                     exceptions: Array<out String>?,
                 ): MethodVisitor {
-                    val caller = MethodRef(ClassName(ownerClassName), name)
+                    val caller = MethodRef(ownerClassName, name)
 
                     return object : MethodVisitor(Opcodes.ASM9) {
                         override fun visitMethodInsn(
