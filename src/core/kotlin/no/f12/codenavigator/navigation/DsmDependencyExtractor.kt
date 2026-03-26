@@ -49,10 +49,9 @@ object DsmDependencyExtractor {
         if (rootPrefix.isNotEmpty() && !sourceClass.value.startsWith(rootPrefix)) return
 
         collector.referencedTypes
-            .filter { it != sourceClass.value }
-            .filter { rootPrefix.isEmpty() || it.startsWith(rootPrefix) }
-            .forEach { targetClassStr ->
-                val targetClass = ClassName(targetClassStr)
+            .filter { it != sourceClass }
+            .filter { rootPrefix.isEmpty() || it.value.startsWith(rootPrefix) }
+            .forEach { targetClass ->
                 val targetPackage = targetClass.packageName()
                 if (targetPackage != sourcePackage) {
                     dependencies += PackageDependency(sourcePackage, targetPackage, sourceClass, targetClass)
@@ -62,7 +61,7 @@ object DsmDependencyExtractor {
 }
 
 private class DependencyCollector(private val rootPrefix: String) : ClassVisitor(Opcodes.ASM9) {
-    val referencedTypes = mutableSetOf<String>()
+    val referencedTypes = mutableSetOf<ClassName>()
 
     override fun visit(
         version: Int, access: Int, name: String?, signature: String?,
@@ -119,7 +118,7 @@ private class DependencyCollector(private val rootPrefix: String) : ClassVisitor
         if (className.startsWith('[')) return
         if (rootPrefix.isNotEmpty() && !className.startsWith(rootPrefix)) return
         val baseName = className.substringBefore('$')
-        referencedTypes += baseName
+        referencedTypes += ClassName(baseName)
     }
 
     private fun addDescriptorTypes(descriptor: String) {
