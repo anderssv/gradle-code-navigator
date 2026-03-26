@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.26
+
+- **New:** `-Pfield=<name>` parameter for `cnavUsages` — find all reads/writes of a field or Kotlin property. Matches direct field access (GETFIELD/PUTFIELD) and property accessor calls (`get<Field>`, `set<Field>`, `is<Field>`). Requires `ownerClass`, mutually exclusive with `method`.
+- **Fix:** Gradle and Maven error messages now show the specific validation error (e.g. "Cannot specify both 'field' and 'method'") instead of a generic "Missing required property" message.
+
 ## 0.1.25
 
 - **New:** Line numbers in `cnavCallers`/`cnavCallees` output — extracted from bytecode line number tables and shown in all three formats: TEXT `(File.kt:42)`, LLM `File.kt:42`, JSON `"lineNumber":42`. Cached in a backward-compatible `[LINES]` section.
