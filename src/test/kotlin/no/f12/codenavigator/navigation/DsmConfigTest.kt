@@ -87,14 +87,14 @@ class DsmConfigTest {
     fun `parseCycleFilter parses comma-separated packages`() {
         val result = DsmConfig.parseCycleFilter("api,service")
 
-        assertEquals("api" to "service", result)
+        assertEquals(PackageName("api") to PackageName("service"), result)
     }
 
     @Test
     fun `parseCycleFilter trims whitespace around package names`() {
         val result = DsmConfig.parseCycleFilter(" api , service ")
 
-        assertEquals("api" to "service", result)
+        assertEquals(PackageName("api") to PackageName("service"), result)
     }
 
     @Test
@@ -122,7 +122,7 @@ class DsmConfigTest {
     fun `parse includes cycleFilter from cycle property`() {
         val config = DsmConfig.parse(mapOf("cycle" to "api,service"))
 
-        assertEquals("api" to "service", config.cycleFilter)
+        assertEquals(PackageName("api") to PackageName("service"), config.cycleFilter)
     }
 
     @Test

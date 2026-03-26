@@ -158,45 +158,45 @@ object JsonFormatter {
         }
 
     fun formatDsm(matrix: DsmMatrix): String {
-        val packages = jsonStringArray(matrix.packages)
-        val cells = jsonArray(matrix.cells.entries.toList().sortedBy { "${it.key.first}-${it.key.second}" }) { (key, count) ->
+        val packages = jsonStringArray(matrix.packages.map { it.value })
+        val cells = jsonArray(matrix.cells.entries.toList().sortedBy { "${it.key.first.value}-${it.key.second.value}" }) { (key, count) ->
             val classDeps = matrix.classDependencies[key]
             jsonObject(
-                "from" to key.first,
-                "to" to key.second,
+                "from" to key.first.value,
+                "to" to key.second.value,
                 "count" to count,
                 "classes" to JsonRaw(
-                    jsonArray(classDeps?.toList()?.sortedBy { "${it.first}-${it.second}" } ?: emptyList()) { (src, tgt) ->
-                        jsonObject("source" to src, "target" to tgt)
+                    jsonArray(classDeps?.toList()?.sortedBy { "${it.first.value}-${it.second.value}" } ?: emptyList()) { (src, tgt) ->
+                        jsonObject("source" to src.value, "target" to tgt.value)
                     },
                 ),
             )
         }
         val cycles = matrix.findCyclicPairs()
         val cyclesJson = jsonArray(cycles) { (a, b, counts) ->
-            jsonObject("packageA" to a, "packageB" to b, "forwardRefs" to counts.first, "backwardRefs" to counts.second)
+            jsonObject("packageA" to a.value, "packageB" to b.value, "forwardRefs" to counts.first, "backwardRefs" to counts.second)
         }
         return jsonObject("packages" to JsonRaw(packages), "cells" to JsonRaw(cells), "cycles" to JsonRaw(cyclesJson))
     }
 
-    fun formatDsmCycles(matrix: DsmMatrix, cycleFilter: Pair<String, String>? = null): String {
+    fun formatDsmCycles(matrix: DsmMatrix, cycleFilter: Pair<PackageName, PackageName>? = null): String {
         val cycles = matrix.findCyclicPairs(cycleFilter)
         return jsonArray(cycles) { (a, b, counts) ->
             val fwdEdges = matrix.classDependencies[a to b]
             val bwdEdges = matrix.classDependencies[b to a]
             jsonObject(
-                "packageA" to a,
-                "packageB" to b,
+                "packageA" to a.value,
+                "packageB" to b.value,
                 "forwardRefs" to counts.first,
                 "backwardRefs" to counts.second,
                 "forwardEdges" to JsonRaw(
-                    jsonArray(fwdEdges?.toList()?.sortedBy { "${it.first}-${it.second}" } ?: emptyList()) { (src, tgt) ->
-                        jsonObject("source" to src, "target" to tgt)
+                    jsonArray(fwdEdges?.toList()?.sortedBy { "${it.first.value}-${it.second.value}" } ?: emptyList()) { (src, tgt) ->
+                        jsonObject("source" to src.value, "target" to tgt.value)
                     },
                 ),
                 "backwardEdges" to JsonRaw(
-                    jsonArray(bwdEdges?.toList()?.sortedBy { "${it.first}-${it.second}" } ?: emptyList()) { (src, tgt) ->
-                        jsonObject("source" to src, "target" to tgt)
+                    jsonArray(bwdEdges?.toList()?.sortedBy { "${it.first.value}-${it.second.value}" } ?: emptyList()) { (src, tgt) ->
+                        jsonObject("source" to src.value, "target" to tgt.value)
                     },
                 ),
             )
@@ -257,14 +257,14 @@ object JsonFormatter {
     fun formatCycles(details: List<CycleDetail>): String =
         jsonArray(details) { detail ->
             jsonObject(
-                "packages" to JsonRaw(jsonStringArray(detail.packages)),
+                "packages" to JsonRaw(jsonStringArray(detail.packages.map { it.value })),
                 "edges" to JsonRaw(jsonArray(detail.edges) { edge ->
                     jsonObject(
-                        "from" to edge.from,
-                        "to" to edge.to,
+                        "from" to edge.from.value,
+                        "to" to edge.to.value,
                         "classEdges" to JsonRaw(
-                            jsonArray(edge.classEdges.toList().sortedBy { "${it.first}-${it.second}" }) { (src, tgt) ->
-                                jsonObject("source" to src, "target" to tgt)
+                            jsonArray(edge.classEdges.toList().sortedBy { "${it.first.value}-${it.second.value}" }) { (src, tgt) ->
+                                jsonObject("source" to src.value, "target" to tgt.value)
                             },
                         ),
                     )

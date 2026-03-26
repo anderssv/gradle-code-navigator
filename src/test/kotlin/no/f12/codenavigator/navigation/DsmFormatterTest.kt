@@ -18,8 +18,8 @@ class DsmFormatterTest {
     @Test
     fun `formats two-package matrix with numbered legend`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "model"),
-            cells = mapOf("api" to "model" to 3),
+            packages = listOf(PackageName("api"), PackageName("model")),
+            cells = mapOf((PackageName("api") to PackageName("model")) to 3),
             classDependencies = emptyMap(),
         )
 
@@ -33,8 +33,8 @@ class DsmFormatterTest {
     @Test
     fun `diagonal cells show dot`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "model"),
-            cells = mapOf("api" to "model" to 1),
+            packages = listOf(PackageName("api"), PackageName("model")),
+            cells = mapOf((PackageName("api") to PackageName("model")) to 1),
             classDependencies = emptyMap(),
         )
 
@@ -49,8 +49,8 @@ class DsmFormatterTest {
     @Test
     fun `non-zero cells show count`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "model"),
-            cells = mapOf("api" to "model" to 5),
+            packages = listOf(PackageName("api"), PackageName("model")),
+            cells = mapOf((PackageName("api") to PackageName("model")) to 5),
             classDependencies = emptyMap(),
         )
 
@@ -65,14 +65,14 @@ class DsmFormatterTest {
     @Test
     fun `detects and warns about cyclic dependencies`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "service"),
+            packages = listOf(PackageName("api"), PackageName("service")),
             cells = mapOf(
-                "api" to "service" to 2,
-                "service" to "api" to 1,
+                (PackageName("api") to PackageName("service")) to 2,
+                (PackageName("service") to PackageName("api")) to 1,
             ),
             classDependencies = mapOf(
-                ("api" to "service") to setOf("Controller" to "Service"),
-                ("service" to "api") to setOf("Service" to "Controller"),
+                (PackageName("api") to PackageName("service")) to setOf(ClassName("Controller") to ClassName("Service")),
+                (PackageName("service") to PackageName("api")) to setOf(ClassName("Service") to ClassName("Controller")),
             ),
         )
 
@@ -85,8 +85,8 @@ class DsmFormatterTest {
     @Test
     fun `no cyclic warning when dependencies are one-directional`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "model"),
-            cells = mapOf("api" to "model" to 1),
+            packages = listOf(PackageName("api"), PackageName("model")),
+            cells = mapOf((PackageName("api") to PackageName("model")) to 1),
             classDependencies = emptyMap(),
         )
 
@@ -98,8 +98,8 @@ class DsmFormatterTest {
     @Test
     fun `column headers are numeric indices`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "model", "service"),
-            cells = mapOf("api" to "model" to 1),
+            packages = listOf(PackageName("api"), PackageName("model"), PackageName("service")),
+            cells = mapOf((PackageName("api") to PackageName("model")) to 1),
             classDependencies = emptyMap(),
         )
 
@@ -124,14 +124,14 @@ class DsmFormatterTest {
     @Test
     fun `formatCycles shows cycle with ref counts and class edges`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "service"),
+            packages = listOf(PackageName("api"), PackageName("service")),
             cells = mapOf(
-                "api" to "service" to 2,
-                "service" to "api" to 1,
+                (PackageName("api") to PackageName("service")) to 2,
+                (PackageName("service") to PackageName("api")) to 1,
             ),
             classDependencies = mapOf(
-                ("api" to "service") to setOf("Controller" to "Service", "Filter" to "Service"),
-                ("service" to "api") to setOf("Service" to "Controller"),
+                (PackageName("api") to PackageName("service")) to setOf(ClassName("Controller") to ClassName("Service"), ClassName("Filter") to ClassName("Service")),
+                (PackageName("service") to PackageName("api")) to setOf(ClassName("Service") to ClassName("Controller")),
             ),
         )
 
@@ -148,10 +148,10 @@ class DsmFormatterTest {
     @Test
     fun `formatCycles with one-directional deps shows no-cycles message`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "model"),
-            cells = mapOf("api" to "model" to 3),
+            packages = listOf(PackageName("api"), PackageName("model")),
+            cells = mapOf((PackageName("api") to PackageName("model")) to 3),
             classDependencies = mapOf(
-                ("api" to "model") to setOf("Controller" to "User"),
+                (PackageName("api") to PackageName("model")) to setOf(ClassName("Controller") to ClassName("User")),
             ),
         )
 
@@ -163,18 +163,18 @@ class DsmFormatterTest {
     @Test
     fun `formatCycles lists multiple cycles separately`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "model", "service"),
+            packages = listOf(PackageName("api"), PackageName("model"), PackageName("service")),
             cells = mapOf(
-                "api" to "service" to 1,
-                "service" to "api" to 1,
-                "model" to "service" to 1,
-                "service" to "model" to 1,
+                (PackageName("api") to PackageName("service")) to 1,
+                (PackageName("service") to PackageName("api")) to 1,
+                (PackageName("model") to PackageName("service")) to 1,
+                (PackageName("service") to PackageName("model")) to 1,
             ),
             classDependencies = mapOf(
-                ("api" to "service") to setOf("Controller" to "Service"),
-                ("service" to "api") to setOf("Service" to "Controller"),
-                ("model" to "service") to setOf("User" to "Service"),
-                ("service" to "model") to setOf("Service" to "User"),
+                (PackageName("api") to PackageName("service")) to setOf(ClassName("Controller") to ClassName("Service")),
+                (PackageName("service") to PackageName("api")) to setOf(ClassName("Service") to ClassName("Controller")),
+                (PackageName("model") to PackageName("service")) to setOf(ClassName("User") to ClassName("Service")),
+                (PackageName("service") to PackageName("model")) to setOf(ClassName("Service") to ClassName("User")),
             ),
         )
 
@@ -189,22 +189,22 @@ class DsmFormatterTest {
     @Test
     fun `formatCycles with cycleFilter shows only the matching cycle`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "model", "service"),
+            packages = listOf(PackageName("api"), PackageName("model"), PackageName("service")),
             cells = mapOf(
-                "api" to "service" to 1,
-                "service" to "api" to 1,
-                "model" to "service" to 1,
-                "service" to "model" to 1,
+                (PackageName("api") to PackageName("service")) to 1,
+                (PackageName("service") to PackageName("api")) to 1,
+                (PackageName("model") to PackageName("service")) to 1,
+                (PackageName("service") to PackageName("model")) to 1,
             ),
             classDependencies = mapOf(
-                ("api" to "service") to setOf("Controller" to "Service"),
-                ("service" to "api") to setOf("Service" to "Controller"),
-                ("model" to "service") to setOf("User" to "Service"),
-                ("service" to "model") to setOf("Service" to "User"),
+                (PackageName("api") to PackageName("service")) to setOf(ClassName("Controller") to ClassName("Service")),
+                (PackageName("service") to PackageName("api")) to setOf(ClassName("Service") to ClassName("Controller")),
+                (PackageName("model") to PackageName("service")) to setOf(ClassName("User") to ClassName("Service")),
+                (PackageName("service") to PackageName("model")) to setOf(ClassName("Service") to ClassName("User")),
             ),
         )
 
-        val result = DsmFormatter.formatCycles(matrix, cycleFilter = "api" to "service")
+        val result = DsmFormatter.formatCycles(matrix, cycleFilter = PackageName("api") to PackageName("service"))
 
         assertTrue(result.contains("CYCLE: api <-> service"))
         assertTrue(!result.contains("CYCLE: model <-> service"))
@@ -213,18 +213,18 @@ class DsmFormatterTest {
     @Test
     fun `formatCycles with cycleFilter in reverse order still matches`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "service"),
+            packages = listOf(PackageName("api"), PackageName("service")),
             cells = mapOf(
-                "api" to "service" to 2,
-                "service" to "api" to 1,
+                (PackageName("api") to PackageName("service")) to 2,
+                (PackageName("service") to PackageName("api")) to 1,
             ),
             classDependencies = mapOf(
-                ("api" to "service") to setOf("Controller" to "Service"),
-                ("service" to "api") to setOf("Service" to "Controller"),
+                (PackageName("api") to PackageName("service")) to setOf(ClassName("Controller") to ClassName("Service")),
+                (PackageName("service") to PackageName("api")) to setOf(ClassName("Service") to ClassName("Controller")),
             ),
         )
 
-        val result = DsmFormatter.formatCycles(matrix, cycleFilter = "service" to "api")
+        val result = DsmFormatter.formatCycles(matrix, cycleFilter = PackageName("service") to PackageName("api"))
 
         assertTrue(result.contains("CYCLE: api <-> service"))
     }
@@ -232,18 +232,18 @@ class DsmFormatterTest {
     @Test
     fun `formatCycles with cycleFilter that matches no cycle shows no-cycles message`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "service"),
+            packages = listOf(PackageName("api"), PackageName("service")),
             cells = mapOf(
-                "api" to "service" to 1,
-                "service" to "api" to 1,
+                (PackageName("api") to PackageName("service")) to 1,
+                (PackageName("service") to PackageName("api")) to 1,
             ),
             classDependencies = mapOf(
-                ("api" to "service") to setOf("Controller" to "Service"),
-                ("service" to "api") to setOf("Service" to "Controller"),
+                (PackageName("api") to PackageName("service")) to setOf(ClassName("Controller") to ClassName("Service")),
+                (PackageName("service") to PackageName("api")) to setOf(ClassName("Service") to ClassName("Controller")),
             ),
         )
 
-        val result = DsmFormatter.formatCycles(matrix, cycleFilter = "model" to "service")
+        val result = DsmFormatter.formatCycles(matrix, cycleFilter = PackageName("model") to PackageName("service"))
 
         assertEquals("No cyclic dependencies found.", result)
     }

@@ -40,10 +40,10 @@ class DsmDependencyExtractorTest {
 
         val deps = DsmDependencyExtractor.extract(listOf(classesDir), "com.example").data
 
-        val dep = deps.find { it.sourceClass == "com.example.api.Controller" && it.targetClass == "com.example.service.Service" }
+        val dep = deps.find { it.sourceClass == ClassName("com.example.api.Controller") && it.targetClass == ClassName("com.example.service.Service") }
         assertTrue(dep != null, "Expected dependency from Controller to Service")
-        assertEquals("com.example.api", dep.sourcePackage)
-        assertEquals("com.example.service", dep.targetPackage)
+        assertEquals(PackageName("com.example.api"), dep.sourcePackage)
+        assertEquals(PackageName("com.example.service"), dep.targetPackage)
     }
 
     @Test
@@ -69,7 +69,7 @@ class DsmDependencyExtractorTest {
 
         val deps = DsmDependencyExtractor.extract(listOf(classesDir), "com.example").data
 
-        val dep = deps.find { it.sourceClass == "com.example.api.Controller" && it.targetClass == "com.example.service.Service" }
+        val dep = deps.find { it.sourceClass == ClassName("com.example.api.Controller") && it.targetClass == ClassName("com.example.service.Service") }
         assertTrue(dep != null, "Expected dependency from field type")
     }
 
@@ -83,7 +83,7 @@ class DsmDependencyExtractorTest {
 
         val deps = DsmDependencyExtractor.extract(listOf(classesDir), "com.example").data
 
-        val dep = deps.find { it.sourceClass == "com.example.impl.ConcreteService" && it.targetClass == "com.example.base.AbstractService" }
+        val dep = deps.find { it.sourceClass == ClassName("com.example.impl.ConcreteService") && it.targetClass == ClassName("com.example.base.AbstractService") }
         assertTrue(dep != null, "Expected dependency from superclass")
     }
 
@@ -97,7 +97,7 @@ class DsmDependencyExtractorTest {
 
         val deps = DsmDependencyExtractor.extract(listOf(classesDir), "com.example").data
 
-        val dep = deps.find { it.sourceClass == "com.example.impl.UserRepo" && it.targetClass == "com.example.domain.Repository" }
+        val dep = deps.find { it.sourceClass == ClassName("com.example.impl.UserRepo") && it.targetClass == ClassName("com.example.domain.Repository") }
         assertTrue(dep != null, "Expected dependency from interface implementation")
     }
 
@@ -124,7 +124,7 @@ class DsmDependencyExtractorTest {
 
         val deps = DsmDependencyExtractor.extract(listOf(classesDir), "").data
 
-        val dep = deps.find { it.sourceClass == "com.example.api.Controller" && it.targetClass == "com.other.lib.Helper" }
+        val dep = deps.find { it.sourceClass == ClassName("com.example.api.Controller") && it.targetClass == ClassName("com.other.lib.Helper") }
         assertTrue(dep != null, "Empty root prefix should include all packages")
     }
 
@@ -138,7 +138,7 @@ class DsmDependencyExtractorTest {
 
         val deps = DsmDependencyExtractor.extract(listOf(classesDir), "com.example").data
 
-        val dep = deps.find { it.sourceClass == "com.example.api.Controller" && it.targetClass == "com.example.service.Service" }
+        val dep = deps.find { it.sourceClass == ClassName("com.example.api.Controller") && it.targetClass == ClassName("com.example.service.Service") }
         assertTrue(dep != null, "Inner class reference should resolve to base class")
     }
 
@@ -155,7 +155,7 @@ class DsmDependencyExtractorTest {
 
         val deps = DsmDependencyExtractor.extract(listOf(classesDir), "com.example").data
 
-        val matching = deps.filter { it.sourceClass == "com.example.api.Controller" && it.targetClass == "com.example.service.Service" }
+        val matching = deps.filter { it.sourceClass == ClassName("com.example.api.Controller") && it.targetClass == ClassName("com.example.service.Service") }
         assertEquals(1, matching.size, "Should deduplicate to one dependency per class pair")
     }
 
@@ -170,8 +170,8 @@ class DsmDependencyExtractorTest {
 
         assertTrue(deps.isNotEmpty(), "Expected inter-package dependencies from test-project, but got none")
         val packages = deps.flatMap { listOf(it.sourcePackage, it.targetPackage) }.toSet()
-        assertTrue(packages.contains("com.example.services"), "Expected com.example.services in dependencies")
-        assertTrue(packages.contains("com.example.domain"), "Expected com.example.domain in dependencies")
+        assertTrue(packages.contains(PackageName("com.example.services")), "Expected com.example.services in dependencies")
+        assertTrue(packages.contains(PackageName("com.example.domain")), "Expected com.example.domain in dependencies")
     }
 
     private fun buildTestProject() {

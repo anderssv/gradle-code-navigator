@@ -18,10 +18,10 @@ class DsmHtmlRendererTest {
     @Test
     fun `renders complete html document with table`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "model"),
-            cells = mapOf("api" to "model" to 3),
+            packages = listOf(PackageName("api"), PackageName("model")),
+            cells = mapOf((PackageName("api") to PackageName("model")) to 3),
             classDependencies = mapOf(
-                ("api" to "model") to setOf("Controller" to "User"),
+                (PackageName("api") to PackageName("model")) to setOf(ClassName("Controller") to ClassName("User")),
             ),
         )
 
@@ -37,8 +37,8 @@ class DsmHtmlRendererTest {
     @Test
     fun `color-codes forward dependencies as green`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "model"),
-            cells = mapOf("api" to "model" to 1),
+            packages = listOf(PackageName("api"), PackageName("model")),
+            cells = mapOf((PackageName("api") to PackageName("model")) to 1),
             classDependencies = emptyMap(),
         )
 
@@ -51,8 +51,8 @@ class DsmHtmlRendererTest {
     @Test
     fun `color-codes backward dependencies as red`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "model"),
-            cells = mapOf("model" to "api" to 1),
+            packages = listOf(PackageName("api"), PackageName("model")),
+            cells = mapOf((PackageName("model") to PackageName("api")) to 1),
             classDependencies = emptyMap(),
         )
 
@@ -65,10 +65,10 @@ class DsmHtmlRendererTest {
     @Test
     fun `includes class-level tooltips`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "model"),
-            cells = mapOf("api" to "model" to 1),
+            packages = listOf(PackageName("api"), PackageName("model")),
+            cells = mapOf((PackageName("api") to PackageName("model")) to 1),
             classDependencies = mapOf(
-                ("api" to "model") to setOf("Controller" to "User"),
+                (PackageName("api") to PackageName("model")) to setOf(ClassName("Controller") to ClassName("User")),
             ),
         )
 
@@ -82,8 +82,8 @@ class DsmHtmlRendererTest {
     @Test
     fun `includes package legend`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "model", "service"),
-            cells = mapOf("api" to "model" to 1),
+            packages = listOf(PackageName("api"), PackageName("model"), PackageName("service")),
+            cells = mapOf((PackageName("api") to PackageName("model")) to 1),
             classDependencies = emptyMap(),
         )
 
@@ -98,8 +98,8 @@ class DsmHtmlRendererTest {
     @Test
     fun `diagonal cells have diagonal class`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "model"),
-            cells = mapOf("api" to "model" to 1),
+            packages = listOf(PackageName("api"), PackageName("model")),
+            cells = mapOf((PackageName("api") to PackageName("model")) to 1),
             classDependencies = emptyMap(),
         )
 

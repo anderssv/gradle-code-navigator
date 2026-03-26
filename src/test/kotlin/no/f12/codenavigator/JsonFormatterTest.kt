@@ -427,10 +427,10 @@ class JsonFormatterTest {
     @Test
     fun `dsm produces JSON with packages, cells, and class dependencies`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "model"),
-            cells = mapOf("api" to "model" to 2),
+            packages = listOf(PackageName("api"), PackageName("model")),
+            cells = mapOf((PackageName("api") to PackageName("model")) to 2),
             classDependencies = mapOf(
-                ("api" to "model") to setOf("Controller" to "User"),
+                (PackageName("api") to PackageName("model")) to setOf(ClassName("Controller") to ClassName("User")),
             ),
         )
 
@@ -447,10 +447,10 @@ class JsonFormatterTest {
     @Test
     fun `dsm includes cyclic pairs in output`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "service"),
+            packages = listOf(PackageName("api"), PackageName("service")),
             cells = mapOf(
-                "api" to "service" to 3,
-                "service" to "api" to 1,
+                (PackageName("api") to PackageName("service")) to 3,
+                (PackageName("service") to PackageName("api")) to 1,
             ),
             classDependencies = emptyMap(),
         )
@@ -476,14 +476,14 @@ class JsonFormatterTest {
     @Test
     fun `dsm cycles-only includes class edges in each direction`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "service"),
+            packages = listOf(PackageName("api"), PackageName("service")),
             cells = mapOf(
-                "api" to "service" to 2,
-                "service" to "api" to 1,
+                (PackageName("api") to PackageName("service")) to 2,
+                (PackageName("service") to PackageName("api")) to 1,
             ),
             classDependencies = mapOf(
-                ("api" to "service") to setOf("Controller" to "Service"),
-                ("service" to "api") to setOf("Service" to "Controller"),
+                (PackageName("api") to PackageName("service")) to setOf(ClassName("Controller") to ClassName("Service")),
+                (PackageName("service") to PackageName("api")) to setOf(ClassName("Service") to ClassName("Controller")),
             ),
         )
 
@@ -648,10 +648,10 @@ class JsonFormatterTest {
     fun `formatCycles includes cycle packages and edges`() {
         val details = listOf(
             CycleDetail(
-                packages = listOf("api", "service"),
+                packages = listOf(PackageName("api"), PackageName("service")),
                 edges = listOf(
-                    CycleEdge("api", "service", setOf("api.Controller" to "service.Service")),
-                    CycleEdge("service", "api", setOf("service.Service" to "api.Controller")),
+                    CycleEdge(PackageName("api"), PackageName("service"), setOf(ClassName("api.Controller") to ClassName("service.Service"))),
+                    CycleEdge(PackageName("service"), PackageName("api"), setOf(ClassName("service.Service") to ClassName("api.Controller"))),
                 ),
             ),
         )
@@ -669,16 +669,16 @@ class JsonFormatterTest {
     fun `formatCycles handles multiple cycles`() {
         val details = listOf(
             CycleDetail(
-                packages = listOf("a", "b"),
+                packages = listOf(PackageName("a"), PackageName("b")),
                 edges = listOf(
-                    CycleEdge("a", "b", setOf("a.X" to "b.Y")),
-                    CycleEdge("b", "a", setOf("b.Y" to "a.X")),
+                    CycleEdge(PackageName("a"), PackageName("b"), setOf(ClassName("a.X") to ClassName("b.Y"))),
+                    CycleEdge(PackageName("b"), PackageName("a"), setOf(ClassName("b.Y") to ClassName("a.X"))),
                 ),
             ),
             CycleDetail(
-                packages = listOf("x", "y", "z"),
+                packages = listOf(PackageName("x"), PackageName("y"), PackageName("z")),
                 edges = listOf(
-                    CycleEdge("x", "y", setOf("x.A" to "y.B")),
+                    CycleEdge(PackageName("x"), PackageName("y"), setOf(ClassName("x.A") to ClassName("y.B"))),
                 ),
             ),
         )

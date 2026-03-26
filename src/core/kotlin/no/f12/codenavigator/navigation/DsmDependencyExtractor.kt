@@ -43,16 +43,17 @@ object DsmDependencyExtractor {
         val collector = DependencyCollector(rootPrefix)
         reader.accept(collector, ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES)
 
-        val sourceClass = reader.className.replace('/', '.')
-        val sourcePackage = sourceClass.substringBeforeLast('.', "")
+        val sourceClass = ClassName(reader.className.replace('/', '.'))
+        val sourcePackage = sourceClass.packageName()
 
-        if (rootPrefix.isNotEmpty() && !sourceClass.startsWith(rootPrefix)) return
+        if (rootPrefix.isNotEmpty() && !sourceClass.value.startsWith(rootPrefix)) return
 
         collector.referencedTypes
-            .filter { it != sourceClass }
+            .filter { it != sourceClass.value }
             .filter { rootPrefix.isEmpty() || it.startsWith(rootPrefix) }
-            .forEach { targetClass ->
-                val targetPackage = targetClass.substringBeforeLast('.', "")
+            .forEach { targetClassStr ->
+                val targetClass = ClassName(targetClassStr)
+                val targetPackage = targetClass.packageName()
                 if (targetPackage != sourcePackage) {
                     dependencies += PackageDependency(sourcePackage, targetPackage, sourceClass, targetClass)
                 }

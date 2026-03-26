@@ -11,7 +11,7 @@ object DsmFormatter {
             appendLine()
             appendLine("Legend:")
             packages.forEachIndexed { i, pkg ->
-                appendLine("  ${(i + 1).toString().padStart(3)}: $pkg")
+                appendLine("  ${(i + 1).toString().padStart(3)}: ${pkg.value}")
             }
             appendLine()
 
@@ -21,7 +21,7 @@ object DsmFormatter {
             appendLine()
 
             val colWidth = maxOf(packages.size.toString().length, 4)
-            val labelWidth = packages.maxOf { it.length }.coerceAtLeast(10)
+            val labelWidth = packages.maxOf { it.value.length }.coerceAtLeast(10)
 
             append("".padEnd(labelWidth + 6))
             packages.forEachIndexed { i, _ ->
@@ -33,7 +33,7 @@ object DsmFormatter {
             appendLine("-".repeat(totalWidth))
 
             packages.forEachIndexed { rowIdx, rowPkg ->
-                append("${(rowIdx + 1).toString().padStart(3)}. ${rowPkg.padEnd(labelWidth)}")
+                append("${(rowIdx + 1).toString().padStart(3)}. ${rowPkg.value.padEnd(labelWidth)}")
                 packages.forEachIndexed { colIdx, colPkg ->
                     val cell = when {
                         rowIdx == colIdx -> "."
@@ -49,17 +49,17 @@ object DsmFormatter {
                 appendLine()
                 appendLine("WARNING: Cyclic dependencies detected:")
                 cyclicPairs.forEach { (a, b, counts) ->
-                    appendLine("  $a <-> $b  (${counts.first} refs / ${counts.second} refs)")
+                    appendLine("  ${a.value} <-> ${b.value}  (${counts.first} refs / ${counts.second} refs)")
                     val fwd = matrix.classDependencies[a to b]
                     val bwd = matrix.classDependencies[b to a]
-                    fwd?.take(5)?.forEach { (src, tgt) -> appendLine("    $a.$src -> $b.$tgt") }
-                    bwd?.take(5)?.forEach { (src, tgt) -> appendLine("    $b.$src -> $a.$tgt") }
+                    fwd?.take(5)?.forEach { (src, tgt) -> appendLine("    ${a.value}.${src.value} -> ${b.value}.${tgt.value}") }
+                    bwd?.take(5)?.forEach { (src, tgt) -> appendLine("    ${b.value}.${src.value} -> ${a.value}.${tgt.value}") }
                 }
             }
         }.trimEnd()
     }
 
-    fun formatCycles(matrix: DsmMatrix, cycleFilter: Pair<String, String>? = null): String {
+    fun formatCycles(matrix: DsmMatrix, cycleFilter: Pair<PackageName, PackageName>? = null): String {
         val cyclicPairs = matrix.findCyclicPairs(cycleFilter)
         if (cyclicPairs.isEmpty()) return "No cyclic dependencies found."
 
@@ -68,16 +68,16 @@ object DsmFormatter {
                 if (idx > 0) appendLine()
                 val fwdLabel = if (counts.first == 1) "ref" else "refs"
                 val bwdLabel = if (counts.second == 1) "ref" else "refs"
-                appendLine("CYCLE: $a <-> $b (${counts.first} $fwdLabel / ${counts.second} $bwdLabel)")
-                appendLine("  $a -> $b:")
+                appendLine("CYCLE: ${a.value} <-> ${b.value} (${counts.first} $fwdLabel / ${counts.second} $bwdLabel)")
+                appendLine("  ${a.value} -> ${b.value}:")
                 val fwd = matrix.classDependencies[a to b]
-                fwd?.sortedBy { "${it.first}-${it.second}" }?.forEach { (src, tgt) ->
-                    appendLine("    $a.$src -> $b.$tgt")
+                fwd?.sortedBy { "${it.first.value}-${it.second.value}" }?.forEach { (src, tgt) ->
+                    appendLine("    ${a.value}.${src.value} -> ${b.value}.${tgt.value}")
                 }
-                appendLine("  $b -> $a:")
+                appendLine("  ${b.value} -> ${a.value}:")
                 val bwd = matrix.classDependencies[b to a]
-                bwd?.sortedBy { "${it.first}-${it.second}" }?.forEach { (src, tgt) ->
-                    appendLine("    $b.$src -> $a.$tgt")
+                bwd?.sortedBy { "${it.first.value}-${it.second.value}" }?.forEach { (src, tgt) ->
+                    appendLine("    ${b.value}.${src.value} -> ${a.value}.${tgt.value}")
                 }
             }
         }.trimEnd()

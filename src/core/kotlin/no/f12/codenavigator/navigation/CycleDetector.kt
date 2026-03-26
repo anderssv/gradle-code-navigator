@@ -1,24 +1,24 @@
 package no.f12.codenavigator.navigation
 
 data class Cycle(
-    val packages: List<String>,
+    val packages: List<PackageName>,
 )
 
 data class CycleDetail(
-    val packages: List<String>,
+    val packages: List<PackageName>,
     val edges: List<CycleEdge>,
 )
 
 data class CycleEdge(
-    val from: String,
-    val to: String,
-    val classEdges: Set<Pair<String, String>>,
+    val from: PackageName,
+    val to: PackageName,
+    val classEdges: Set<Pair<ClassName, ClassName>>,
 )
 
 object CycleDetector {
 
-    fun adjacencyMapFrom(matrix: DsmMatrix): Map<String, Set<String>> {
-        val result = mutableMapOf<String, MutableSet<String>>()
+    fun adjacencyMapFrom(matrix: DsmMatrix): Map<PackageName, Set<PackageName>> {
+        val result = mutableMapOf<PackageName, MutableSet<PackageName>>()
         for ((source, target) in matrix.cells.keys) {
             result.getOrPut(source) { mutableSetOf() }.add(target)
         }
@@ -27,7 +27,6 @@ object CycleDetector {
 
     fun enrich(cycles: List<Cycle>, matrix: DsmMatrix): List<CycleDetail> =
         cycles.map { cycle ->
-            val packageSet = cycle.packages.toSet()
             val edges = mutableListOf<CycleEdge>()
             for (from in cycle.packages) {
                 for (to in cycle.packages) {
@@ -41,21 +40,21 @@ object CycleDetector {
             CycleDetail(packages = cycle.packages, edges = edges.sortedWith(compareBy({ it.from }, { it.to })))
         }
 
-    fun findCycles(graph: Map<String, Set<String>>): List<Cycle> {
-        val allNodes = mutableSetOf<String>()
+    fun findCycles(graph: Map<PackageName, Set<PackageName>>): List<Cycle> {
+        val allNodes = mutableSetOf<PackageName>()
         for ((source, targets) in graph) {
             allNodes.add(source)
             allNodes.addAll(targets)
         }
 
-        val index = mutableMapOf<String, Int>()
-        val lowLink = mutableMapOf<String, Int>()
-        val onStack = mutableSetOf<String>()
-        val stack = ArrayDeque<String>()
+        val index = mutableMapOf<PackageName, Int>()
+        val lowLink = mutableMapOf<PackageName, Int>()
+        val onStack = mutableSetOf<PackageName>()
+        val stack = ArrayDeque<PackageName>()
         var nextIndex = 0
-        val sccs = mutableListOf<List<String>>()
+        val sccs = mutableListOf<List<PackageName>>()
 
-        fun strongConnect(node: String) {
+        fun strongConnect(node: PackageName) {
             index[node] = nextIndex
             lowLink[node] = nextIndex
             nextIndex++
@@ -72,7 +71,7 @@ object CycleDetector {
             }
 
             if (lowLink[node] == index[node]) {
-                val scc = mutableListOf<String>()
+                val scc = mutableListOf<PackageName>()
                 while (true) {
                     val w = stack.removeLast()
                     onStack.remove(w)

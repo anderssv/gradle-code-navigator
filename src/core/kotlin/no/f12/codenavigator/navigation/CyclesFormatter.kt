@@ -7,11 +7,11 @@ object CyclesFormatter {
 
         return details.joinToString("\n\n") { detail ->
             buildString {
-                append("CYCLE: ${detail.packages.joinToString(", ")}")
+                append("CYCLE: ${detail.packages.joinToString(", ") { it.value }}")
                 for (edge in detail.edges) {
-                    append("\n  ${edge.from} -> ${edge.to}:")
-                    for ((src, tgt) in edge.classEdges.sortedBy { "${it.first}-${it.second}" }) {
-                        append("\n    $src -> $tgt")
+                    append("\n  ${edge.from.value} -> ${edge.to.value}:")
+                    for ((src, tgt) in edge.classEdges.sortedBy { "${it.first.value}-${it.second.value}" }) {
+                        append("\n    ${src.value} -> ${tgt.value}")
                     }
                 }
             }

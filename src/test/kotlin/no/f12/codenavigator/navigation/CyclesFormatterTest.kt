@@ -17,10 +17,10 @@ class CyclesFormatterTest {
     fun `formats a single cycle with class-level edges`() {
         val details = listOf(
             CycleDetail(
-                packages = listOf("api", "service"),
+                packages = listOf(PackageName("api"), PackageName("service")),
                 edges = listOf(
-                    CycleEdge("api", "service", setOf("api.Controller" to "service.Service")),
-                    CycleEdge("service", "api", setOf("service.Service" to "api.Controller")),
+                    CycleEdge(PackageName("api"), PackageName("service"), setOf(ClassName("api.Controller") to ClassName("service.Service"))),
+                    CycleEdge(PackageName("service"), PackageName("api"), setOf(ClassName("service.Service") to ClassName("api.Controller"))),
                 ),
             ),
         )
@@ -38,18 +38,18 @@ class CyclesFormatterTest {
     fun `formats multiple cycles separated by blank lines`() {
         val details = listOf(
             CycleDetail(
-                packages = listOf("a", "b"),
+                packages = listOf(PackageName("a"), PackageName("b")),
                 edges = listOf(
-                    CycleEdge("a", "b", setOf("a.X" to "b.Y")),
-                    CycleEdge("b", "a", setOf("b.Y" to "a.X")),
+                    CycleEdge(PackageName("a"), PackageName("b"), setOf(ClassName("a.X") to ClassName("b.Y"))),
+                    CycleEdge(PackageName("b"), PackageName("a"), setOf(ClassName("b.Y") to ClassName("a.X"))),
                 ),
             ),
             CycleDetail(
-                packages = listOf("x", "y", "z"),
+                packages = listOf(PackageName("x"), PackageName("y"), PackageName("z")),
                 edges = listOf(
-                    CycleEdge("x", "y", setOf("x.A" to "y.B")),
-                    CycleEdge("y", "z", setOf("y.B" to "z.C")),
-                    CycleEdge("z", "x", setOf("z.C" to "x.A")),
+                    CycleEdge(PackageName("x"), PackageName("y"), setOf(ClassName("x.A") to ClassName("y.B"))),
+                    CycleEdge(PackageName("y"), PackageName("z"), setOf(ClassName("y.B") to ClassName("z.C"))),
+                    CycleEdge(PackageName("z"), PackageName("x"), setOf(ClassName("z.C") to ClassName("x.A"))),
                 ),
             ),
         )

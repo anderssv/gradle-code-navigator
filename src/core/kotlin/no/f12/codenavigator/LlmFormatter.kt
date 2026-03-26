@@ -118,11 +118,11 @@ object LlmFormatter {
 
         return details.joinToString("\n") { detail ->
             buildString {
-                append("CYCLE ${detail.packages.joinToString(",")}")
+                append("CYCLE ${detail.packages.joinToString(",") { it.value }}")
                 for (edge in detail.edges) {
-                    val classStr = edge.classEdges.sortedBy { "${it.first}-${it.second}" }
-                        .joinToString(",") { "${it.first}->${it.second}" }
-                    append("\n  ${edge.from}->${edge.to}: $classStr")
+                    val classStr = edge.classEdges.sortedBy { "${it.first.value}-${it.second.value}" }
+                        .joinToString(",") { "${it.first.value}->${it.second.value}" }
+                    append("\n  ${edge.from.value}->${edge.to.value}: $classStr")
                 }
             }
         }
@@ -144,42 +144,42 @@ object LlmFormatter {
     }
 
     fun formatDsm(matrix: DsmMatrix): String = buildString {
-        append("packages:${matrix.packages.joinToString(",")}")
+        append("packages:${matrix.packages.joinToString(",") { it.value }}")
         if (matrix.cells.isEmpty()) {
             append("\n(no dependencies)")
         } else {
-            for ((key, count) in matrix.cells.entries.sortedBy { "${it.key.first}-${it.key.second}" }) {
-                append("\n${key.first}->${key.second}:$count")
+            for ((key, count) in matrix.cells.entries.sortedBy { "${it.key.first.value}-${it.key.second.value}" }) {
+                append("\n${key.first.value}->${key.second.value}:$count")
                 val classDeps = matrix.classDependencies[key]
                 if (!classDeps.isNullOrEmpty()) {
-                    val classStr = classDeps.sortedBy { "${it.first}-${it.second}" }
-                        .joinToString(",") { "${it.first}->${it.second}" }
+                    val classStr = classDeps.sortedBy { "${it.first.value}-${it.second.value}" }
+                        .joinToString(",") { "${it.first.value}->${it.second.value}" }
                     append(" [$classStr]")
                 }
             }
             val cyclicPairs = matrix.findCyclicPairs()
             if (cyclicPairs.isNotEmpty()) {
-                val cycleStr = cyclicPairs.joinToString(",") { (a, b, _) -> "$a<->$b" }
+                val cycleStr = cyclicPairs.joinToString(",") { (a, b, _) -> "${a.value}<->${b.value}" }
                 append("\nCYCLES: $cycleStr")
             }
         }
     }
 
-    fun formatDsmCycles(matrix: DsmMatrix, cycleFilter: Pair<String, String>? = null): String {
+    fun formatDsmCycles(matrix: DsmMatrix, cycleFilter: Pair<PackageName, PackageName>? = null): String {
         val cyclicPairs = matrix.findCyclicPairs(cycleFilter)
         if (cyclicPairs.isEmpty()) return "(no cycles)"
 
         return cyclicPairs.joinToString("\n") { (a, b, counts) ->
             val fwd = matrix.classDependencies[a to b]
             val bwd = matrix.classDependencies[b to a]
-            val fwdStr = fwd?.sortedBy { "${it.first}-${it.second}" }
-                ?.joinToString(",") { "${it.first}->${it.second}" } ?: ""
-            val bwdStr = bwd?.sortedBy { "${it.first}-${it.second}" }
-                ?.joinToString(",") { "${it.first}->${it.second}" } ?: ""
+            val fwdStr = fwd?.sortedBy { "${it.first.value}-${it.second.value}" }
+                ?.joinToString(",") { "${it.first.value}->${it.second.value}" } ?: ""
+            val bwdStr = bwd?.sortedBy { "${it.first.value}-${it.second.value}" }
+                ?.joinToString(",") { "${it.first.value}->${it.second.value}" } ?: ""
             buildString {
-                append("CYCLE $a<->$b ${counts.first}/${counts.second}")
-                if (fwdStr.isNotEmpty()) append("\n  $a->$b: $fwdStr")
-                if (bwdStr.isNotEmpty()) append("\n  $b->$a: $bwdStr")
+                append("CYCLE ${a.value}<->${b.value} ${counts.first}/${counts.second}")
+                if (fwdStr.isNotEmpty()) append("\n  ${a.value}->${b.value}: $fwdStr")
+                if (bwdStr.isNotEmpty()) append("\n  ${b.value}->${a.value}: $bwdStr")
             }
         }
     }

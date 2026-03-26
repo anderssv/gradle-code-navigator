@@ -185,10 +185,10 @@ class LlmFormatterTest {
     @Test
     fun `formats dsm compactly`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "model"),
-            cells = mapOf("api" to "model" to 3),
+            packages = listOf(PackageName("api"), PackageName("model")),
+            cells = mapOf((PackageName("api") to PackageName("model")) to 3),
             classDependencies = mapOf(
-                ("api" to "model") to setOf("Controller" to "User"),
+                (PackageName("api") to PackageName("model")) to setOf(ClassName("Controller") to ClassName("User")),
             ),
         )
 
@@ -209,10 +209,10 @@ class LlmFormatterTest {
     @Test
     fun `formats dsm with cycles`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "service"),
+            packages = listOf(PackageName("api"), PackageName("service")),
             cells = mapOf(
-                "api" to "service" to 2,
-                "service" to "api" to 1,
+                (PackageName("api") to PackageName("service")) to 2,
+                (PackageName("service") to PackageName("api")) to 1,
             ),
             classDependencies = emptyMap(),
         )
@@ -236,14 +236,14 @@ class LlmFormatterTest {
     @Test
     fun `formatDsmCycles shows compact cycle with class edges`() {
         val matrix = DsmMatrix(
-            packages = listOf("api", "service"),
+            packages = listOf(PackageName("api"), PackageName("service")),
             cells = mapOf(
-                "api" to "service" to 2,
-                "service" to "api" to 1,
+                (PackageName("api") to PackageName("service")) to 2,
+                (PackageName("service") to PackageName("api")) to 1,
             ),
             classDependencies = mapOf(
-                ("api" to "service") to setOf("Controller" to "Service"),
-                ("service" to "api") to setOf("Service" to "Controller"),
+                (PackageName("api") to PackageName("service")) to setOf(ClassName("Controller") to ClassName("Service")),
+                (PackageName("service") to PackageName("api")) to setOf(ClassName("Service") to ClassName("Controller")),
             ),
         )
 
@@ -454,10 +454,10 @@ class LlmFormatterTest {
     fun `formatCycles formats cycle with class edges`() {
         val details = listOf(
             CycleDetail(
-                packages = listOf("api", "service"),
+                packages = listOf(PackageName("api"), PackageName("service")),
                 edges = listOf(
-                    CycleEdge("api", "service", setOf("api.Controller" to "service.Service")),
-                    CycleEdge("service", "api", setOf("service.Service" to "api.Controller")),
+                    CycleEdge(PackageName("api"), PackageName("service"), setOf(ClassName("api.Controller") to ClassName("service.Service"))),
+                    CycleEdge(PackageName("service"), PackageName("api"), setOf(ClassName("service.Service") to ClassName("api.Controller"))),
                 ),
             ),
         )
@@ -473,16 +473,16 @@ class LlmFormatterTest {
     fun `formatCycles separates multiple cycles with newlines`() {
         val details = listOf(
             CycleDetail(
-                packages = listOf("a", "b"),
+                packages = listOf(PackageName("a"), PackageName("b")),
                 edges = listOf(
-                    CycleEdge("a", "b", setOf("a.X" to "b.Y")),
-                    CycleEdge("b", "a", setOf("b.Y" to "a.X")),
+                    CycleEdge(PackageName("a"), PackageName("b"), setOf(ClassName("a.X") to ClassName("b.Y"))),
+                    CycleEdge(PackageName("b"), PackageName("a"), setOf(ClassName("b.Y") to ClassName("a.X"))),
                 ),
             ),
             CycleDetail(
-                packages = listOf("x", "y", "z"),
+                packages = listOf(PackageName("x"), PackageName("y"), PackageName("z")),
                 edges = listOf(
-                    CycleEdge("x", "y", setOf("x.A" to "y.B")),
+                    CycleEdge(PackageName("x"), PackageName("y"), setOf(ClassName("x.A") to ClassName("y.B"))),
                 ),
             ),
         )
