@@ -3,6 +3,7 @@ import org.gradle.plugin.compatibility.compatibility
 plugins {
     `kotlin-dsl`
     id("com.gradle.plugin-publish") version "2.1.1"
+    jacoco
 }
 
 group = "no.f12"
@@ -47,6 +48,16 @@ kotlin {
 
 tasks.test {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(false)
+        csv.required.set(true)
+        html.outputLocation.set(layout.buildDirectory.dir("jacocoHtml"))
+    }
 }
 
 sourceSets {

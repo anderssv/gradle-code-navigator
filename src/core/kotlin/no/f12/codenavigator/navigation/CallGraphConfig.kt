@@ -9,6 +9,14 @@ data class CallGraphConfig(
     val filterSynthetic: Boolean,
     val format: OutputFormat,
 ) {
+    fun buildFilter(graph: CallGraph): ((MethodRef) -> Boolean)? {
+        val filters = buildList {
+            if (projectOnly) add(graph.projectClassFilter())
+            if (filterSynthetic) add { ref: MethodRef -> !KotlinMethodFilter.isGenerated(ref.methodName) }
+        }
+        return if (filters.isEmpty()) null else { ref -> filters.all { it(ref) } }
+    }
+
     companion object {
         fun parse(properties: Map<String, String?>): CallGraphConfig = CallGraphConfig(
             method = properties["method"]
