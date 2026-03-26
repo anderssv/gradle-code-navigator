@@ -119,62 +119,11 @@ object AgentHelpText {
         appendLine()
         appendLine("--- Task Reference ---")
         appendLine()
-        appendLine("  ${t("list-classes")}           List all classes and source files")
-        appendLine("  ${t("find-class")}             Find classes by regex       ${p("pattern", "<regex>")}")
-        appendLine("  ${t("find-symbol")}            Find methods/fields         ${p("pattern", "<regex>")}")
-        appendLine("  ${t("class-detail")}                 Inspect class signature     ${p("pattern", "<regex>")}")
-        appendLine("  ${t("find-callers")}               Who calls a method?         ${p("method", "<regex>")}")
-        appendLine("  ${t("find-callees")}               What does a method call?    ${p("method", "<regex>")}")
-        appendLine("  ${t("find-interfaces")}            Find implementations        ${p("pattern", "<regex>")}")
-        appendLine("  ${t("package-deps")}                  Package dependency map      [${p("package", "<regex>")}]")
-        appendLine("  ${t("dsm")}                   Dependency Structure Matrix [${p("root-package", "<pkg>")}] [${p("dsm-depth", "N")}] [${p("dsm-html", "<path>")}] [${p("cycles", "true")}] [${p("cycle", "<pkgA>,<pkgB>")}]")
-        appendLine("  ${t("cycles")}                Cycle detection (Tarjan)    [${p("root-package", "<pkg>")}] [${p("dsm-depth", "N")}]")
-        appendLine("  ${t("find-usages")}             Find external API usages    ${p("ownerClass", "<class>")} [${p("method", "<name>")}] or ${p("type", "<class>")} [${p("outside-package", "<pkg>")}]")
-        appendLine("  ${t("rank")}                  Type importance ranking     [${p("top", "N")}] [${p("projectonly", "true|false")}]")
-        appendLine("  ${t("dead")}                  Potential dead code         [${p("filter", "<regex>")}] [${p("exclude", "<regex>")}] [${p("classes-only", "true")}]")
-        appendLine("  ${t("complexity")}            Class fan-in/fan-out        [${p("classname", "<pattern>")}] [${p("projectonly", "true")}] [${p("detail", "true")}] [${p("top", "N")}]")
-        appendLine("  ${t("metrics")}              Project health snapshot     [${p("after", "")}] [${p("top", "")}] [${p("root-package", "")}]")
-        appendLine()
-        appendLine("  Git history (no compilation needed):")
-        appendLine("  ${t("hotspots")}              Most-changed files          [${p("after", "")}] [${p("min-revs", "")}] [${p("top", "")}]")
-        appendLine("  ${t("coupling")}              Files that change together  [${p("after", "")}] [${p("min-shared-revs", "")}] [${p("min-coupling", "")}]")
-        appendLine("  ${t("code-age")}                   Time since last change      [${p("after", "")}] [${p("top", "")}]")
-        appendLine("  ${t("authors")}               Distinct authors per file   [${p("after", "")}] [${p("min-revs", "")}] [${p("top", "")}]")
-        appendLine("  ${t("churn")}                 Lines added/deleted         [${p("after", "")}] [${p("top", "")}]")
-        appendLine()
-        appendLine("  Help:")
-        appendLine("  ${t("help")}                  Full task documentation")
-        appendLine("  ${t("agent-help")}             AI agent usage guide")
-        appendLine("  ${t("config-help")}            All configuration parameters")
+        appendTaskReference(tool)
         appendLine()
         appendLine("--- Global Parameters ---")
         appendLine()
-        appendLine("  ${p("llm", "true")}                Compact, token-efficient output (all tasks)")
-        appendLine("  ${p("format", "json")}             Machine-readable JSON output (all tasks)")
-        appendLine("  ${p("projectonly", "true")}         Hide JDK/stdlib (${t("find-callers")}, ${t("find-callees")}, ${t("package-deps")})")
-        appendLine("  ${p("maxdepth", "N")}              Max call tree depth (${t("find-callers")}, ${t("find-callees")})")
-        appendLine("  ${p("reverse", "true")}            Reverse deps: who depends on me? (${t("package-deps")})")
-        appendLine("  ${p("includetest", "true")}        Include test classes (${t("find-interfaces")})")
-        appendLine("  ${p("ownerClass", "<class>")}      FQN of type — matches method call and field owners (${t("find-usages")})")
-        appendLine("  ${p("type", "<class>")}            Find ALL references: calls, fields, casts, signatures (${t("find-usages")})")
-        appendLine("  ${p("outside-package", "<pkg>")}   Exclude callers inside this package — show only external usages (${t("find-usages")})")
-        appendLine("  ${p("root-package", "<pkg>")}      Root package prefix to filter (${t("dsm")})")
-        appendLine("  ${p("dsm-depth", "N")}             Package grouping depth (${t("dsm")}, default: 2)")
-        appendLine("  ${p("dsm-html", "<path>")}         Write interactive HTML matrix (${t("dsm")})")
-        appendLine("  ${p("cycles", "true")}              Show only cyclic dependencies with class-level edges (${t("dsm")})")
-        appendLine("  ${p("cycle", "<pkgA>,<pkgB>")}     Show only the cycle between two specific packages (${t("dsm")})")
-        appendLine("  ${p("filter", "<regex>")}          Only show results matching regex (${t("dead")})")
-        appendLine("  ${p("exclude", "<regex>")}         Exclude results matching regex (${t("dead")})")
-        appendLine("  ${p("classes-only", "true")}         Show only unreferenced classes, skip dead methods (${t("dead")})")
-        appendLine("  ${p("classname", "<pattern>")}         Class name regex to analyze (${t("complexity")}, default: all classes)")
-        appendLine("  ${p("detail", "true")}              Show individual call details (${t("complexity")})")
-        appendLine("  ${p("after", "YYYY-MM-DD")}        Git history window (git tasks, default: 1 year ago)")
-        appendLine("  ${pf("no-follow")}               Disable git rename tracking (git tasks, renames tracked by default)")
-        appendLine("  ${p("top", "N")}                   Max results (${t("hotspots")}, ${t("code-age")}, ${t("authors")}, ${t("churn")})")
-        appendLine("  ${p("min-revs", "N")}              Min revisions (${t("hotspots")}, ${t("authors")})")
-        appendLine("  ${p("min-shared-revs", "N")}       Min shared commits (${t("coupling")}, default: 5)")
-        appendLine("  ${p("min-coupling", "N")}          Min coupling % (${t("coupling")}, default: 30)")
-        appendLine("  ${p("max-changeset-size", "N")}    Skip large commits (${t("coupling")}, default: 30)")
+        appendGlobalParameters(tool)
         appendLine()
         appendLine("--- Tips for Optimal Results ---")
         appendLine()
@@ -282,4 +231,77 @@ object AgentHelpText {
         appendLine("Get interface implementor class names:")
         appendLine("  $helperName ${t("find-interfaces")} ${p("pattern", "Repository")} ${p("format", "json")} | jq '.[].implementors[].className'")
     }
+
+    private val HELP_GOALS = setOf("help", "agent-help", "config-help")
+    private val FORMAT_PARAM_NAMES = setOf("format", "llm")
+
+    private fun StringBuilder.appendTaskReference(tool: BuildTool) {
+        val compilationTasks = TaskRegistry.ALL_TASKS
+            .filter { it.requiresCompilation && it.goal !in HELP_GOALS }
+        val gitTasks = TaskRegistry.ALL_TASKS
+            .filter { !it.requiresCompilation && it.goal !in HELP_GOALS }
+        val helpTasks = TaskRegistry.ALL_TASKS
+            .filter { it.goal in HELP_GOALS }
+
+        for (task in compilationTasks) {
+            appendTaskLine(task, tool)
+        }
+        appendLine()
+        appendLine("  Git history (no compilation needed):")
+        for (task in gitTasks) {
+            appendTaskLine(task, tool)
+        }
+        appendLine()
+        appendLine("  Help:")
+        for (task in helpTasks) {
+            appendLine("  ${padTo(task.taskName(tool), 22)}${task.description}")
+        }
+    }
+
+    private fun StringBuilder.appendTaskLine(task: TaskDef, tool: BuildTool) {
+        val taskName = task.taskName(tool)
+        val nonFormatParams = task.params.filter { it.name !in FORMAT_PARAM_NAMES }
+        val paramStr = nonFormatParams.joinToString(" ") { param ->
+            val rendered = param.render(tool)
+            if (param.defaultValue != null) "[$rendered]" else rendered
+        }
+        val line = if (paramStr.isEmpty()) {
+            "  ${padTo(taskName, 22)}${task.description}"
+        } else {
+            "  ${padTo(taskName, 22)}${padTo(task.description, 36)}$paramStr"
+        }
+        appendLine(line)
+    }
+
+    private fun StringBuilder.appendGlobalParameters(tool: BuildTool) {
+        appendLine("  ${padTo(TaskRegistry.LLM.render(tool), 28)}Compact, token-efficient output (all tasks)")
+        appendLine("  ${padTo(TaskRegistry.FORMAT.render(tool), 28)}Machine-readable JSON output (all tasks)")
+        appendLine()
+
+        val tasksByParam = buildMap<String, MutableList<TaskDef>> {
+            for (task in TaskRegistry.ALL_TASKS) {
+                for (param in task.params) {
+                    if (param.name !in FORMAT_PARAM_NAMES) {
+                        getOrPut(param.name) { mutableListOf() }.add(task)
+                    }
+                }
+            }
+        }
+
+        val allParams = TaskRegistry.ALL_TASKS
+            .flatMap { it.params }
+            .filter { it.name !in FORMAT_PARAM_NAMES }
+            .distinctBy { it.name }
+
+        for (param in allParams) {
+            val tasks = tasksByParam[param.name] ?: continue
+            val rendered = param.render(tool)
+            val taskList = tasks.joinToString(", ") { it.taskName(tool) }
+            val defaultSuffix = param.defaultValue?.let { ", default: $it" } ?: ""
+            appendLine("  ${padTo(rendered, 28)}${param.description} ($taskList$defaultSuffix)")
+        }
+    }
+
+    private fun padTo(s: String, width: Int): String =
+        if (s.length >= width) "$s " else s.padEnd(width)
 }

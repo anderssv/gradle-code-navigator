@@ -20,6 +20,9 @@ data class TaskDef(
     val requiresCompilation: Boolean,
 ) {
     fun taskName(tool: BuildTool): String = tool.taskName(goal)
+
+    fun paramByName(name: String): ParamDef =
+        params.first { it.name == name }
 }
 
 object TaskRegistry {

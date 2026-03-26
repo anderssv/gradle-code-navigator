@@ -3,6 +3,7 @@ package no.f12.codenavigator
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.assertFalse
+import kotlin.test.assertEquals
 
 class AgentHelpTextTest {
 
@@ -10,59 +11,34 @@ class AgentHelpTextTest {
     fun `Gradle agent help text contains all task names with Gradle names`() {
         val text = AgentHelpText.generate(BuildTool.GRADLE)
 
-        // Navigation tasks
-        assertTrue(text.contains("cnavListClasses"))
-        assertTrue(text.contains("cnavFindClass"))
-        assertTrue(text.contains("cnavFindSymbol"))
-        assertTrue(text.contains("cnavCallers"))
-        assertTrue(text.contains("cnavCallees"))
-        assertTrue(text.contains("cnavClass"))
-        assertTrue(text.contains("cnavInterfaces"))
-        assertTrue(text.contains("cnavDeps"))
-        assertTrue(text.contains("cnavDsm"))
-
-        // Usages task
-        assertTrue(text.contains("cnavUsages"))
-
-        // Analysis tasks
-        assertTrue(text.contains("cnavHotspots"))
-        assertTrue(text.contains("cnavCoupling"))
-        assertTrue(text.contains("cnavAge"))
-        assertTrue(text.contains("cnavAuthors"))
-        assertTrue(text.contains("cnavChurn"))
-
-        // Metrics task
-        assertTrue(text.contains("cnavMetrics"))
+        val helpGoals = setOf("help", "agent-help", "config-help")
+        for (task in TaskRegistry.ALL_TASKS.filter { it.goal !in helpGoals }) {
+            assertTrue(
+                text.contains(task.taskName(BuildTool.GRADLE)),
+                "Should contain ${task.taskName(BuildTool.GRADLE)} (goal: ${task.goal})",
+            )
+        }
     }
 
     @Test
     fun `Maven agent help text contains all task names with Maven names`() {
         val text = AgentHelpText.generate(BuildTool.MAVEN)
 
-        assertTrue(text.contains("cnav:list-classes"))
-        assertTrue(text.contains("cnav:find-class"))
-        assertTrue(text.contains("cnav:find-symbol"))
-        assertTrue(text.contains("cnav:find-callers"))
-        assertTrue(text.contains("cnav:find-callees"))
-        assertTrue(text.contains("cnav:class-detail"))
-        assertTrue(text.contains("cnav:find-interfaces"))
-        assertTrue(text.contains("cnav:package-deps"))
-        assertTrue(text.contains("cnav:dsm"))
-        assertTrue(text.contains("cnav:find-usages"))
-        assertTrue(text.contains("cnav:hotspots"))
-        assertTrue(text.contains("cnav:coupling"))
-        assertTrue(text.contains("cnav:code-age"))
-        assertTrue(text.contains("cnav:authors"))
-        assertTrue(text.contains("cnav:churn"))
-        assertTrue(text.contains("cnav:metrics"))
+        val helpGoals = setOf("help", "agent-help", "config-help")
+        for (task in TaskRegistry.ALL_TASKS.filter { it.goal !in helpGoals }) {
+            assertTrue(
+                text.contains(task.taskName(BuildTool.MAVEN)),
+                "Should contain ${task.taskName(BuildTool.MAVEN)} (goal: ${task.goal})",
+            )
+        }
     }
 
     @Test
     fun `Gradle agent help text uses -P parameters and gradlew command`() {
         val text = AgentHelpText.generate(BuildTool.GRADLE)
 
-        assertTrue(text.contains("-Pllm=true"))
-        assertTrue(text.contains("-Pformat=json"))
+        assertTrue(text.contains(TaskRegistry.LLM.render(BuildTool.GRADLE)))
+        assertTrue(text.contains(TaskRegistry.FORMAT.render(BuildTool.GRADLE)))
         assertTrue(text.contains("./gradlew"))
     }
 
@@ -70,12 +46,14 @@ class AgentHelpTextTest {
     fun `Maven agent help text uses -D parameters and mvn command`() {
         val text = AgentHelpText.generate(BuildTool.MAVEN)
 
-        assertTrue(text.contains("-Dllm=true"))
-        assertTrue(text.contains("-Dformat=json"))
+        assertTrue(text.contains(TaskRegistry.LLM.render(BuildTool.MAVEN)))
+        assertTrue(text.contains(TaskRegistry.FORMAT.render(BuildTool.MAVEN)))
         assertTrue(text.contains("mvn"))
         assertFalse(text.contains("./gradlew"), "Maven agent help should not contain ./gradlew")
-        assertFalse(text.contains("-Pllm"), "Maven agent help should not contain -P params")
-        assertFalse(text.contains("-Pformat"), "Maven agent help should not contain -P params")
+        assertFalse(
+            text.contains(TaskRegistry.LLM.render(BuildTool.GRADLE)),
+            "Maven agent help should not contain -P params",
+        )
     }
 
     @Test
@@ -99,43 +77,47 @@ class AgentHelpTextTest {
     }
 
     @Test
-    fun `Gradle agent help text includes Gradle parameter examples`() {
+    fun `Gradle agent help text includes all parameter renders`() {
         val text = AgentHelpText.generate(BuildTool.GRADLE)
 
-        assertTrue(text.contains("-Ppattern="))
-        assertTrue(text.contains("-Pmethod="))
-        assertTrue(text.contains("-Pmaxdepth="))
-        assertTrue(text.contains("-Preverse=true"))
-        assertTrue(text.contains("-Pincludetest=true"))
-        assertTrue(text.contains("-Pafter="))
-        assertTrue(text.contains("-Ptop="))
-        assertTrue(text.contains("-Pmin-revs="))
-        assertTrue(text.contains("-Pmin-coupling="))
-        assertTrue(text.contains("-Pno-follow"))
-        assertTrue(text.contains("-Proot-package="))
-        assertTrue(text.contains("-Pdsm-depth="))
-        assertTrue(text.contains("-Pdsm-html="))
-        assertTrue(text.contains("-Pcycles=true"))
+        val paramsToCheck = listOf(
+            TaskRegistry.PATTERN,
+            TaskRegistry.METHOD,
+            TaskRegistry.MAXDEPTH,
+            TaskRegistry.PROJECTONLY,
+            TaskRegistry.TOP,
+            TaskRegistry.AFTER,
+            TaskRegistry.MIN_REVS,
+            TaskRegistry.NO_FOLLOW,
+        )
+        for (param in paramsToCheck) {
+            assertTrue(
+                text.contains(param.render(BuildTool.GRADLE)),
+                "Should contain ${param.render(BuildTool.GRADLE)} (param: ${param.name})",
+            )
+        }
     }
 
     @Test
-    fun `Maven agent help text includes Maven parameter examples`() {
+    fun `Maven agent help text includes all parameter renders`() {
         val text = AgentHelpText.generate(BuildTool.MAVEN)
 
-        assertTrue(text.contains("-Dpattern="))
-        assertTrue(text.contains("-Dmethod="))
-        assertTrue(text.contains("-Dmaxdepth="))
-        assertTrue(text.contains("-Dreverse=true"))
-        assertTrue(text.contains("-Dincludetest=true"))
-        assertTrue(text.contains("-Dafter="))
-        assertTrue(text.contains("-Dtop="))
-        assertTrue(text.contains("-Dmin-revs="))
-        assertTrue(text.contains("-Dmin-coupling="))
-        assertTrue(text.contains("-Dno-follow"))
-        assertTrue(text.contains("-Droot-package="))
-        assertTrue(text.contains("-Ddsm-depth="))
-        assertTrue(text.contains("-Ddsm-html="))
-        assertTrue(text.contains("-Dcycles=true"))
+        val paramsToCheck = listOf(
+            TaskRegistry.PATTERN,
+            TaskRegistry.METHOD,
+            TaskRegistry.MAXDEPTH,
+            TaskRegistry.PROJECTONLY,
+            TaskRegistry.TOP,
+            TaskRegistry.AFTER,
+            TaskRegistry.MIN_REVS,
+            TaskRegistry.NO_FOLLOW,
+        )
+        for (param in paramsToCheck) {
+            assertTrue(
+                text.contains(param.render(BuildTool.MAVEN)),
+                "Should contain ${param.render(BuildTool.MAVEN)} (param: ${param.name})",
+            )
+        }
     }
 
     @Test
@@ -165,30 +147,16 @@ class AgentHelpTextTest {
     fun `Gradle jq examples use gradlew command`() {
         val text = AgentHelpText.generate(BuildTool.GRADLE)
 
-        assertTrue(text.contains("./gradlew cnavListClasses"))
+        val listClassesTask = TaskRegistry.LIST_CLASSES.taskName(BuildTool.GRADLE)
+        assertTrue(text.contains("./gradlew $listClassesTask"))
     }
 
     @Test
     fun `Maven jq examples use mvn command`() {
         val text = AgentHelpText.generate(BuildTool.MAVEN)
 
-        assertTrue(text.contains("mvn cnav:list-classes"))
-    }
-
-    @Test
-    fun `Gradle agent help text includes ownerClass and type parameters`() {
-        val text = AgentHelpText.generate(BuildTool.GRADLE)
-
-        assertTrue(text.contains("-PownerClass="), "Should list ownerClass parameter")
-        assertTrue(text.contains("-Ptype="), "Should list type parameter")
-    }
-
-    @Test
-    fun `Maven agent help text includes ownerClass and type parameters`() {
-        val text = AgentHelpText.generate(BuildTool.MAVEN)
-
-        assertTrue(text.contains("-DownerClass="), "Should list ownerClass parameter for Maven")
-        assertTrue(text.contains("-Dtype="), "Should list type parameter for Maven")
+        val listClassesTask = TaskRegistry.LIST_CLASSES.taskName(BuildTool.MAVEN)
+        assertTrue(text.contains("mvn $listClassesTask"))
     }
 
     @Test
@@ -236,15 +204,22 @@ class AgentHelpTextTest {
     fun `Maven extracting output section uses mvn command`() {
         val text = AgentHelpText.generate(BuildTool.MAVEN)
 
-        assertTrue(text.contains("mvn cnav:list-classes"), "Maven extraction example should use mvn command")
-        assertFalse(text.contains("./gradlew cnavListClasses"), "Maven should not contain Gradle extraction examples")
+        val listClassesTask = TaskRegistry.LIST_CLASSES.taskName(BuildTool.MAVEN)
+        assertTrue(text.contains("mvn $listClassesTask"), "Maven extraction example should use mvn command")
+        assertFalse(
+            text.contains("./gradlew ${TaskRegistry.LIST_CLASSES.taskName(BuildTool.GRADLE)}"),
+            "Maven should not contain Gradle extraction examples",
+        )
     }
 
     @Test
     fun `agent help text includes metrics in task reference`() {
         val text = AgentHelpText.generate(BuildTool.GRADLE)
 
-        assertTrue(text.contains("cnavMetrics"), "Task reference should list cnavMetrics")
+        assertTrue(
+            text.contains(TaskRegistry.METRICS.taskName(BuildTool.GRADLE)),
+            "Task reference should list metrics task",
+        )
         assertTrue(text.contains("health snapshot"), "Should describe metrics purpose")
     }
 
@@ -256,5 +231,118 @@ class AgentHelpTextTest {
         assertTrue(text.contains("\"packageCount\""), "Should document packageCount field")
         assertTrue(text.contains("\"averageFanIn\""), "Should document averageFanIn field")
         assertTrue(text.contains("\"cycleCount\""), "Should document cycleCount field")
+    }
+
+    @Test
+    fun `task reference lists every non-help task from TaskRegistry`() {
+        val text = AgentHelpText.generate(BuildTool.GRADLE)
+        val taskReferenceSection = text.substringAfter("--- Task Reference ---")
+            .substringBefore("--- Global Parameters ---")
+
+        val helpGoals = setOf("help", "agent-help", "config-help")
+        val expectedTasks = TaskRegistry.ALL_TASKS.filter { it.goal !in helpGoals }
+
+        for (task in expectedTasks) {
+            val taskName = task.taskName(BuildTool.GRADLE)
+            assertTrue(
+                taskReferenceSection.contains(taskName),
+                "Task Reference should list $taskName (goal: ${task.goal})",
+            )
+        }
+    }
+
+    @Test
+    fun `task reference shows all non-format params for each task`() {
+        val text = AgentHelpText.generate(BuildTool.GRADLE)
+        val taskReferenceSection = text.substringAfter("--- Task Reference ---")
+            .substringBefore("--- Global Parameters ---")
+
+        val globalParamNames = setOf("format", "llm")
+        val helpGoals = setOf("help", "agent-help", "config-help")
+
+        for (task in TaskRegistry.ALL_TASKS.filter { it.goal !in helpGoals }) {
+            val taskName = task.taskName(BuildTool.GRADLE)
+            val nonGlobalParams = task.params.filter { it.name !in globalParamNames }
+
+            for (param in nonGlobalParams) {
+                val rendered = param.render(BuildTool.GRADLE)
+                assertTrue(
+                    taskReferenceSection.contains(rendered),
+                    "Task Reference should contain $rendered for $taskName (param: ${param.name})",
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `every non-format param from TaskRegistry appears somewhere in agent help output`() {
+        val text = AgentHelpText.generate(BuildTool.GRADLE)
+
+        val globalParamNames = setOf("format", "llm")
+
+        val allParams = TaskRegistry.ALL_TASKS
+            .flatMap { it.params }
+            .filter { it.name !in globalParamNames }
+            .distinctBy { it.name }
+
+        val missing = allParams.filter { param ->
+            !text.contains(param.render(BuildTool.GRADLE))
+        }
+
+        assertEquals(
+            emptyList(),
+            missing.map { "${it.name} (${it.render(BuildTool.GRADLE)})" },
+            "All TaskRegistry params should appear in agent help output",
+        )
+    }
+
+    @Test
+    fun `global parameters section includes params shared across tasks`() {
+        val text = AgentHelpText.generate(BuildTool.GRADLE)
+        val globalSection = text.substringAfter("--- Global Parameters ---")
+            .substringBefore("--- Tips")
+
+        val sharedParams = listOf(
+            TaskRegistry.MAXDEPTH,
+            TaskRegistry.PROJECTONLY,
+            TaskRegistry.AFTER,
+            TaskRegistry.TOP,
+        )
+        for (param in sharedParams) {
+            assertTrue(
+                globalSection.contains(param.render(BuildTool.GRADLE)),
+                "Global section should list ${param.name}",
+            )
+        }
+    }
+
+    @Test
+    fun `global parameters section shows default values from TaskRegistry`() {
+        val text = AgentHelpText.generate(BuildTool.GRADLE)
+        val globalSection = text.substringAfter("--- Global Parameters ---")
+            .substringBefore("--- Tips")
+
+        val paramsWithDefaults = listOf(TaskRegistry.MAXDEPTH, TaskRegistry.TOP)
+        for (param in paramsWithDefaults) {
+            assertTrue(
+                globalSection.contains("default: ${param.defaultValue}"),
+                "Global section should show default for ${param.name}: ${param.defaultValue}",
+            )
+        }
+    }
+
+    @Test
+    fun `Maven task reference uses Maven task names and -D params`() {
+        val text = AgentHelpText.generate(BuildTool.MAVEN)
+        val taskReferenceSection = text.substringAfter("--- Task Reference ---")
+            .substringBefore("--- Global Parameters ---")
+
+        val callersTask = TaskRegistry.FIND_CALLERS.taskName(BuildTool.MAVEN)
+        val methodParam = TaskRegistry.METHOD.render(BuildTool.MAVEN)
+        val gradleMethodParam = TaskRegistry.METHOD.render(BuildTool.GRADLE)
+
+        assertTrue(taskReferenceSection.contains(callersTask), "Should use Maven task names")
+        assertTrue(taskReferenceSection.contains(methodParam), "Should use -D params")
+        assertFalse(taskReferenceSection.contains(gradleMethodParam), "Should not use -P params")
     }
 }
