@@ -1,53 +1,5 @@
 # Plan
 
-## 66. Fix `<unknown>` source locations for project-internal classes (Very high value, medium effort)
-
-From real user feedback: many entries in `cnavCallers`/`cnavCallees` output show `<unknown>` for the source file on the callee side of the tree, even for project-internal code. This prevents clicking through to the definition and breaks the navigation workflow.
-
-**Root cause**: The `sourceFiles` map in `CallGraph` is keyed by `ClassName` as seen during class scanning. When the call graph refers to a class by a different form than was scanned — most commonly Kotlin inner classes (`Foo$bar$1`), companion objects (`Foo$Companion`), or lambda classes (`Foo$method$1$2`) — the lookup fails and returns `<unknown>`. The `LambdaCollapser` helps in some contexts but isn't applied to the source file lookup in the call tree builder.
-
-**Approach**:
-1. When `sourceFileOf(className)` returns `<unknown>`, try stripping inner class suffixes progressively (`Foo$bar$1` → `Foo$bar` → `Foo`) until a match is found
-2. Alternatively, build the source file map with all inner class variants pointing to the outer class's source file during scanning (inner classes share the source file attribute in bytecode)
-3. Verify: scan project bytecode and check how many `ClassName` entries in the call graph have no matching source file entry — quantify the gap
-
-**Applies to**: `cnavCallers`, `cnavCallees`, `cnavDead`, `cnavComplexity`, `cnavRank` — any task that shows source file annotations
-
-**Why highest priority**: Source file resolution is foundational. Every navigation query becomes less useful when you can't navigate to the result. The user called this the "biggest practical win."
-
-## 67. Kotlin-aware property name resolution (Very high value, medium effort)
-
-From real user feedback: to find usages of a Kotlin property like `BaseAccount.accountNumber`, you have to know it compiles to `getAccountNumber` (and `setAccountNumber` for mutable properties). The plugin should accept the Kotlin property name directly and automatically map it to the JVM getter/setter names.
-
-**Approach**:
-- When a `-Pmethod=accountNumber` query finds no direct match, automatically try `getAccountNumber` and `setAccountNumber` (JavaBean convention that `kotlinc` uses)
-- For boolean properties, also try `isAccountNumber`
-- Apply this in `cnavCallers`, `cnavCallees`, `cnavUsages`, and `cnavCallers -Pmethod=X`
-- When the expanded form finds results, include a note in the output: `(matched as getAccountNumber — Kotlin property accessor)`
-- **Important**: Don't replace the original query, expand it. The user might genuinely be looking for a method called `accountNumber`.
-
-**Complexity**: Low for basic JavaBean mapping. Higher if we want to handle `@JvmName` annotations or `internal` visibility name mangling — defer those.
-
-**Why high priority**: The user identified this as one of the two "biggest practical wins." Reduces the cognitive translation step between Kotlin source and JVM bytecode names.
-
-## 68. Filter synthetic/generated methods from `cnavCallers` output (High value, low effort)
-
-From real user feedback: querying `cnavCallers -Pmethod=BaseAccount` (targeting a class constructor) returns everything including `<clinit>`, `copy`, `copy$default`, `equals`, `hashCode`, `toString`, and `componentN` methods. The signal-to-noise ratio is poor for data classes.
-
-**Approach**:
-- Add a `-Pfilter-synthetic=true` parameter (default: true) that filters out Kotlin compiler-generated methods from results:
-  - `<clinit>` (static initializer)
-  - `copy`, `copy$default` (data class copy)
-  - `equals`, `hashCode`, `toString` (data class generated)
-  - `componentN` methods (data class destructuring)
-  - `$serializer`, `write$Self` (serialization generated)
-  - Bridge/synthetic methods (`access$*`)
-- Reuse the existing filter list from `cnavDead` (which already filters these — see CHANGELOG 0.1.22)
-- Add `-Pfilter-synthetic=false` to opt out and see everything
-- **Applies to**: `cnavCallers`, `cnavCallees`, and potentially `cnavClass` method listings
-
-**Why**: The `cnavDead` noise reduction list already exists. This is mostly wiring the same filter into the caller/callee tasks.
-
 ## 69. `cnavFieldUsages` — find all reads/writes of a field or Kotlin property (High value, medium effort)
 
 From real user feedback: `cnavCallers` works on methods but not fields. To find all places a domain field like `BaseAccount.accountNumber` is read, you have to infer it from getter calls (`getAccountNumber`). A direct field-usage command would be cleaner.
@@ -61,19 +13,6 @@ From real user feedback: `cnavCallers` works on methods but not fields. To find 
 - Combine with #67 (Kotlin property name resolution): `-Pfield=accountNumber` should also find `getAccountNumber`/`setAccountNumber` call sites.
 
 **Applies to**: `cnavUsages` (enhanced) or new `cnavFieldUsages` task
-
-## 70. Type-usage query discoverability — improve `cnavUsages -Ptype` documentation (Medium value, low effort)
-
-From real user feedback: the user asked for "where is BaseAccount used as a parameter or return type?" without knowing that `cnavUsages -Ptype=BaseAccount` already answers this question. The feature exists but isn't discoverable.
-
-**Actions**:
-- Update `AgentHelpText.kt` to prominently feature the `-Ptype` parameter for the "find all usages of a type" use case
-- Add a "Common questions → which task to use" section:
-  - "Where is type X used?" → `cnavUsages -Ptype=X`
-  - "Who calls method X?" → `cnavCallers -Pmethod=X`
-  - "What does class X look like?" → `cnavClass -Ppattern=X`
-- Add an example in `cnavHelpConfig` output showing `-Ptype` usage
-- Consider: `cnavCallers -Pmethod=BaseAccount` could suggest `cnavUsages -Ptype=BaseAccount` when results are noisy
 
 ## 6. `cnavLayerCheck` — architecture conformance (High value, ambitious)
 

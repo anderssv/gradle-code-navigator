@@ -205,4 +205,20 @@ class TaskRegistryTest {
     fun `PATTERN param has no default value`() {
         assertEquals(null, TaskRegistry.PATTERN.defaultValue)
     }
+
+    @Test
+    fun `find-callers and find-callees have filter-synthetic param`() {
+        val callersParams = TaskRegistry.FIND_CALLERS.params.map { it.name }.toSet()
+        val calleesParams = TaskRegistry.FIND_CALLEES.params.map { it.name }.toSet()
+
+        assertTrue(callersParams.contains("filter-synthetic"))
+        assertTrue(calleesParams.contains("filter-synthetic"))
+    }
+
+    @Test
+    fun `FILTER_SYNTHETIC param defaults to true`() {
+        val param = TaskRegistry.FIND_CALLERS.paramByName("filter-synthetic")
+
+        assertEquals("true", param.defaultValue)
+    }
 }

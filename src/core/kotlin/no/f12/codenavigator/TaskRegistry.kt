@@ -35,6 +35,7 @@ object TaskRegistry {
     val METHOD = ParamDef("method", "<regex>", "Method name regex", flag = false, defaultValue = null)
     val MAXDEPTH = ParamDef("maxdepth", "<N>", "Max call tree depth", flag = false, defaultValue = "3")
     val PROJECTONLY = ParamDef("projectonly", "true", "Hide JDK/stdlib/library classes", flag = false, defaultValue = null)
+    val FILTER_SYNTHETIC = ParamDef("filter-synthetic", "false", "Set false to include synthetic methods (equals, hashCode, copy, componentN, etc.)", flag = false, defaultValue = "true")
     val TOP = ParamDef("top", "<N>", "Max results", flag = false, defaultValue = "50")
     val AFTER = ParamDef("after", "YYYY-MM-DD", "Only consider commits after this date", flag = false, defaultValue = "1 year ago")
     val NO_FOLLOW = ParamDef("no-follow", "", "Disable git rename tracking", flag = true, defaultValue = null)
@@ -97,14 +98,14 @@ object TaskRegistry {
     val FIND_CALLERS = TaskDef(
         goal = "find-callers",
         description = "Find callers of a method (call tree)",
-        params = FORMAT_PARAMS + listOf(METHOD, MAXDEPTH, PROJECTONLY),
+        params = FORMAT_PARAMS + listOf(METHOD, MAXDEPTH, PROJECTONLY, FILTER_SYNTHETIC),
         requiresCompilation = true,
     )
 
     val FIND_CALLEES = TaskDef(
         goal = "find-callees",
         description = "Find methods called by a method (call tree)",
-        params = FORMAT_PARAMS + listOf(METHOD, MAXDEPTH, PROJECTONLY),
+        params = FORMAT_PARAMS + listOf(METHOD, MAXDEPTH, PROJECTONLY, FILTER_SYNTHETIC),
         requiresCompilation = true,
     )
 

@@ -345,4 +345,77 @@ class AgentHelpTextTest {
         assertTrue(taskReferenceSection.contains(methodParam), "Should use -D params")
         assertFalse(taskReferenceSection.contains(gradleMethodParam), "Should not use -P params")
     }
+
+    @Test
+    fun `agent help text contains Common Questions section`() {
+        val text = AgentHelpText.generate(BuildTool.GRADLE)
+
+        assertTrue(text.contains("Common Questions"), "Should have a Common Questions section")
+    }
+
+    @Test
+    fun `common questions maps type usage question to find-usages with type param`() {
+        val text = AgentHelpText.generate(BuildTool.GRADLE)
+        val commonQuestionsSection = text.substringAfter("Common Questions")
+            .substringBefore("--- Recommended Workflow")
+
+        val findUsagesTask = TaskRegistry.FIND_USAGES.taskName(BuildTool.GRADLE)
+        val typeParam = TaskRegistry.FIND_USAGES.paramByName("type").render(BuildTool.GRADLE)
+
+        assertTrue(
+            commonQuestionsSection.contains(findUsagesTask),
+            "Common Questions should mention $findUsagesTask for type usage",
+        )
+        assertTrue(
+            commonQuestionsSection.contains(typeParam) || commonQuestionsSection.contains("-Ptype"),
+            "Common Questions should mention -Ptype param for type usage",
+        )
+    }
+
+    @Test
+    fun `common questions maps caller question to find-callers with method param`() {
+        val text = AgentHelpText.generate(BuildTool.GRADLE)
+        val commonQuestionsSection = text.substringAfter("Common Questions")
+            .substringBefore("--- Recommended Workflow")
+
+        val findCallersTask = TaskRegistry.FIND_CALLERS.taskName(BuildTool.GRADLE)
+        val methodParam = TaskRegistry.METHOD.render(BuildTool.GRADLE)
+
+        assertTrue(
+            commonQuestionsSection.contains(findCallersTask),
+            "Common Questions should mention $findCallersTask",
+        )
+        assertTrue(
+            commonQuestionsSection.contains(methodParam) || commonQuestionsSection.contains("-Pmethod"),
+            "Common Questions should mention -Pmethod param",
+        )
+    }
+
+    @Test
+    fun `common questions maps class inspection question to class-detail`() {
+        val text = AgentHelpText.generate(BuildTool.GRADLE)
+        val commonQuestionsSection = text.substringAfter("Common Questions")
+            .substringBefore("--- Recommended Workflow")
+
+        val classDetailTask = TaskRegistry.CLASS_DETAIL.taskName(BuildTool.GRADLE)
+
+        assertTrue(
+            commonQuestionsSection.contains(classDetailTask),
+            "Common Questions should mention $classDetailTask",
+        )
+    }
+
+    @Test
+    fun `Maven common questions uses Maven task names and params`() {
+        val text = AgentHelpText.generate(BuildTool.MAVEN)
+        val commonQuestionsSection = text.substringAfter("Common Questions")
+            .substringBefore("--- Recommended Workflow")
+
+        val findUsagesTask = TaskRegistry.FIND_USAGES.taskName(BuildTool.MAVEN)
+
+        assertTrue(
+            commonQuestionsSection.contains(findUsagesTask),
+            "Maven Common Questions should use Maven task name $findUsagesTask",
+        )
+    }
 }

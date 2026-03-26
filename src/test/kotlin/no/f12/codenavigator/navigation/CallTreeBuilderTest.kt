@@ -228,4 +228,35 @@ class CallTreeBuilderTest {
 
         assertEquals(null, result[0].sourceFile, "Root node should not have source file annotation")
     }
+
+    @Test
+    fun `synthetic method filter removes equals, hashCode, copy, componentN from children`() {
+        val target = MethodRef(ClassName("com.example.Service"), "doWork")
+        val realCaller = MethodRef(ClassName("com.example.Controller"), "handle")
+        val equalsCaller = MethodRef(ClassName("com.example.Model"), "equals")
+        val hashCodeCaller = MethodRef(ClassName("com.example.Model"), "hashCode")
+        val copyCaller = MethodRef(ClassName("com.example.Model"), "copy")
+        val componentCaller = MethodRef(ClassName("com.example.Model"), "component1")
+        val graph = CallGraph(
+            mapOf(
+                realCaller to setOf(target),
+                equalsCaller to setOf(target),
+                hashCodeCaller to setOf(target),
+                copyCaller to setOf(target),
+                componentCaller to setOf(target),
+            ),
+        )
+
+        val syntheticFilter: (MethodRef) -> Boolean = { !KotlinMethodFilter.isGenerated(it.methodName) }
+        val result = CallTreeBuilder.build(
+            graph,
+            listOf(target),
+            maxDepth = 3,
+            CallDirection.CALLERS,
+            filter = syntheticFilter,
+        )
+
+        assertEquals(1, result[0].children.size)
+        assertEquals("handle", result[0].children[0].method.methodName)
+    }
 }

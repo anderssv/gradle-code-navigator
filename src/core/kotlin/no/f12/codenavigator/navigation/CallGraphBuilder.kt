@@ -39,13 +39,43 @@ class CallGraph(
 
     fun findMethods(pattern: String): List<MethodRef> {
         val regex = Regex(pattern, RegexOption.IGNORE_CASE)
-        return allMethods
+        val directMatches = allMethods
             .filter { regex.containsMatchIn(it.qualifiedName) }
+            .sortedBy { it.qualifiedName }
+        if (directMatches.isNotEmpty()) return directMatches
+
+        val expanded = expandPropertyAccessors(pattern) ?: return emptyList()
+        return allMethods
+            .filter { expanded.containsMatchIn(it.qualifiedName) }
             .sortedBy { it.qualifiedName }
     }
 
-    fun sourceFileOf(className: ClassName): String =
-        sourceFiles[className] ?: "<unknown>"
+    private fun expandPropertyAccessors(pattern: String): Regex? {
+        val escapedDotIndex = pattern.lastIndexOf("\\.")
+        val plainDotIndex = if (escapedDotIndex < 0) pattern.lastIndexOf('.') else -1
+        val (prefixEnd, methodStart) = when {
+            escapedDotIndex >= 0 -> (escapedDotIndex + 2) to (escapedDotIndex + 2)
+            plainDotIndex >= 0 -> (plainDotIndex + 1) to (plainDotIndex + 1)
+            else -> return null
+        }
+        val prefix = pattern.substring(0, prefixEnd)
+        val methodPart = pattern.substring(methodStart)
+        if (methodPart.isEmpty()) return null
+        val capitalized = methodPart.replaceFirstChar { it.uppercase() }
+        val accessorPattern = "$prefix(?:get$capitalized|set$capitalized|is$capitalized)"
+        return Regex(accessorPattern, RegexOption.IGNORE_CASE)
+    }
+
+    fun sourceFileOf(className: ClassName): String {
+        sourceFiles[className]?.let { return it }
+        var name = className.value
+        while (true) {
+            val idx = name.lastIndexOf('$')
+            if (idx < 0) return "<unknown>"
+            name = name.substring(0, idx)
+            sourceFiles[ClassName(name)]?.let { return it }
+        }
+    }
 
     fun projectClasses(): Set<ClassName> = sourceFiles.keys
 

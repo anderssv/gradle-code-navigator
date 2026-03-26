@@ -9,6 +9,7 @@ import no.f12.codenavigator.navigation.CallGraphCache
 import no.f12.codenavigator.navigation.CallGraphConfig
 import no.f12.codenavigator.navigation.CallTreeBuilder
 import no.f12.codenavigator.navigation.CallTreeFormatter
+import no.f12.codenavigator.navigation.KotlinMethodFilter
 import no.f12.codenavigator.navigation.MethodRef
 import no.f12.codenavigator.navigation.SkippedFileReporter
 
@@ -27,7 +28,7 @@ abstract class FindCallersTask : DefaultTask() {
         val config = try {
             CallGraphConfig.parse(
                 project.buildPropertyMap(
-                    propertyNames = listOf("method", "maxdepth", "projectonly", "format", "llm"),
+                    propertyNames = listOf("method", "maxdepth", "projectonly", "filter-synthetic", "format", "llm"),
                     flagNames = emptyList(),
                 ),
             )
@@ -53,8 +54,11 @@ abstract class FindCallersTask : DefaultTask() {
             return
         }
 
+        val filters = mutableListOf<(MethodRef) -> Boolean>()
+        if (config.projectOnly) filters.add(graph.projectClassFilter())
+        if (config.filterSynthetic) filters.add { !KotlinMethodFilter.isGenerated(it.methodName) }
         val filter: ((MethodRef) -> Boolean)? =
-            if (config.projectOnly) graph.projectClassFilter() else null
+            if (filters.isEmpty()) null else { ref -> filters.all { it(ref) } }
 
         val trees = CallTreeBuilder.build(graph, methods, config.maxDepth, CallDirection.CALLERS, filter)
         val output = when (config.format) {

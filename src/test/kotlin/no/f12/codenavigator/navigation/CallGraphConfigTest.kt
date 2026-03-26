@@ -69,4 +69,22 @@ class CallGraphConfigTest {
 
         assertEquals(OutputFormat.LLM, config.format)
     }
+
+    @Test
+    fun `parses filter-synthetic as false when explicitly set`() {
+        val config = CallGraphConfig.parse(
+            mapOf("method" to "com.example.MyClass.myMethod", "filter-synthetic" to "false"),
+        )
+
+        assertEquals(false, config.filterSynthetic)
+    }
+
+    @Test
+    fun `defaults filterSynthetic to true when not provided`() {
+        val config = CallGraphConfig.parse(
+            mapOf("method" to "com.example.MyClass.myMethod"),
+        )
+
+        assertEquals(true, config.filterSynthetic)
+    }
 }

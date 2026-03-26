@@ -100,3 +100,19 @@ Implemented `LambdaCollapser` utility that collapses Kotlin lambda inner classes
 ## ~~24. `cnavCycles` — explicit cycle detection task (High value, medium effort)~~ DONE
 
 Implemented `cnavCycles` task using Tarjan's SCC (Strongly Connected Components) algorithm to detect true multi-node dependency cycles in the package dependency graph. Unlike the existing `cnavDsm -Pcycles=true` which only finds pairwise bidirectional edges (A<->B), `cnavCycles` detects cycles of any size (A->B->C->A). Uses the DSM pipeline for comprehensive dependency extraction (superclass, interfaces, field types, method signatures, method calls). Supports TEXT, JSON, and LLM output formats. Parameters: `-Proot-package=<pkg>`, `-Pdepth=N`, `-Pformat=json|text|llm`. Available as both Gradle task (`cnavCycles`) and Maven goal (`cycles`).
+
+## ~~66. Fix `<unknown>` source locations for project-internal classes (Very high value, medium effort)~~ DONE
+
+Modified `CallGraph.sourceFileOf()` to progressively strip `$` inner class suffixes when the direct lookup fails. For example, `Foo$bar$1` → `Foo$bar` → `Foo`, returning the first match. This resolves `<unknown>` source files for Kotlin lambda inner classes, companion objects, and nested anonymous classes. Inner classes share the source file attribute in bytecode, so the outer class's source file is correct. Tests cover inner class fallback, multi-level fallback, and no-match returning `<unknown>`.
+
+## ~~67. Kotlin-aware property name resolution (Very high value, medium effort)~~ DONE
+
+Modified `CallGraph.findMethods()` to auto-expand to `get<Name>`/`set<Name>`/`is<Name>` when the original pattern finds no direct match. The `expandPropertyAccessors()` private method handles both escaped dots (`\.`) and unescaped dots (`.`) in patterns, expanding only the method name portion after the last dot. This allows patterns like `Account.accountNumber` to automatically match `Account.getAccountNumber`. Expansion only fires when the original pattern returns zero results, so exact method names are never overridden.
+
+## ~~68. Filter synthetic/generated methods from `cnavCallers`/`cnavCallees` output (High value, low effort)~~ DONE
+
+Added `-Pfilter-synthetic=true` parameter (default: true) to `cnavCallers` and `cnavCallees`. When enabled, filters out Kotlin compiler-generated methods (`<init>`, `<clinit>`, `equals`, `hashCode`, `toString`, `copy`, `componentN`, `access$*`, `$lambda$`, etc.) using the existing `KotlinMethodFilter`. Wired in both Gradle tasks (`FindCallersTask`, `FindCalleesTask`) and Maven mojos (`FindCallersMojo`, `FindCalleesMojo`). The filter composes with the existing `projectOnly` filter.
+
+## ~~70. Type-usage query discoverability — improve `cnavUsages -Ptype` documentation (Medium value, low effort)~~ DONE
+
+Added a "Common Questions → Which Task" section to `AgentHelpText.kt`, placed between "When to Use What" and "Recommended Workflow". Maps natural-language questions to the correct task and parameters: "Where is type X used?" → `cnavUsages -Ptype=X`, "Who calls method X?" → `cnavCallers -Pmethod=X`, "What does class X look like?" → `cnavClass -Ppattern=X`, plus entries for callees, interfaces, package deps, dead code, rank, and hotspots. Section uses the build-tool-aware `u()` and `p()` helpers so it renders correctly for both Gradle and Maven.

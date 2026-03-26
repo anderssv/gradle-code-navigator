@@ -215,6 +215,118 @@ class CallGraphBuilderTest {
     }
 
     @Test
+    fun `sourceFileOf falls back to outer class when inner class not found`() {
+        val graph = CallGraph(
+            emptyMap(),
+            sourceFiles = mapOf(ClassName("com.example.MyService") to "MyService.kt"),
+        )
+
+        assertEquals("MyService.kt", graph.sourceFileOf(ClassName("com.example.MyService\$InnerClass")))
+    }
+
+    @Test
+    fun `sourceFileOf falls back through multiple inner class levels`() {
+        val graph = CallGraph(
+            emptyMap(),
+            sourceFiles = mapOf(ClassName("com.example.MyService") to "MyService.kt"),
+        )
+
+        assertEquals("MyService.kt", graph.sourceFileOf(ClassName("com.example.MyService\$Lambda\$1")))
+    }
+
+    @Test
+    fun `sourceFileOf returns unknown when no outer class matches either`() {
+        val graph = CallGraph(
+            emptyMap(),
+            sourceFiles = mapOf(ClassName("com.example.Other") to "Other.kt"),
+        )
+
+        assertEquals("<unknown>", graph.sourceFileOf(ClassName("com.example.Missing\$Inner")))
+    }
+
+    @Test
+    fun `findMethods expands qualified property name to getter when no direct match`() {
+        val getter = MethodRef(ClassName("com.example.Account"), "getAccountNumber")
+        val graph = CallGraph(
+            mapOf(getter to emptySet()),
+        )
+
+        val result = graph.findMethods("Account\\.accountNumber")
+
+        assertEquals(1, result.size)
+        assertEquals("getAccountNumber", result[0].methodName)
+    }
+
+    @Test
+    fun `findMethods expands to setter when no direct match`() {
+        val setter = MethodRef(ClassName("com.example.Account"), "setAccountNumber")
+        val graph = CallGraph(
+            mapOf(setter to emptySet()),
+        )
+
+        val result = graph.findMethods("Account\\.accountNumber")
+
+        assertEquals(1, result.size)
+        assertEquals("setAccountNumber", result[0].methodName)
+    }
+
+    @Test
+    fun `findMethods expands to is-getter for boolean properties`() {
+        val isGetter = MethodRef(ClassName("com.example.Account"), "isActive")
+        val graph = CallGraph(
+            mapOf(isGetter to emptySet()),
+        )
+
+        val result = graph.findMethods("Account\\.active")
+
+        assertEquals(1, result.size)
+        assertEquals("isActive", result[0].methodName)
+    }
+
+    @Test
+    fun `findMethods does not expand when direct match exists`() {
+        val direct = MethodRef(ClassName("com.example.Service"), "accountNumber")
+        val getter = MethodRef(ClassName("com.example.Service"), "getAccountNumber")
+        val graph = CallGraph(
+            mapOf(direct to emptySet(), getter to emptySet()),
+        )
+
+        val result = graph.findMethods("Service\\.accountNumber")
+
+        assertEquals(1, result.size)
+        assertEquals("accountNumber", result[0].methodName)
+    }
+
+    @Test
+    fun `findMethods expansion finds both getter and setter`() {
+        val getter = MethodRef(ClassName("com.example.Account"), "getAccountNumber")
+        val setter = MethodRef(ClassName("com.example.Account"), "setAccountNumber")
+        val graph = CallGraph(
+            mapOf(getter to emptySet(), setter to emptySet()),
+        )
+
+        val result = graph.findMethods("Account\\.accountNumber")
+
+        assertEquals(2, result.size)
+        val methodNames = result.map { it.methodName }.toSet()
+        assertTrue("getAccountNumber" in methodNames)
+        assertTrue("setAccountNumber" in methodNames)
+    }
+
+    @Test
+    fun `findMethods expands with unescaped dot`() {
+        val getter = MethodRef(ClassName("com.example.Account"), "getAccountNumber")
+        val graph = CallGraph(
+            mapOf(getter to emptySet()),
+        )
+
+        val result = graph.findMethods("Account.accountNumber")
+
+        assertEquals(1, result.size)
+        assertEquals("getAccountNumber", result[0].methodName)
+    }
+
+    @Test
     fun `multiple methods on same class each have independent caller chains`() {
         // UserService has: buildNotificationMessage, sendResetNotification, sendDeactivationNotification,
         //                  resetPassword, deactivateUser

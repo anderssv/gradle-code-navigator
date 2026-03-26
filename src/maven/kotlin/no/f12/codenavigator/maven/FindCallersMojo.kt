@@ -9,6 +9,7 @@ import no.f12.codenavigator.navigation.CallGraphBuilder
 import no.f12.codenavigator.navigation.CallGraphConfig
 import no.f12.codenavigator.navigation.CallTreeBuilder
 import no.f12.codenavigator.navigation.CallTreeFormatter
+import no.f12.codenavigator.navigation.KotlinMethodFilter
 import no.f12.codenavigator.navigation.MethodRef
 import no.f12.codenavigator.navigation.SkippedFileReporter
 import org.apache.maven.plugin.AbstractMojo
@@ -42,6 +43,9 @@ class FindCallersMojo : AbstractMojo() {
     @Parameter(property = "projectonly")
     private var projectonly: String? = null
 
+    @Parameter(property = "filter-synthetic")
+    private var filterSynthetic: String? = null
+
     override fun execute() {
         val config = try {
             CallGraphConfig.parse(buildPropertyMap())
@@ -68,8 +72,11 @@ class FindCallersMojo : AbstractMojo() {
             return
         }
 
+        val filters = mutableListOf<(MethodRef) -> Boolean>()
+        if (config.projectOnly) filters.add(graph.projectClassFilter())
+        if (config.filterSynthetic) filters.add { !KotlinMethodFilter.isGenerated(it.methodName) }
         val filter: ((MethodRef) -> Boolean)? =
-            if (config.projectOnly) graph.projectClassFilter() else null
+            if (filters.isEmpty()) null else { ref -> filters.all { it(ref) } }
 
         val trees = CallTreeBuilder.build(graph, methods, config.maxDepth, CallDirection.CALLERS, filter)
         val output = when (config.format) {
@@ -86,5 +93,6 @@ class FindCallersMojo : AbstractMojo() {
         method?.let { put("method", it) }
         maxdepth?.let { put("maxdepth", it) }
         projectonly?.let { put("projectonly", it) }
+        filterSynthetic?.let { put("filter-synthetic", it) }
     }
 }
