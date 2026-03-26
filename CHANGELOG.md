@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.23
+
+- Add `cnavMetrics` task / `cnav:metrics` goal — quick project health snapshot combining bytecode and git analysis. Shows total classes, package count, average fan-in/fan-out, cycle count (Tarjan SCC), dead code counts, and top hotspots.
+- Add `cnavCycles` task / `cnav:cycles` goal — true multi-node dependency cycle detection using Tarjan's strongly connected components algorithm. Parameters: `-Proot-package=<pkg>`, `-Pdsm-depth=<N>`.
+- Add `top` parameter to `cnavCoupling` and `cnavComplexity` to limit result count
+- Add `PatternEnhancer` for camel-case-aware pattern matching — e.g. `Service` now matches `MyServiceImpl`
+- Default `maxdepth` to 3 for `cnavCallers` and `cnavCallees` (was required)
+- Make `cnavComplexity` work without `-Pclassname` — defaults to showing all project classes sorted by fan-out descending
+- **Refactoring:** Introduce `ClassName` and `PackageName` value classes throughout the codebase for type-safe identifiers
+- **Refactoring:** Collapse Kotlin lambda inner classes (`$`-containing) in complexity and rank output
+- **Refactoring:** Generate help text (AgentHelpText, HelpText) from `TaskRegistry` to prevent parameter drift — all parameter documentation is now data-driven
+- **Fix:** `cnavCycles` no longer reads ambient Gradle `depth` property — renamed to `dsm-depth`
+- **Fix:** `cnavMetrics` cycle count now uses Tarjan SCC and resolves `rootPackage` from extension config
+- **Fix:** Filter Kotlin `$default` and `$$forInline` synthetic methods from dead code results
+
 ## 0.1.22
 
 - Add `cnavComplexity` task / `cnav:complexity` goal — analyzes class complexity via fan-in (incoming calls) and fan-out (outgoing calls). Parameters: `-Pclassname=<pattern>` (filter by class), `-Ptop=N` (default 50), `-Pprojectonly=true|false` (default true). TEXT, JSON, and LLM output formats.
