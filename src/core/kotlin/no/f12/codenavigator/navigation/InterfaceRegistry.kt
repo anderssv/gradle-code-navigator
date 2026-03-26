@@ -61,9 +61,9 @@ class InterfaceRegistry(
             map: MutableMap<ClassName, MutableList<ImplementorInfo>>,
         ) {
             val reader = createClassReader(classFile)
-            var className = ""
+            var className = ClassName("")
             var sourceFile = "<unknown>"
-            var implementedInterfaces = emptyList<String>()
+            var implementedInterfaces = emptyList<ClassName>()
             var isSynthetic = false
 
             reader.accept(
@@ -76,10 +76,10 @@ class InterfaceRegistry(
                         superName: String?,
                         interfaces: Array<out String>?,
                     ) {
-                        className = name.replace('/', '.')
+                        className = ClassName(name.replace('/', '.'))
                         isSynthetic = isSyntheticClass(name)
                         implementedInterfaces = interfaces
-                            ?.map { it.replace('/', '.') }
+                            ?.map { ClassName(it.replace('/', '.')) }
                             ?: emptyList()
                     }
 
@@ -94,9 +94,9 @@ class InterfaceRegistry(
 
             if (isSynthetic || implementedInterfaces.isEmpty()) return
 
-            val info = ImplementorInfo(ClassName(className), sourceFile)
+            val info = ImplementorInfo(className, sourceFile)
             implementedInterfaces.forEach { ifaceName ->
-                map.getOrPut(ClassName(ifaceName)) { mutableListOf() }.add(info)
+                map.getOrPut(ifaceName) { mutableListOf() }.add(info)
             }
         }
 
