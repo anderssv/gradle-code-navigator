@@ -86,7 +86,7 @@ class ClassComplexityAnalyzerTest {
         val result = ClassComplexityAnalyzer.analyze(graph, "Service", projectOnly = true)
 
         val c = result.first()
-        assertEquals(listOf("com.example.Repo" to 2, "com.example.Cache" to 1), c.outgoingByClass)
+        assertEquals(listOf(ClassName("com.example.Repo") to 2, ClassName("com.example.Cache") to 1), c.outgoingByClass)
     }
 
     @Test
@@ -100,7 +100,7 @@ class ClassComplexityAnalyzerTest {
         val result = ClassComplexityAnalyzer.analyze(graph, "Service", projectOnly = true)
 
         val c = result.first()
-        assertEquals(listOf("com.example.Controller" to 2, "com.example.Scheduler" to 1), c.incomingByClass)
+        assertEquals(listOf(ClassName("com.example.Controller") to 2, ClassName("com.example.Scheduler") to 1), c.incomingByClass)
     }
 
     @Test
@@ -144,7 +144,7 @@ class ClassComplexityAnalyzerTest {
         val result = ClassComplexityAnalyzer.analyze(graph, "Service", projectOnly = true)
 
         assertEquals(2, result.size)
-        val classNames = result.map { it.className }.toSet()
+        val classNames = result.map { it.className.value }.toSet()
         assertTrue("com.example.UserService" in classNames)
         assertTrue("com.example.OrderService" in classNames)
     }
@@ -170,7 +170,7 @@ class ClassComplexityAnalyzerTest {
 
         val result = ClassComplexityAnalyzer.analyze(graph, "RAClient", projectOnly = true)
 
-        val classNames = result.map { it.className }
+        val classNames = result.map { it.className.value }
         assertEquals(listOf("com.example.RAClient"), classNames, "Only the real class should match, not \$-inner classes")
     }
 

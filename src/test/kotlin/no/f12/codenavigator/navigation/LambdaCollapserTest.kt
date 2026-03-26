@@ -54,14 +54,14 @@ class LambdaCollapserTest {
     fun `collapseComplexity with no lambda classes returns unchanged results`() {
         val input = listOf(
             ClassComplexity(
-                className = "com.example.Service",
+                className = ClassName("com.example.Service"),
                 sourceFile = "Service.kt",
                 fanOut = 2,
                 fanIn = 1,
                 distinctOutgoingClasses = 2,
                 distinctIncomingClasses = 1,
-                outgoingByClass = listOf("com.example.Repo" to 1, "com.example.Cache" to 1),
-                incomingByClass = listOf("com.example.Controller" to 1),
+                outgoingByClass = listOf(ClassName("com.example.Repo") to 1, ClassName("com.example.Cache") to 1),
+                incomingByClass = listOf(ClassName("com.example.Controller") to 1),
             ),
         )
 
@@ -74,7 +74,7 @@ class LambdaCollapserTest {
     fun `collapseComplexity merges lambda callers into enclosing class`() {
         val input = listOf(
             ClassComplexity(
-                className = "com.example.Service",
+                className = ClassName("com.example.Service"),
                 sourceFile = "Service.kt",
                 fanOut = 0,
                 fanIn = 3,
@@ -82,9 +82,9 @@ class LambdaCollapserTest {
                 distinctIncomingClasses = 3,
                 outgoingByClass = emptyList(),
                 incomingByClass = listOf(
-                    "com.example.Controller" to 1,
-                    "com.example.Controller\$handle\$1" to 1,
-                    "com.example.Controller\$handle\$2" to 1,
+                    ClassName("com.example.Controller") to 1,
+                    ClassName("com.example.Controller\$handle\$1") to 1,
+                    ClassName("com.example.Controller\$handle\$2") to 1,
                 ),
             ),
         )
@@ -93,7 +93,7 @@ class LambdaCollapserTest {
 
         val c = result.first()
         assertEquals(1, c.distinctIncomingClasses)
-        assertEquals(listOf("com.example.Controller" to 3), c.incomingByClass)
+        assertEquals(listOf(ClassName("com.example.Controller") to 3), c.incomingByClass)
         assertEquals(3, c.fanIn)
     }
 
@@ -101,15 +101,15 @@ class LambdaCollapserTest {
     fun `collapseComplexity merges lambda callees into enclosing class`() {
         val input = listOf(
             ClassComplexity(
-                className = "com.example.Service",
+                className = ClassName("com.example.Service"),
                 sourceFile = "Service.kt",
                 fanOut = 2,
                 fanIn = 0,
                 distinctOutgoingClasses = 2,
                 distinctIncomingClasses = 0,
                 outgoingByClass = listOf(
-                    "com.example.Repo" to 1,
-                    "com.example.Repo\$save\$1" to 1,
+                    ClassName("com.example.Repo") to 1,
+                    ClassName("com.example.Repo\$save\$1") to 1,
                 ),
                 incomingByClass = emptyList(),
             ),
@@ -119,7 +119,7 @@ class LambdaCollapserTest {
 
         val c = result.first()
         assertEquals(1, c.distinctOutgoingClasses)
-        assertEquals(listOf("com.example.Repo" to 2), c.outgoingByClass)
+        assertEquals(listOf(ClassName("com.example.Repo") to 2), c.outgoingByClass)
         assertEquals(2, c.fanOut)
     }
 }

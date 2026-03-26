@@ -1,14 +1,14 @@
 package no.f12.codenavigator.navigation
 
 data class ClassComplexity(
-    val className: String,
+    val className: ClassName,
     val sourceFile: String,
     val fanOut: Int,
     val fanIn: Int,
     val distinctOutgoingClasses: Int,
     val distinctIncomingClasses: Int,
-    val outgoingByClass: List<Pair<String, Int>>,
-    val incomingByClass: List<Pair<String, Int>>,
+    val outgoingByClass: List<Pair<ClassName, Int>>,
+    val incomingByClass: List<Pair<ClassName, Int>>,
 )
 
 object ClassComplexityAnalyzer {
@@ -32,8 +32,8 @@ object ClassComplexityAnalyzer {
         projectOnly: Boolean,
         projectClasses: Set<ClassName>,
     ): ClassComplexity {
-        val outgoing = mutableListOf<Pair<String, String>>()
-        val incoming = mutableListOf<Pair<String, String>>()
+        val outgoing = mutableListOf<Pair<ClassName, String>>()
+        val incoming = mutableListOf<Pair<ClassName, String>>()
 
         graph.forEachEdge { caller, callee ->
             val callerClass = caller.className
@@ -41,12 +41,12 @@ object ClassComplexityAnalyzer {
 
             if (callerClass == className && calleeClass != className) {
                 if (!projectOnly || callee.className in projectClasses) {
-                    outgoing.add(calleeClass.value to callee.methodName)
+                    outgoing.add(calleeClass to callee.methodName)
                 }
             }
             if (calleeClass == className && callerClass != className) {
                 if (!projectOnly || caller.className in projectClasses) {
-                    incoming.add(callerClass.value to caller.methodName)
+                    incoming.add(callerClass to caller.methodName)
                 }
             }
         }
@@ -62,7 +62,7 @@ object ClassComplexityAnalyzer {
             .sortedByDescending { it.second }
 
         return ClassComplexity(
-            className = className.value,
+            className = className,
             sourceFile = graph.sourceFileOf(className),
             fanOut = outgoing.size,
             fanIn = incoming.size,

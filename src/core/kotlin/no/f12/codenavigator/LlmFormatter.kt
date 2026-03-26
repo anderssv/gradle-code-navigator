@@ -97,18 +97,18 @@ object LlmFormatter {
     fun formatComplexity(results: List<ClassComplexity>): String =
         results.joinToString("\n\n") { c ->
             buildString {
-                append("${c.className} out=${c.fanOut}/${c.distinctOutgoingClasses} in=${c.fanIn}/${c.distinctIncomingClasses}")
+                append("${c.className.value} out=${c.fanOut}/${c.distinctOutgoingClasses} in=${c.fanIn}/${c.distinctIncomingClasses}")
                 if (c.outgoingByClass.isEmpty()) {
                     append("\n  outgoing: none")
                 } else {
                     append("\n  outgoing:")
-                    c.outgoingByClass.forEach { append("\n    ${it.first}(${it.second})") }
+                    c.outgoingByClass.forEach { append("\n    ${it.first.value}(${it.second})") }
                 }
                 if (c.incomingByClass.isEmpty()) {
                     append("\n  incoming: none")
                 } else {
                     append("\n  incoming:")
-                    c.incomingByClass.forEach { append("\n    ${it.first}(${it.second})") }
+                    c.incomingByClass.forEach { append("\n    ${it.first.value}(${it.second})") }
                 }
             }
         }

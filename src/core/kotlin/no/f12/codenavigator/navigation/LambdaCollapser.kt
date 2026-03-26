@@ -28,9 +28,9 @@ object LambdaCollapser {
             )
         }
 
-    private fun collapseByClass(entries: List<Pair<String, Int>>): List<Pair<String, Int>> =
+    private fun collapseByClass(entries: List<Pair<ClassName, Int>>): List<Pair<ClassName, Int>> =
         entries
-            .groupBy { (className, _) -> collapse(ClassName(className)).value }
+            .groupBy { (className, _) -> collapse(className) }
             .map { (collapsed, group) -> collapsed to group.sumOf { it.second } }
             .sortedByDescending { it.second }
 }

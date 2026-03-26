@@ -310,14 +310,14 @@ class LlmFormatterTest {
     fun `formats complexity compactly`() {
         val results = listOf(
             ClassComplexity(
-                className = "com.example.Service",
+                className = ClassName("com.example.Service"),
                 sourceFile = "Service.kt",
                 fanOut = 5,
                 fanIn = 3,
                 distinctOutgoingClasses = 2,
                 distinctIncomingClasses = 1,
-                outgoingByClass = listOf("com.example.Repo" to 3, "com.example.Cache" to 2),
-                incomingByClass = listOf("com.example.Controller" to 3),
+                outgoingByClass = listOf(ClassName("com.example.Repo") to 3, ClassName("com.example.Cache") to 2),
+                incomingByClass = listOf(ClassName("com.example.Controller") to 3),
             ),
         )
 
@@ -338,7 +338,7 @@ class LlmFormatterTest {
     fun `formats complexity with no outgoing or incoming`() {
         val results = listOf(
             ClassComplexity(
-                className = "com.example.Orphan",
+                className = ClassName("com.example.Orphan"),
                 sourceFile = "Orphan.kt",
                 fanOut = 0,
                 fanIn = 0,
@@ -363,24 +363,24 @@ class LlmFormatterTest {
     fun `formats multiple complexity results separated by blank line`() {
         val results = listOf(
             ClassComplexity(
-                className = "com.example.A",
+                className = ClassName("com.example.A"),
                 sourceFile = "A.kt",
                 fanOut = 1,
                 fanIn = 0,
                 distinctOutgoingClasses = 1,
                 distinctIncomingClasses = 0,
-                outgoingByClass = listOf("com.example.B" to 1),
+                outgoingByClass = listOf(ClassName("com.example.B") to 1),
                 incomingByClass = emptyList(),
             ),
             ClassComplexity(
-                className = "com.example.B",
+                className = ClassName("com.example.B"),
                 sourceFile = "B.kt",
                 fanOut = 0,
                 fanIn = 1,
                 distinctOutgoingClasses = 0,
                 distinctIncomingClasses = 1,
                 outgoingByClass = emptyList(),
-                incomingByClass = listOf("com.example.A" to 1),
+                incomingByClass = listOf(ClassName("com.example.A") to 1),
             ),
         )
 

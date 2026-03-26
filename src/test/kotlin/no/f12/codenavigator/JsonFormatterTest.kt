@@ -564,14 +564,14 @@ class JsonFormatterTest {
     fun `formats complexity as JSON with all fields`() {
         val complexity = listOf(
             ClassComplexity(
-                className = "com.example.Service",
+                className = ClassName("com.example.Service"),
                 sourceFile = "Service.kt",
                 fanOut = 5,
                 fanIn = 3,
                 distinctOutgoingClasses = 2,
                 distinctIncomingClasses = 1,
-                outgoingByClass = listOf("com.example.Repo" to 3, "com.example.Cache" to 2),
-                incomingByClass = listOf("com.example.Controller" to 3),
+                outgoingByClass = listOf(ClassName("com.example.Repo") to 3, ClassName("com.example.Cache") to 2),
+                incomingByClass = listOf(ClassName("com.example.Controller") to 3),
             ),
         )
 

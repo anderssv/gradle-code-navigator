@@ -15,14 +15,14 @@ class ComplexityFormatterTest {
     @Test
     fun `formats single class summary`() {
         val complexity = ClassComplexity(
-            className = "com.example.Service",
+            className = ClassName("com.example.Service"),
             sourceFile = "Service.kt",
             fanOut = 5,
             fanIn = 3,
             distinctOutgoingClasses = 2,
             distinctIncomingClasses = 2,
-            outgoingByClass = listOf("com.example.Repo" to 3, "com.example.Cache" to 2),
-            incomingByClass = listOf("com.example.Controller" to 2, "com.example.Scheduler" to 1),
+            outgoingByClass = listOf(ClassName("com.example.Repo") to 3, ClassName("com.example.Cache") to 2),
+            incomingByClass = listOf(ClassName("com.example.Controller") to 2, ClassName("com.example.Scheduler") to 1),
         )
 
         val result = ComplexityFormatter.format(listOf(complexity))
@@ -40,14 +40,14 @@ class ComplexityFormatterTest {
     @Test
     fun `formats class with no outgoing calls`() {
         val complexity = ClassComplexity(
-            className = "com.example.Leaf",
+            className = ClassName("com.example.Leaf"),
             sourceFile = "Leaf.kt",
             fanOut = 0,
             fanIn = 2,
             distinctOutgoingClasses = 0,
             distinctIncomingClasses = 1,
             outgoingByClass = emptyList(),
-            incomingByClass = listOf("com.example.Service" to 2),
+            incomingByClass = listOf(ClassName("com.example.Service") to 2),
         )
 
         val result = ComplexityFormatter.format(listOf(complexity))
@@ -65,24 +65,24 @@ class ComplexityFormatterTest {
     @Test
     fun `formats multiple classes separated by blank line`() {
         val c1 = ClassComplexity(
-            className = "com.example.A",
+            className = ClassName("com.example.A"),
             sourceFile = "A.kt",
             fanOut = 1,
             fanIn = 0,
             distinctOutgoingClasses = 1,
             distinctIncomingClasses = 0,
-            outgoingByClass = listOf("com.example.B" to 1),
+            outgoingByClass = listOf(ClassName("com.example.B") to 1),
             incomingByClass = emptyList(),
         )
         val c2 = ClassComplexity(
-            className = "com.example.B",
+            className = ClassName("com.example.B"),
             sourceFile = "B.kt",
             fanOut = 0,
             fanIn = 1,
             distinctOutgoingClasses = 0,
             distinctIncomingClasses = 1,
             outgoingByClass = emptyList(),
-            incomingByClass = listOf("com.example.A" to 1),
+            incomingByClass = listOf(ClassName("com.example.A") to 1),
         )
 
         val result = ComplexityFormatter.format(listOf(c1, c2))

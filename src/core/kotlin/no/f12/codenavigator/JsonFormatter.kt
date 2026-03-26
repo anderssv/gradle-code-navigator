@@ -239,17 +239,17 @@ object JsonFormatter {
     fun formatComplexity(results: List<ClassComplexity>): String =
         jsonArray(results) { c ->
             jsonObject(
-                "className" to c.className,
+                "className" to c.className.value,
                 "sourceFile" to c.sourceFile,
                 "fanOut" to c.fanOut,
                 "fanIn" to c.fanIn,
                 "distinctOutgoingClasses" to c.distinctOutgoingClasses,
                 "distinctIncomingClasses" to c.distinctIncomingClasses,
                 "outgoingByClass" to JsonRaw(jsonArray(c.outgoingByClass) { (cls, count) ->
-                    jsonObject("className" to cls, "count" to count)
+                    jsonObject("className" to cls.value, "count" to count)
                 }),
                 "incomingByClass" to JsonRaw(jsonArray(c.incomingByClass) { (cls, count) ->
-                    jsonObject("className" to cls, "count" to count)
+                    jsonObject("className" to cls.value, "count" to count)
                 }),
             )
         }
