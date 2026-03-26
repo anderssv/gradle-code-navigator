@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "no.f12"
-version = "0.1.24"
+version = "0.1.25-SNAPSHOT"
 
 gradlePlugin {
     website.set("https://github.com/anderssv/gradle-code-navigator")
