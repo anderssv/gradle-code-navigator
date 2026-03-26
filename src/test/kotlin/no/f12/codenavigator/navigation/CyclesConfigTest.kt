@@ -10,7 +10,7 @@ class CyclesConfigTest {
     fun `defaults — root-package empty, depth 2, format TEXT`() {
         val config = CyclesConfig.parse(emptyMap())
 
-        assertEquals("", config.rootPackage)
+        assertEquals(PackageName(""), config.rootPackage)
         assertEquals(2, config.depth)
         assertEquals(OutputFormat.TEXT, config.format)
     }
@@ -21,7 +21,7 @@ class CyclesConfigTest {
             mapOf("root-package" to "com.example", "depth" to "3"),
         )
 
-        assertEquals("com.example", config.rootPackage)
+        assertEquals(PackageName("com.example"), config.rootPackage)
         assertEquals(3, config.depth)
     }
 

@@ -35,12 +35,12 @@ data class DsmMatrix(
 
 object DsmMatrixBuilder {
 
-    fun build(dependencies: List<PackageDependency>, rootPrefix: String, depth: Int): DsmMatrix {
+    fun build(dependencies: List<PackageDependency>, rootPrefix: PackageName, depth: Int): DsmMatrix {
         if (dependencies.isEmpty()) return DsmMatrix(emptyList(), emptyMap(), emptyMap())
 
         val allTruncated = dependencies.map { dep ->
-            Triple(truncate(dep.sourcePackage.value, rootPrefix, depth),
-                   truncate(dep.targetPackage.value, rootPrefix, depth),
+            Triple(truncate(dep.sourcePackage.value, rootPrefix.value, depth),
+                   truncate(dep.targetPackage.value, rootPrefix.value, depth),
                    dep)
         }
 

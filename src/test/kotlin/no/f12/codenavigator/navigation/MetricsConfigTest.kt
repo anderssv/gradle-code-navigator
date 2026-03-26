@@ -23,7 +23,7 @@ class MetricsConfigTest {
         assertEquals(LocalDate.of(2024, 6, 1), config.after)
         assertEquals(10, config.top)
         assertEquals(false, config.followRenames)
-        assertEquals("com.example", config.rootPackage)
+        assertEquals(PackageName("com.example"), config.rootPackage)
         assertEquals(OutputFormat.JSON, config.format)
     }
 
@@ -74,6 +74,6 @@ class MetricsConfigTest {
     fun `defaults rootPackage to empty string`() {
         val config = MetricsConfig.parse(emptyMap())
 
-        assertEquals("", config.rootPackage)
+        assertEquals(PackageName(""), config.rootPackage)
     }
 }

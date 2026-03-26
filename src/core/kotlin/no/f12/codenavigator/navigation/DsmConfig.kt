@@ -3,7 +3,7 @@ package no.f12.codenavigator.navigation
 import no.f12.codenavigator.OutputFormat
 
 data class DsmConfig(
-    val rootPackage: String,
+    val rootPackage: PackageName,
     val depth: Int,
     val htmlPath: String?,
     val format: OutputFormat,
@@ -12,7 +12,7 @@ data class DsmConfig(
 ) {
     companion object {
         fun parse(properties: Map<String, String?>): DsmConfig = DsmConfig(
-            rootPackage = properties["root-package"] ?: "",
+            rootPackage = PackageName(properties["root-package"] ?: ""),
             depth = properties["dsm-depth"]?.toIntOrNull() ?: 2,
             htmlPath = properties["dsm-html"],
             format = OutputFormat.from(

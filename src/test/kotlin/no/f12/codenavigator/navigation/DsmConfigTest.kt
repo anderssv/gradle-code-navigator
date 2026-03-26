@@ -19,7 +19,7 @@ class DsmConfigTest {
 
         val config = DsmConfig.parse(props)
 
-        assertEquals("com.example", config.rootPackage)
+        assertEquals(PackageName("com.example"), config.rootPackage)
         assertEquals(4, config.depth)
         assertEquals("/tmp/dsm.html", config.htmlPath)
         assertEquals(OutputFormat.JSON, config.format)
@@ -29,7 +29,7 @@ class DsmConfigTest {
     fun `defaults rootPackage to empty string`() {
         val config = DsmConfig.parse(emptyMap())
 
-        assertEquals("", config.rootPackage)
+        assertEquals(PackageName(""), config.rootPackage)
     }
 
     @Test

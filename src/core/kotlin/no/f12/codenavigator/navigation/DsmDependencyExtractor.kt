@@ -10,7 +10,7 @@ import java.io.File
 
 object DsmDependencyExtractor {
 
-    fun extract(classDirectories: List<File>, rootPrefix: String): ScanResult<List<PackageDependency>> {
+    fun extract(classDirectories: List<File>, rootPrefix: PackageName): ScanResult<List<PackageDependency>> {
         val dependencies = mutableSetOf<PackageDependency>()
         val skipped = mutableListOf<UnsupportedBytecodeVersionException>()
 
@@ -21,7 +21,7 @@ object DsmDependencyExtractor {
                     .filter { it.isFile && it.extension == "class" }
                     .forEach { classFile ->
                         try {
-                            extractFromClass(classFile, rootPrefix, dependencies)
+                            extractFromClass(classFile, rootPrefix.value, dependencies)
                         } catch (e: UnsupportedBytecodeVersionException) {
                             skipped.add(e)
                         }

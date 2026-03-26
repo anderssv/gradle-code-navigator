@@ -8,7 +8,7 @@ class DsmMatrixBuilderTest {
 
     @Test
     fun `empty dependency list produces empty matrix`() {
-        val matrix = DsmMatrixBuilder.build(emptyList(), "", 2)
+        val matrix = DsmMatrixBuilder.build(emptyList(), PackageName(""), 2)
 
         assertTrue(matrix.packages.isEmpty())
         assertTrue(matrix.cells.isEmpty())
@@ -20,7 +20,7 @@ class DsmMatrixBuilderTest {
             PackageDependency(PackageName("com.example.api"), PackageName("com.example.model"), ClassName("UserController"), ClassName("User")),
         )
 
-        val matrix = DsmMatrixBuilder.build(deps, "com.example", 1)
+        val matrix = DsmMatrixBuilder.build(deps, PackageName("com.example"), 1)
 
         assertEquals(listOf(PackageName("api"), PackageName("model")), matrix.packages)
         assertEquals(1, matrix.cells[PackageName("api") to PackageName("model")])
@@ -34,7 +34,7 @@ class DsmMatrixBuilderTest {
             PackageDependency(PackageName("com.example.api"), PackageName("com.example.model"), ClassName("OrderController"), ClassName("Order")),
         )
 
-        val matrix = DsmMatrixBuilder.build(deps, "com.example", 1)
+        val matrix = DsmMatrixBuilder.build(deps, PackageName("com.example"), 1)
 
         assertEquals(3, matrix.cells[PackageName("api") to PackageName("model")])
     }
@@ -45,7 +45,7 @@ class DsmMatrixBuilderTest {
             PackageDependency(PackageName("com.example.api.v1"), PackageName("com.example.api.v2"), ClassName("FooController"), ClassName("BarController")),
         )
 
-        val matrix = DsmMatrixBuilder.build(deps, "com.example", 1)
+        val matrix = DsmMatrixBuilder.build(deps, PackageName("com.example"), 1)
 
         assertTrue(matrix.packages.isEmpty())
         assertTrue(matrix.cells.isEmpty())
@@ -57,7 +57,7 @@ class DsmMatrixBuilderTest {
             PackageDependency(PackageName("com.example.service"), PackageName("com.example.repository"), ClassName("UserService"), ClassName("UserRepo")),
         )
 
-        val matrix = DsmMatrixBuilder.build(deps, "com.example", 1)
+        val matrix = DsmMatrixBuilder.build(deps, PackageName("com.example"), 1)
 
         assertEquals(listOf(PackageName("repository"), PackageName("service")), matrix.packages)
         assertEquals(1, matrix.cells[PackageName("service") to PackageName("repository")])
@@ -69,7 +69,7 @@ class DsmMatrixBuilderTest {
             PackageDependency(PackageName("com.example.api.rest.v1"), PackageName("com.example.service.impl"), ClassName("Controller"), ClassName("ServiceImpl")),
         )
 
-        val matrix = DsmMatrixBuilder.build(deps, "com.example", 2)
+        val matrix = DsmMatrixBuilder.build(deps, PackageName("com.example"), 2)
 
         assertEquals(listOf(PackageName("api.rest"), PackageName("service.impl")), matrix.packages)
     }
@@ -80,7 +80,7 @@ class DsmMatrixBuilderTest {
             PackageDependency(PackageName("com.example.api.rest.v1"), PackageName("com.example.service.impl"), ClassName("Controller"), ClassName("ServiceImpl")),
         )
 
-        val matrix = DsmMatrixBuilder.build(deps, "com.example", 1)
+        val matrix = DsmMatrixBuilder.build(deps, PackageName("com.example"), 1)
 
         assertEquals(listOf(PackageName("api"), PackageName("service")), matrix.packages)
     }
@@ -92,7 +92,7 @@ class DsmMatrixBuilderTest {
             PackageDependency(PackageName("com.example.api"), PackageName("com.example.model"), ClassName("OrderController"), ClassName("Order")),
         )
 
-        val matrix = DsmMatrixBuilder.build(deps, "com.example", 1)
+        val matrix = DsmMatrixBuilder.build(deps, PackageName("com.example"), 1)
 
         val classDeps = matrix.classDependencies[PackageName("api") to PackageName("model")]
         assertEquals(setOf(ClassName("UserController") to ClassName("User"), ClassName("OrderController") to ClassName("Order")), classDeps)
@@ -105,7 +105,7 @@ class DsmMatrixBuilderTest {
             PackageDependency(PackageName("com.example.api"), PackageName("com.example.model"), ClassName("Ctrl"), ClassName("User")),
         )
 
-        val matrix = DsmMatrixBuilder.build(deps, "com.example", 1)
+        val matrix = DsmMatrixBuilder.build(deps, PackageName("com.example"), 1)
 
         assertEquals(listOf(PackageName("api"), PackageName("model"), PackageName("service")), matrix.packages)
     }
@@ -116,7 +116,7 @@ class DsmMatrixBuilderTest {
             PackageDependency(PackageName("com.example.api"), PackageName("com.example.model"), ClassName("Ctrl"), ClassName("User")),
         )
 
-        val matrix = DsmMatrixBuilder.build(deps, "", 2)
+        val matrix = DsmMatrixBuilder.build(deps, PackageName(""), 2)
 
         assertTrue(matrix.packages.isEmpty())
         assertTrue(matrix.cells.isEmpty())
@@ -128,7 +128,7 @@ class DsmMatrixBuilderTest {
             PackageDependency(PackageName("com.example.api"), PackageName("com.example.model"), ClassName("Ctrl"), ClassName("User")),
         )
 
-        val matrix = DsmMatrixBuilder.build(deps, "", 3)
+        val matrix = DsmMatrixBuilder.build(deps, PackageName(""), 3)
 
         assertEquals(listOf(PackageName("com.example.api"), PackageName("com.example.model")), matrix.packages)
     }

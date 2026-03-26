@@ -7,7 +7,7 @@ data class MetricsConfig(
     val after: LocalDate,
     val top: Int,
     val followRenames: Boolean,
-    val rootPackage: String,
+    val rootPackage: PackageName,
     val format: OutputFormat,
 ) {
     companion object {
@@ -16,7 +16,7 @@ data class MetricsConfig(
                 ?: LocalDate.now().minusYears(1),
             top = properties["top"]?.toIntOrNull() ?: 5,
             followRenames = !properties.containsKey("no-follow"),
-            rootPackage = properties["root-package"] ?: "",
+            rootPackage = PackageName(properties["root-package"] ?: ""),
             format = OutputFormat.from(
                 format = properties["format"],
                 llm = properties["llm"]?.toBoolean(),
