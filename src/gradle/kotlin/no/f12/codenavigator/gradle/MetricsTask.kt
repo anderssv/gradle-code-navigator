@@ -8,6 +8,7 @@ import no.f12.codenavigator.analysis.GitLogRunner
 import no.f12.codenavigator.analysis.HotspotBuilder
 import no.f12.codenavigator.navigation.CallGraphCache
 import no.f12.codenavigator.navigation.ClassScanner
+import no.f12.codenavigator.navigation.CycleDetector
 import no.f12.codenavigator.navigation.DeadCodeFinder
 import no.f12.codenavigator.navigation.DsmDependencyExtractor
 import no.f12.codenavigator.navigation.DsmMatrixBuilder
@@ -29,11 +30,14 @@ abstract class MetricsTask : DefaultTask() {
 
     @TaskAction
     fun showMetrics() {
+        val extension = project.codeNavigatorExtension()
+        val resolvedRootPackage = extension.resolveRootPackage(project.findProperty("root-package"))
+
         val config = MetricsConfig.parse(
             project.buildPropertyMap(
-                propertyNames = listOf("after", "top", "root-package", "format", "llm"),
+                propertyNames = listOf("after", "top", "format", "llm"),
                 flagNames = listOf("no-follow"),
-            ),
+            ) + ("root-package" to resolvedRootPackage),
         )
 
         val sourceSets = project.extensions.getByType(SourceSetContainer::class.java)
@@ -53,7 +57,7 @@ abstract class MetricsTask : DefaultTask() {
 
         val dsmResult = DsmDependencyExtractor.extract(classDirectories, config.rootPackage)
         val matrix = DsmMatrixBuilder.build(dsmResult.data, config.rootPackage, depth = 2)
-        val cyclicPairCount = matrix.findCyclicPairs().size
+        val cyclicPairCount = CycleDetector.findCycles(CycleDetector.adjacencyMapFrom(matrix)).size
 
         val commits = GitLogRunner.run(project.projectDir, config.after, followRenames = config.followRenames)
         val hotspots = HotspotBuilder.build(commits, minRevs = 1, top = config.top)
