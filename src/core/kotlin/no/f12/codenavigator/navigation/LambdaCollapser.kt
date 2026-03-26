@@ -1,5 +1,15 @@
 package no.f12.codenavigator.navigation
 
+/**
+ * Maps synthetic lambda/anonymous class names back to their enclosing "real" class.
+ *
+ * Used by complexity analysis and PageRank to avoid inflated counts. Without collapsing,
+ * compiler-generated classes like `Controller$handle$1` count as separate coupling partners,
+ * distorting fan-in/fan-out and type rankings.
+ *
+ * Not used in call trees — those rely on [KotlinMethodFilter] to filter synthetic methods,
+ * and line numbers for navigation.
+ */
 object LambdaCollapser {
 
     private val TRAILING_NUMERIC_SEGMENT = Regex("""\$\d+$""")
