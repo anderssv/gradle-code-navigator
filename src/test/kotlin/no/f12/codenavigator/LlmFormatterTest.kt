@@ -64,10 +64,10 @@ class LlmFormatterTest {
     fun `formats class details compactly`() {
         val details = listOf(
             ClassDetail(
-                className = "com.example.UserService",
+                className = ClassName("com.example.UserService"),
                 sourceFile = "UserService.kt",
                 superClass = null,
-                interfaces = listOf("UserOperations"),
+                interfaces = listOf(ClassName("UserOperations")),
                 fields = listOf(FieldDetail("repo", "UserRepository")),
                 methods = listOf(MethodDetail("findById", listOf("long"), "User")),
             )

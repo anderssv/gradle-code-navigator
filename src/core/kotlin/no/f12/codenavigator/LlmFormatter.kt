@@ -34,9 +34,9 @@ object LlmFormatter {
     fun formatClassDetails(details: List<ClassDetail>): String =
         details.sortedBy { it.className }.joinToString("\n") { d ->
             buildString {
-                append("${d.className} ${d.sourceFile}")
-                if (d.superClass != null) append(" extends:${d.superClass}")
-                if (d.interfaces.isNotEmpty()) append(" implements:${d.interfaces.joinToString(",")}")
+                append("${d.className.value} ${d.sourceFile}")
+                if (d.superClass != null) append(" extends:${d.superClass.value}")
+                if (d.interfaces.isNotEmpty()) append(" implements:${d.interfaces.joinToString(",") { it.value }}")
                 if (d.fields.isNotEmpty()) append(" fields:${d.fields.joinToString(",") { "${it.name}:${it.type}" }}")
                 if (d.methods.isNotEmpty()) append(" methods:${d.methods.joinToString(",") { "${it.name}(${it.parameterTypes.joinToString(",")}):${it.returnType}" }}")
             }

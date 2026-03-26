@@ -53,10 +53,10 @@ object JsonFormatter {
     fun formatClassDetails(details: List<ClassDetail>): String =
         jsonArray(details.sortedBy { it.className }) { d ->
             jsonObject(
-                "className" to d.className,
+                "className" to d.className.value,
                 "sourceFile" to d.sourceFile,
-                "superClass" to d.superClass,
-                "interfaces" to JsonRaw(jsonStringArray(d.interfaces)),
+                "superClass" to d.superClass?.value,
+                "interfaces" to JsonRaw(jsonStringArray(d.interfaces.map { it.value })),
                 "fields" to JsonRaw(jsonArray(d.fields) { f ->
                     jsonObject("name" to f.name, "type" to f.type)
                 }),

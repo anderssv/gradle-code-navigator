@@ -20,10 +20,10 @@ data class MethodDetail(
 )
 
 data class ClassDetail(
-    val className: String,
+    val className: ClassName,
     val sourceFile: String,
-    val superClass: String?,
-    val interfaces: List<String>,
+    val superClass: ClassName?,
+    val interfaces: List<ClassName>,
     val fields: List<FieldDetail>,
     val methods: List<MethodDetail>,
 )
@@ -37,8 +37,8 @@ object ClassDetailExtractor {
         val reader = createClassReader(classFile)
         var className = ""
         var sourceFile = "<unknown>"
-        var superClass: String? = null
-        var interfaceList = emptyList<String>()
+        var superClass: ClassName? = null
+        var interfaceList = emptyList<ClassName>()
         val methods = mutableListOf<MethodDetail>()
         val fields = mutableListOf<FieldDetail>()
         val fieldNames = mutableSetOf<String>()
@@ -56,9 +56,9 @@ object ClassDetailExtractor {
                     className = name.replace('/', '.')
                     superClass = superName
                         ?.takeIf { it != "java/lang/Object" }
-                        ?.replace('/', '.')
+                        ?.let { ClassName(it.replace('/', '.')) }
                     interfaceList = interfaces
-                        ?.map { it.replace('/', '.') }
+                        ?.map { ClassName(it.replace('/', '.')) }
                         ?: emptyList()
                 }
 
@@ -106,7 +106,7 @@ object ClassDetailExtractor {
         }
 
         return ClassDetail(
-            className = className,
+            className = ClassName(className),
             sourceFile = sourceFile,
             superClass = superClass,
             interfaces = interfaceList,

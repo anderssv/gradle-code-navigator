@@ -132,10 +132,10 @@ class JsonFormatterTest {
     fun `single class detail with fields and methods`() {
         val details = listOf(
             ClassDetail(
-                className = "com.example.Order",
+                className = ClassName("com.example.Order"),
                 sourceFile = "Order.kt",
-                superClass = "com.example.BaseEntity",
-                interfaces = listOf("com.example.Identifiable"),
+                superClass = ClassName("com.example.BaseEntity"),
+                interfaces = listOf(ClassName("com.example.Identifiable")),
                 fields = listOf(FieldDetail("id", "Long"), FieldDetail("name", "String")),
                 methods = listOf(MethodDetail("getName", emptyList(), "String")),
             ),
@@ -156,7 +156,7 @@ class JsonFormatterTest {
     fun `class detail with null superClass omits superClass field`() {
         val details = listOf(
             ClassDetail(
-                className = "com.example.Simple",
+                className = ClassName("com.example.Simple"),
                 sourceFile = "Simple.kt",
                 superClass = null,
                 interfaces = emptyList(),

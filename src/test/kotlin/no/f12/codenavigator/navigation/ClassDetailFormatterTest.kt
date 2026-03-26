@@ -8,7 +8,7 @@ class ClassDetailFormatterTest {
     @Test
     fun `formats a class with fields and methods`() {
         val detail = ClassDetail(
-            className = "com.example.MyService",
+            className = ClassName("com.example.MyService"),
             sourceFile = "MyService.kt",
             superClass = null,
             interfaces = emptyList(),
@@ -42,10 +42,10 @@ class ClassDetailFormatterTest {
     @Test
     fun `formats a class with superclass and interfaces`() {
         val detail = ClassDetail(
-            className = "com.example.AdminService",
+            className = ClassName("com.example.AdminService"),
             sourceFile = "AdminService.kt",
-            superClass = "com.example.BaseService",
-            interfaces = listOf("com.example.Auditable", "java.io.Serializable"),
+            superClass = ClassName("com.example.BaseService"),
+            interfaces = listOf(ClassName("com.example.Auditable"), ClassName("java.io.Serializable")),
             fields = emptyList(),
             methods = listOf(MethodDetail("audit", emptyList(), "void")),
         )
@@ -67,7 +67,7 @@ class ClassDetailFormatterTest {
     @Test
     fun `omits Fields section when no fields`() {
         val detail = ClassDetail(
-            className = "com.example.Svc",
+            className = ClassName("com.example.Svc"),
             sourceFile = "Svc.kt",
             superClass = null,
             interfaces = emptyList(),
@@ -91,7 +91,7 @@ class ClassDetailFormatterTest {
     @Test
     fun `omits Methods section when no methods`() {
         val detail = ClassDetail(
-            className = "com.example.Config",
+            className = ClassName("com.example.Config"),
             sourceFile = "Config.kt",
             superClass = null,
             interfaces = emptyList(),
@@ -115,9 +115,9 @@ class ClassDetailFormatterTest {
     @Test
     fun `formats multiple matched classes separated by blank line`() {
         val details = listOf(
-            ClassDetail("com.example.A", "A.kt", null, emptyList(), emptyList(),
+            ClassDetail(ClassName("com.example.A"), "A.kt", null, emptyList(), emptyList(),
                 listOf(MethodDetail("doA", emptyList(), "void"))),
-            ClassDetail("com.example.B", "B.kt", null, emptyList(), emptyList(),
+            ClassDetail(ClassName("com.example.B"), "B.kt", null, emptyList(), emptyList(),
                 listOf(MethodDetail("doB", emptyList(), "void"))),
         )
 
@@ -142,7 +142,7 @@ class ClassDetailFormatterTest {
     @Test
     fun `omits Extends and Implements lines when not applicable`() {
         val detail = ClassDetail(
-            className = "com.example.Simple",
+            className = ClassName("com.example.Simple"),
             sourceFile = "Simple.kt",
             superClass = null,
             interfaces = emptyList(),

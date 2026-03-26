@@ -20,7 +20,7 @@ class ClassDetailExtractorTest {
 
         val detail = ClassDetailExtractor.extract(classFile)
 
-        assertEquals("com.example.MyService", detail.className)
+        assertEquals("com.example.MyService", detail.className.value)
         assertEquals("MyService.kt", detail.sourceFile)
     }
 
@@ -35,7 +35,7 @@ class ClassDetailExtractorTest {
 
         val detail = ClassDetailExtractor.extract(classFile)
 
-        assertEquals("com.example.BaseService", detail.superClass)
+        assertEquals("com.example.BaseService", detail.superClass?.value)
     }
 
     // [TEST-DONE] Extracts superclass name (non-Object)
@@ -49,7 +49,7 @@ class ClassDetailExtractorTest {
 
         val detail = ClassDetailExtractor.extract(classFile)
 
-        assertEquals(listOf("com.example.Repository", "java.io.Serializable"), detail.interfaces)
+        assertEquals(listOf("com.example.Repository", "java.io.Serializable"), detail.interfaces.map { it.value })
     }
 
     // [TEST-DONE] Extracts implemented interfaces
