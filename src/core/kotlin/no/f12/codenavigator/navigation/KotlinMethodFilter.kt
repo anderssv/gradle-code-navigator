@@ -15,6 +15,8 @@ object KotlinMethodFilter {
     private val SYNTHETIC_PREFIX = "access$"
     private val VALUE_CLASS_SUFFIX = Regex("""^(box|unbox|equals|hashCode|toString|constructor)-impl\d*$""")
     private val MANGLED_COPY = Regex("""^copy-[A-Za-z0-9]+(\${'$'}default)?$""")
+    private val DEFAULT_BRIDGE_SUFFIX = "\$default"
+    private val FOR_INLINE_SUFFIX = "\$\$forInline"
 
     fun isGenerated(methodName: String): Boolean {
         if (methodName in EXCLUDED_METHODS) return true
@@ -24,6 +26,8 @@ object KotlinMethodFilter {
         if (MANGLED_COPY.matches(methodName)) return true
         if (LAMBDA_METHOD.containsMatchIn(methodName)) return true
         if (VALUE_CLASS_SUFFIX.matches(methodName)) return true
+        if (methodName.endsWith(DEFAULT_BRIDGE_SUFFIX)) return true
+        if (methodName.endsWith(FOR_INLINE_SUFFIX)) return true
         return false
     }
 }

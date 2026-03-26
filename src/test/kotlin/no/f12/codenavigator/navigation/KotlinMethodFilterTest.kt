@@ -78,6 +78,26 @@ class KotlinMethodFilterTest {
     }
 
     @Test
+    fun `excludes dollar-default bridge methods`() {
+        assertTrue(KotlinMethodFilter.isGenerated("renderAdminPage\$default"))
+        assertTrue(KotlinMethodFilter.isGenerated("adminCalendarWrapper\$default"))
+        assertTrue(KotlinMethodFilter.isGenerated("getUserPolls\$default"))
+        assertTrue(KotlinMethodFilter.isGenerated("configureHTTP\$default"))
+    }
+
+    @Test
+    fun `excludes dollar-dollar-forInline methods`() {
+        assertTrue(KotlinMethodFilter.isGenerated("withAdminPoll\$\$forInline"))
+    }
+
+    @Test
+    fun `does not exclude normal methods containing default or inline`() {
+        assertFalse(KotlinMethodFilter.isGenerated("getDefaultValue"))
+        assertFalse(KotlinMethodFilter.isGenerated("setDefaultConfig"))
+        assertFalse(KotlinMethodFilter.isGenerated("inlineHelper"))
+    }
+
+    @Test
     fun `excludes name-mangled copy methods for inline value class parameters`() {
         assertTrue(KotlinMethodFilter.isGenerated("copy-H3nQObg"))
         assertTrue(KotlinMethodFilter.isGenerated("copy-H3nQObg\$default"))
