@@ -15,6 +15,7 @@ object ChangeCouplingBuilder {
         minSharedRevs: Int = 5,
         minCoupling: Int = 30,
         maxChangesetSize: Int = 30,
+        top: Int = 50,
     ): List<CoupledPair> {
         val fileRevisions = mutableMapOf<String, Int>()
         val pairCounts = mutableMapOf<Pair<String, String>, Int>()
@@ -49,5 +50,6 @@ object ChangeCouplingBuilder {
                 CoupledPair(pair.first, pair.second, degree, shared, avgRevs)
             }
             .sortedByDescending { it.degree }
+            .take(top)
     }
 }

@@ -133,4 +133,20 @@ class ChangeCouplingBuilderTest {
         assert(result.size >= 2) { "Expected at least 2 pairs, got ${result.size}" }
         assert(result[0].degree >= result[1].degree) { "Expected sorted by degree descending" }
     }
+
+    @Test
+    fun `top limits number of results`() {
+        val commits = listOf(
+            GitCommit("a", LocalDate.of(2024, 1, 1), "A", listOf(
+                FileChange(1, 0, "src/A.kt"),
+                FileChange(1, 0, "src/B.kt"),
+                FileChange(1, 0, "src/C.kt"),
+                FileChange(1, 0, "src/D.kt"),
+            )),
+        )
+
+        val result = ChangeCouplingBuilder.build(commits, minSharedRevs = 1, minCoupling = 1, top = 2)
+
+        assertEquals(2, result.size)
+    }
 }

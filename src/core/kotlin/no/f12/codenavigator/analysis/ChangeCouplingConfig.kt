@@ -9,6 +9,7 @@ data class ChangeCouplingConfig(
     val minCoupling: Int,
     val maxChangesetSize: Int,
     val followRenames: Boolean,
+    val top: Int,
     val format: OutputFormat,
 ) {
     companion object {
@@ -19,6 +20,7 @@ data class ChangeCouplingConfig(
             minCoupling = properties["min-coupling"]?.toIntOrNull() ?: 30,
             maxChangesetSize = properties["max-changeset-size"]?.toIntOrNull() ?: 30,
             followRenames = !properties.containsKey("no-follow"),
+            top = properties["top"]?.toIntOrNull() ?: 50,
             format = OutputFormat.from(
                 format = properties["format"],
                 llm = properties["llm"]?.toBoolean(),

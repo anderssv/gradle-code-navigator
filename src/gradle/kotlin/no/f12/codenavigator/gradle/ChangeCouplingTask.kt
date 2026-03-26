@@ -20,13 +20,13 @@ abstract class ChangeCouplingTask : DefaultTask() {
     fun showCoupling() {
         val config = ChangeCouplingConfig.parse(
             project.buildPropertyMap(
-                propertyNames = listOf("after", "min-shared-revs", "min-coupling", "max-changeset-size", "format", "llm"),
+                propertyNames = listOf("after", "min-shared-revs", "min-coupling", "max-changeset-size", "top", "format", "llm"),
                 flagNames = listOf("no-follow"),
             ),
         )
 
         val commits = GitLogRunner.run(project.projectDir, config.after, followRenames = config.followRenames)
-        val pairs = ChangeCouplingBuilder.build(commits, config.minSharedRevs, config.minCoupling, config.maxChangesetSize)
+        val pairs = ChangeCouplingBuilder.build(commits, config.minSharedRevs, config.minCoupling, config.maxChangesetSize, config.top)
 
         if (pairs.isEmpty()) {
             logger.lifecycle("No coupling found.")

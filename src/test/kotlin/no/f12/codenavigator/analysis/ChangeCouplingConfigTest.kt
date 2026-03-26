@@ -16,6 +16,7 @@ class ChangeCouplingConfigTest {
             "min-coupling" to "50",
             "max-changeset-size" to "20",
             "no-follow" to "",
+            "top" to "25",
             "format" to "json",
         )
 
@@ -26,6 +27,7 @@ class ChangeCouplingConfigTest {
         assertEquals(50, config.minCoupling)
         assertEquals(20, config.maxChangesetSize)
         assertEquals(false, config.followRenames)
+        assertEquals(25, config.top)
         assertEquals(OutputFormat.JSON, config.format)
     }
 
@@ -84,5 +86,19 @@ class ChangeCouplingConfigTest {
         val config = ChangeCouplingConfig.parse(emptyMap())
 
         assertEquals(OutputFormat.TEXT, config.format)
+    }
+
+    @Test
+    fun `defaults top to 50 when absent`() {
+        val config = ChangeCouplingConfig.parse(emptyMap())
+
+        assertEquals(50, config.top)
+    }
+
+    @Test
+    fun `parses top from properties`() {
+        val config = ChangeCouplingConfig.parse(mapOf("top" to "10"))
+
+        assertEquals(10, config.top)
     }
 }

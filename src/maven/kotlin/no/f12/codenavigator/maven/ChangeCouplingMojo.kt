@@ -40,11 +40,14 @@ class ChangeCouplingMojo : AbstractMojo() {
     @Parameter(property = "no-follow")
     private var noFollow: Boolean = false
 
+    @Parameter(property = "top")
+    private var top: String? = null
+
     override fun execute() {
         val config = ChangeCouplingConfig.parse(buildPropertyMap())
 
         val commits = GitLogRunner.run(project.basedir, config.after, followRenames = config.followRenames)
-        val pairs = ChangeCouplingBuilder.build(commits, config.minSharedRevs, config.minCoupling, config.maxChangesetSize)
+        val pairs = ChangeCouplingBuilder.build(commits, config.minSharedRevs, config.minCoupling, config.maxChangesetSize, config.top)
 
         if (pairs.isEmpty()) {
             println("No coupling found.")
@@ -67,5 +70,6 @@ class ChangeCouplingMojo : AbstractMojo() {
         minCoupling?.let { put("min-coupling", it) }
         maxChangesetSize?.let { put("max-changeset-size", it) }
         if (noFollow) put("no-follow", null)
+        top?.let { put("top", it) }
     }
 }
