@@ -457,6 +457,123 @@ class UsageScannerTest {
         assertEquals(1, usages.size, "Duplicate calls from same caller should be deduplicated")
     }
 
+    // --- Field parameter (property-aware usages) ---
+
+    @Test
+    fun `field parameter finds direct field access on owner`() {
+        writeClassWithFieldAccess(
+            "com/example/Caller", "Caller.kt",
+            "doWork",
+            FieldAccess("com/example/Account", "accountNumber", "Ljava/lang/String;", Opcodes.GETFIELD),
+        )
+
+        val usages = UsageScanner.scan(
+            listOf(classesDir),
+            ownerClass = "com.example.Account",
+            field = "accountNumber",
+        ).data
+
+        assertEquals(1, usages.size)
+        assertEquals(UsageKind.FIELD_ACCESS, usages[0].kind)
+        assertEquals("accountNumber", usages[0].targetName)
+    }
+
+    @Test
+    fun `field parameter finds getter method call on owner`() {
+        writeClassWithCalls(
+            "com/example/Caller", "Caller.kt",
+            "doWork", listOf(Call("com/example/Account", "getAccountNumber", "()Ljava/lang/String;")),
+        )
+
+        val usages = UsageScanner.scan(
+            listOf(classesDir),
+            ownerClass = "com.example.Account",
+            field = "accountNumber",
+        ).data
+
+        assertEquals(1, usages.size)
+        assertEquals(UsageKind.METHOD_CALL, usages[0].kind)
+        assertEquals("getAccountNumber", usages[0].targetName)
+    }
+
+    @Test
+    fun `field parameter finds setter method call on owner`() {
+        writeClassWithCalls(
+            "com/example/Caller", "Caller.kt",
+            "doWork", listOf(Call("com/example/Account", "setAccountNumber", "(Ljava/lang/String;)V")),
+        )
+
+        val usages = UsageScanner.scan(
+            listOf(classesDir),
+            ownerClass = "com.example.Account",
+            field = "accountNumber",
+        ).data
+
+        assertEquals(1, usages.size)
+        assertEquals(UsageKind.METHOD_CALL, usages[0].kind)
+        assertEquals("setAccountNumber", usages[0].targetName)
+    }
+
+    @Test
+    fun `field parameter finds is-prefixed method call on owner`() {
+        writeClassWithCalls(
+            "com/example/Caller", "Caller.kt",
+            "doWork", listOf(Call("com/example/Account", "isActive", "()Z")),
+        )
+
+        val usages = UsageScanner.scan(
+            listOf(classesDir),
+            ownerClass = "com.example.Account",
+            field = "active",
+        ).data
+
+        assertEquals(1, usages.size)
+        assertEquals(UsageKind.METHOD_CALL, usages[0].kind)
+        assertEquals("isActive", usages[0].targetName)
+    }
+
+    @Test
+    fun `field parameter finds both field access and getter call combined`() {
+        writeClassWithFieldAccessAndCalls(
+            "com/example/Caller", "Caller.kt",
+            "doWork",
+            fieldAccess = FieldAccess("com/example/Account", "accountNumber", "Ljava/lang/String;", Opcodes.GETFIELD),
+            calls = listOf(Call("com/example/Account", "getAccountNumber", "()Ljava/lang/String;")),
+        )
+
+        val usages = UsageScanner.scan(
+            listOf(classesDir),
+            ownerClass = "com.example.Account",
+            field = "accountNumber",
+        ).data
+
+        assertEquals(2, usages.size)
+        val kinds = usages.map { it.kind }.toSet()
+        assertTrue(UsageKind.FIELD_ACCESS in kinds)
+        assertTrue(UsageKind.METHOD_CALL in kinds)
+    }
+
+    @Test
+    fun `field parameter does not match unrelated methods on same owner`() {
+        writeClassWithCalls(
+            "com/example/Caller", "Caller.kt",
+            "doWork", listOf(
+                Call("com/example/Account", "getAccountNumber", "()Ljava/lang/String;"),
+                Call("com/example/Account", "process", "()V"),
+                Call("com/example/Account", "validate", "()Z"),
+            ),
+        )
+
+        val usages = UsageScanner.scan(
+            listOf(classesDir),
+            ownerClass = "com.example.Account",
+            field = "accountNumber",
+        ).data
+
+        assertEquals(1, usages.size)
+        assertEquals("getAccountNumber", usages[0].targetName)
+    }
+
     // --- Outside-package filter ---
 
     @Test
@@ -664,6 +781,16 @@ class UsageScannerTest {
         methodName: String,
         fieldAccess: FieldAccess,
     ) {
+        writeClassWithFieldAccessAndCalls(className, sourceFile, methodName, fieldAccess, emptyList())
+    }
+
+    private fun writeClassWithFieldAccessAndCalls(
+        className: String,
+        sourceFile: String,
+        methodName: String,
+        fieldAccess: FieldAccess,
+        calls: List<Call>,
+    ) {
         val writer = ClassWriter(ClassWriter.COMPUTE_FRAMES)
         writer.visit(Opcodes.V21, Opcodes.ACC_PUBLIC, className, null, "java/lang/Object", null)
         writer.visitSource(sourceFile, null)
@@ -684,6 +811,9 @@ class UsageScannerTest {
         mv.visitFieldInsn(fieldAccess.opcode, fieldAccess.owner, fieldAccess.name, fieldAccess.descriptor)
         if (fieldAccess.opcode == Opcodes.GETFIELD || fieldAccess.opcode == Opcodes.GETSTATIC) {
             mv.visitInsn(Opcodes.POP)
+        }
+        for (call in calls) {
+            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, call.owner, call.name, call.descriptor, false)
         }
         mv.visitInsn(Opcodes.RETURN)
         mv.visitMaxs(2, 2)

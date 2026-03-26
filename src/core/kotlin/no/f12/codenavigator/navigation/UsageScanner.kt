@@ -35,6 +35,7 @@ object UsageScanner {
         classDirectories: List<File>,
         ownerClass: String? = null,
         method: String? = null,
+        field: String? = null,
         type: String? = null,
     ): ScanResult<List<UsageSite>> {
         val usages = mutableSetOf<UsageSite>()
@@ -47,7 +48,7 @@ object UsageScanner {
                     .filter { it.isFile && it.extension == "class" }
                     .forEach { classFile ->
                         try {
-                            extractUsages(classFile, ownerClass, method, type, usages)
+                            extractUsages(classFile, ownerClass, method, field, type, usages)
                         } catch (e: UnsupportedBytecodeVersionException) {
                             skipped.add(e)
                         }
@@ -61,6 +62,7 @@ object UsageScanner {
         classFile: File,
         ownerClass: String?,
         method: String?,
+        field: String?,
         type: String?,
         usages: MutableCollection<UsageSite>,
     ) {
@@ -133,9 +135,10 @@ object UsageScanner {
                             instrDescriptor: String, isInterface: Boolean,
                         ) {
                             val instrOwnerDot = instrOwner.replace('/', '.')
-                            val ownerMatched = matchesOwner(instrOwnerDot, ownerClass) && matchesMethod(instrName, method)
+                            val ownerMatched = field == null && matchesOwner(instrOwnerDot, ownerClass) && matchesMethod(instrName, method)
+                            val fieldMatched = field != null && matchesOwner(instrOwnerDot, ownerClass) && matchesFieldAccessor(instrName, field)
                             val typeMatched = type != null && matchesType(instrOwnerDot, type) && matchesMethod(instrName, method)
-                            if (ownerMatched || typeMatched) {
+                            if (ownerMatched || fieldMatched || typeMatched) {
                                 usages.add(
                                     UsageSite(
                                         callerClass = callerClass,
@@ -155,9 +158,10 @@ object UsageScanner {
                             instrDescriptor: String,
                         ) {
                             val instrOwnerDot = instrOwner.replace('/', '.')
-                            val ownerMatched = matchesOwner(instrOwnerDot, ownerClass) && matchesMethod(instrName, method)
+                            val ownerMatched = field == null && matchesOwner(instrOwnerDot, ownerClass) && matchesMethod(instrName, method)
+                            val fieldMatched = field != null && matchesOwner(instrOwnerDot, ownerClass) && instrName == field
                             val typeMatched = type != null && matchesType(instrOwnerDot, type) && matchesMethod(instrName, method)
-                            if (ownerMatched || typeMatched) {
+                            if (ownerMatched || fieldMatched || typeMatched) {
                                 usages.add(
                                     UsageSite(
                                         callerClass = callerClass,
@@ -203,6 +207,13 @@ object UsageScanner {
     private fun matchesMethod(actual: String, filter: String?): Boolean {
         if (filter == null) return true
         return actual == filter
+    }
+
+    private fun matchesFieldAccessor(methodName: String, fieldName: String): Boolean {
+        val capitalized = fieldName.replaceFirstChar { it.uppercase() }
+        return methodName == "get$capitalized" ||
+            methodName == "set$capitalized" ||
+            methodName == "is$capitalized"
     }
 
     private fun matchesType(actual: String, filter: String): Boolean =

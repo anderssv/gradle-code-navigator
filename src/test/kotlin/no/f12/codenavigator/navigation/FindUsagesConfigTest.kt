@@ -82,4 +82,49 @@ class FindUsagesConfigTest {
 
         assertEquals(OutputFormat.LLM, config.format)
     }
+
+    @Test
+    fun `parses field property`() {
+        val config = FindUsagesConfig.parse(
+            mapOf(
+                "ownerClass" to "com.example.Foo",
+                "field" to "accountNumber",
+            ),
+        )
+
+        assertEquals("accountNumber", config.field)
+        assertNull(config.method)
+    }
+
+    @Test
+    fun `throws when both field and method are specified`() {
+        assertFailsWith<IllegalArgumentException> {
+            FindUsagesConfig.parse(
+                mapOf(
+                    "ownerClass" to "com.example.Foo",
+                    "field" to "accountNumber",
+                    "method" to "doStuff",
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `throws when field is specified without ownerClass`() {
+        assertFailsWith<IllegalArgumentException> {
+            FindUsagesConfig.parse(
+                mapOf(
+                    "type" to "com.example.Bar",
+                    "field" to "accountNumber",
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `defaults field to null when absent`() {
+        val config = FindUsagesConfig.parse(mapOf("ownerClass" to "com.example.Foo"))
+
+        assertNull(config.field)
+    }
 }

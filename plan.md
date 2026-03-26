@@ -1,19 +1,5 @@
 # Plan
 
-## 69. `cnavFieldUsages` — find all reads/writes of a field or Kotlin property (High value, medium effort)
-
-From real user feedback: `cnavCallers` works on methods but not fields. To find all places a domain field like `BaseAccount.accountNumber` is read, you have to infer it from getter calls (`getAccountNumber`). A direct field-usage command would be cleaner.
-
-**Note**: `cnavUsages` already detects `FIELD_ACCESS` kind via `visitFieldInsn`, but it's designed for external type references (`-PownerClass=<type>`). This item is about making field/property usage a first-class query that works naturally for project-internal code too.
-
-**Approach**:
-- Option A: Enhance `cnavUsages` to work well for project-internal fields — add a `-Pfield=<name>` parameter alongside `-PownerClass=<class>`. This avoids a new task and leverages existing `UsageScanner` infrastructure.
-- Option B: Add field-level edges to `CallGraph` so `cnavCallers` can trace field reads/writes in addition to method calls. This is a deeper change.
-- **Recommendation**: Option A — it's less invasive and `cnavUsages` already has the bytecode scanning. Just needs better parameter UX for the "find all reads of this field" use case.
-- Combine with #67 (Kotlin property name resolution): `-Pfield=accountNumber` should also find `getAccountNumber`/`setAccountNumber` call sites.
-
-**Applies to**: `cnavUsages` (enhanced) or new `cnavFieldUsages` task
-
 ## 6. `cnavLayerCheck` — architecture conformance (High value, ambitious)
 
 Allow declaring layer rules and validate them against the actual call graph. Like ArchUnit but without writing test code. Catches architecture violations early and is complementary to the DSM.

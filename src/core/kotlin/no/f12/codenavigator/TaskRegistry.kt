@@ -52,6 +52,7 @@ object TaskRegistry {
     private val CYCLES = ParamDef("cycles", "true", "Show only cyclic dependencies with class-level edges", flag = false, defaultValue = null)
     private val CYCLE = ParamDef("cycle", "<pkgA>,<pkgB>", "Show only the cycle between two specific packages", flag = false, defaultValue = null)
     private val OWNER_CLASS = ParamDef("ownerClass", "<class>", "FQN of type — matches method call and field owners", flag = false, defaultValue = null)
+    private val FIELD = ParamDef("field", "<name>", "Field/property name — also finds getter/setter calls", flag = false, defaultValue = null)
     private val TYPE = ParamDef("type", "<class>", "Find ALL references to a class: calls, fields, casts, signatures", flag = false, defaultValue = null)
     private val OUTSIDE_PACKAGE = ParamDef("outside-package", "<pkg>", "Exclude callers inside this package", flag = false, defaultValue = null)
     private val FILTER = ParamDef("filter", "<regex>", "Only show results matching this regex", flag = false, defaultValue = null)
@@ -139,8 +140,8 @@ object TaskRegistry {
 
     val FIND_USAGES = TaskDef(
         goal = "find-usages",
-        description = "Find project references to types and methods",
-        params = FORMAT_PARAMS + listOf(OWNER_CLASS, METHOD, TYPE, OUTSIDE_PACKAGE),
+        description = "Find project references to types, methods, and fields/properties",
+        params = FORMAT_PARAMS + listOf(OWNER_CLASS, METHOD, FIELD, TYPE, OUTSIDE_PACKAGE),
         requiresCompilation = true,
     )
 

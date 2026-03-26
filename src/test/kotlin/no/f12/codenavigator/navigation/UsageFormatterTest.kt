@@ -121,14 +121,14 @@ class UsageFormatterTest {
 
     @Test
     fun `noResultsGuidance includes ownerClass and method in target`() {
-        val guidance = UsageFormatter.noResultsGuidance(ownerClass = "com.example.Target", method = "process", type = null)
+        val guidance = UsageFormatter.noResultsGuidance(ownerClass = "com.example.Target", method = "process", field = null, type = null)
 
         assertTrue(guidance.contains("com.example.Target.process"), "Should include owner.method")
     }
 
     @Test
     fun `noResultsGuidance with type suggests checking FQN`() {
-        val guidance = UsageFormatter.noResultsGuidance(ownerClass = null, method = null, type = "ContextKt")
+        val guidance = UsageFormatter.noResultsGuidance(ownerClass = null, method = null, field = null, type = "ContextKt")
 
         assertTrue(guidance.contains("ContextKt"), "Should include the target")
         assertTrue(guidance.contains("fully-qualified"), "Should suggest checking FQN")
@@ -136,9 +136,23 @@ class UsageFormatterTest {
 
     @Test
     fun `noResultsGuidance with ownerClass suggests trying type`() {
-        val guidance = UsageFormatter.noResultsGuidance(ownerClass = "com.example.Target", method = null, type = null)
+        val guidance = UsageFormatter.noResultsGuidance(ownerClass = "com.example.Target", method = null, field = null, type = null)
 
         assertTrue(guidance.contains("com.example.Target"), "Should include the target")
         assertTrue(guidance.contains("type"), "Should suggest trying -Ptype")
+    }
+
+    @Test
+    fun `noResultsGuidance with method suggests trying field`() {
+        val guidance = UsageFormatter.noResultsGuidance(ownerClass = "com.example.Target", method = "accountNumber", field = null, type = null)
+
+        assertTrue(guidance.contains("-Pfield=accountNumber"), "Should suggest trying -Pfield")
+    }
+
+    @Test
+    fun `noResultsGuidance with field includes field in target`() {
+        val guidance = UsageFormatter.noResultsGuidance(ownerClass = "com.example.Target", method = null, field = "accountNumber", type = null)
+
+        assertTrue(guidance.contains("com.example.Target.accountNumber"), "Should include owner.field")
     }
 }

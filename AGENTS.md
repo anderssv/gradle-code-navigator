@@ -1,52 +1,105 @@
 # Code Navigator - Agent Instructions
 
-## Release Process
+## Quick Reference
 
-Both plugins share the same version number. Version is in `build.gradle.kts` (Gradle) and `pom.xml` (Maven). Development versions use `-SNAPSHOT` suffix.
+- **Run tests**: `mise exec -- ./gradlew test`
+- **Publish locally**: `mise exec -- ./gradlew publishToMavenLocal`
+- **Version**: `build.gradle.kts` + `pom.xml` (keep in sync, `-SNAPSHOT` for dev)
+- **Plan**: `plan.md` (roadmap), `plan-completed.md` (done)
 
-To release:
+## Source Layout
 
-1. Update `CHANGELOG.md` with the new version and a summary of changes since the last release. Use `git diff` or `git log` since the last release tag to identify what changed.
-2. Remove `-SNAPSHOT` from `version` in both `build.gradle.kts` and `pom.xml` (e.g. `0.1.2-SNAPSHOT` → `0.1.2`)
-3. Update the version in the `README.md` installation examples to match the release version (both Gradle and Maven)
-4. Commit: `git commit -am "Release X.Y.Z"`
-5. Tag: `git tag vX.Y.Z`
-6. Publish Gradle plugin:
-   - `mise exec -- ./gradlew publishPlugins`
-7. Publish Maven plugin to Maven Central:
-   - `mise exec -- ./mvnw clean deploy -Prelease`
-   - This signs artifacts with GPG, attaches source and javadoc jars, and publishes via the Sonatype Central Portal
-   - Requires GPG key and Sonatype credentials configured in `~/.m2/settings.xml` (server id `central`)
-8. Bump to next snapshot: change `version` to next patch with `-SNAPSHOT` in both `build.gradle.kts` and `pom.xml` (e.g. `0.1.3-SNAPSHOT`)
-9. Commit: `git commit -am "Bump to X.Y.Z-SNAPSHOT"`
-10. Push: `git push && git push --tags`
+```
+src/
+├── core/    — Shared logic (both Gradle + Maven use this)
+├── gradle/  — Gradle plugin tasks
+├── maven/   — Maven Mojo wrappers
+├── test/    — Tests for core + shared
+└── gradleTest/ — Gradle-specific integration tests
+```
 
-## Plan Management
+### Core packages (`src/core/kotlin/no/f12/codenavigator/`)
 
-`plan.md` contains the feature roadmap. When a feature is completed, move its section from `plan.md` to `plan-completed.md` (append at the end). This keeps the active plan focused on remaining work while preserving the history of what was done and how.
+**Root package** — shared infrastructure:
+- `TaskRegistry.kt` — `ParamDef`/`TaskDef` DSL, all task+param definitions
+- `BuildTool.kt` — goal-to-task-name mapping (Gradle/Maven)
+- `JsonFormatter.kt`, `LlmFormatter.kt`, `TableFormatter.kt` — output formatters
+- `OutputWrapper.kt` — `OutputFormat` enum, wraps output with LLM markers
+- `AgentHelpText.kt` — generates `cnavAgentHelp` output
+- `HelpText.kt`, `ConfigHelpText.kt` — detailed help + config help
+- `CacheFreshness.kt` — cache staleness detection
 
-## Package Structure
+**`navigation/`** — bytecode-based analysis (requires compiled `classes`):
+- **Scanning**: `ClassScanner`, `ClassInfoExtractor`, `ClassDetailExtractor`, `ClassDetailScanner`, `SymbolScanner`, `SymbolExtractor`, `UsageScanner`
+- **Call graph**: `CallGraphBuilder` (ASM bytecode → `CallGraph`), `CallGraphCache`, `CallTreeBuilder` (→ `CallTreeNode` trees)
+- **Formatters**: `CallerTreeFormatter`, `CalleeTreeFormatter`, `CallTreeFormatter` (shared), `ClassDetailFormatter`, `SymbolTableFormatter`, `UsageFormatter`, `InterfaceFormatter`, `ComplexityFormatter`, `DeadCodeFormatter`, `RankFormatter`, `MetricsFormatter`, `DsmFormatter`, `PackageDependencyFormatter`, `CyclesFormatter`
+- **Builders/analyzers**: `InterfaceRegistry` (+cache), `PackageDependencyBuilder`, `DsmMatrixBuilder`, `DsmDependencyExtractor`, `CycleDetector`, `DeadCodeFinder`, `TypeRanker`, `ClassComplexityAnalyzer`, `MetricsBuilder`
+- **Config**: one `*Config.kt` per task (e.g. `CallGraphConfig`, `DeadCodeConfig`, `FindUsagesConfig`)
+- **Shared**: `DomainTypes.kt` (`ClassName`, `MethodRef`), `ClassFilter.kt`, `KotlinMethodFilter.kt`, `LambdaCollapser.kt`, `PatternEnhancer.kt`, `BytecodeReader.kt` (`ScanResult<T>`), `SkippedFileReporter.kt`
 
-The codebase is split into three areas:
+**`analysis/`** — git-history-based analysis (no compilation needed):
+- `GitLogRunner` (runs git), `GitLogParser` (parses output)
+- Per-analysis triple: `*Builder.kt` + `*Config.kt` + `*Formatter.kt`
+- Analyses: `Hotspot`, `ChangeCoupling`, `CodeAge`, `AuthorAnalysis`, `Churn`
 
-- **`no.f12.codenavigator`** (root) — Shared infrastructure: `CodeNavigatorPlugin`, formatters (`JsonFormatter`, `LlmFormatter`, `TableFormatter`), `OutputFormat`, `OutputWrapper`, `CacheFreshness`, help text tasks.
-- **`no.f12.codenavigator.navigation`** — Bytecode-based navigation: class scanning, symbol extraction, call graph building, interface registry, package dependencies, DSM (Dependency Structure Matrix). All navigation tasks depend on compiled `classes`.
-- **`no.f12.codenavigator.analysis`** — Git history analysis: hotspots, coupling, code age, authors, churn. Parses `git log` output. No compilation required.
+### Gradle tasks (`src/gradle/kotlin/.../gradle/`)
+
+- `CodeNavigatorPlugin.kt` — registers all tasks
+- One `*Task.kt` per task (e.g. `FindCallersTask`, `FindUsagesTask`, `DeadCodeTask`)
+- `GradleSupport.kt` — `buildPropertyMap()` helper for reading `-P` properties
+
+### Maven mojos (`src/maven/kotlin/.../maven/`)
+
+- One `*Mojo.kt` per goal, mirrors the Gradle task structure
+
+### Tests (`src/test/kotlin/no/f12/codenavigator/`)
+
+Mirror the core structure. Each core class has a matching `*Test.kt`. Tests use ASM `ClassWriter` to generate synthetic `.class` files — no real compilation needed.
+
+## Adding a New Feature
+
+Typical checklist for a new task or parameter:
+
+1. **Config**: add/update `*Config.kt` + `*ConfigTest.kt`
+2. **TaskRegistry**: add `ParamDef` / update `TaskDef` params
+3. **Scanner/Builder**: implement logic + tests (synthetic bytecode)
+4. **Formatter**: update TEXT/LLM/JSON formatters + tests
+5. **Gradle task**: update `*Task.kt` to pass new param, update `propertyNames` list
+6. **Maven mojo**: update `*Mojo.kt` with new `@Parameter`
+7. **AgentHelpText**: update common questions / workflow / JSON schemas
+8. **noResultsGuidance**: update hints if applicable
 
 ## Code Structure Principles
 
 ### Separate parsing, resolution, and formatting
 
-Code should be structured in distinct layers:
+Three layers, each independently testable:
 
-1. **Parsing** — reads raw input (bytecode, files) and produces a data structure. No formatting, no output.
-2. **Resolution / tree-building** — takes the parsed data and a query, produces a result data structure (e.g. a tree of nodes). No formatting, no I/O.
-3. **Formatting** — takes the result data structure and renders it to text, JSON, etc. No graph walking, no query logic.
+1. **Parsing** — reads raw input (bytecode, git log) → data structure. No formatting, no output.
+2. **Resolution** — takes parsed data + query → result structure (e.g. tree of nodes). No formatting, no I/O.
+3. **Formatting** — takes result structure → text/JSON/LLM. No graph walking, no query logic.
 
-Each layer is independently testable. Formatters never reach back into the parsed data to resolve more information — that belongs in the resolution layer. When two formatters (e.g. text and JSON) need the same data, they consume the same result structure rather than independently walking the source data.
+Formatters never reach back into parsed data. When two formatters need the same data, they consume the same result structure.
 
 ### Why this matters
 
-- Bugs are isolated to one layer. If the tree is wrong, it's the resolution layer. If the output looks wrong but the tree is correct, it's the formatter.
-- Adding a new output format means writing only a formatter, not duplicating resolution logic.
-- Tests for each layer are fast and focused — no need for integration-level setup to test formatting.
+- Bugs are isolated to one layer.
+- New output format = new formatter only, no duplicated resolution logic.
+- Tests per layer are fast and focused.
+
+## Release Process
+
+1. Update `CHANGELOG.md` with changes since last tag (`git log` / `git diff`)
+2. Remove `-SNAPSHOT` from `build.gradle.kts` and `pom.xml`
+3. Update version in `README.md` installation examples
+4. `git commit -am "Release X.Y.Z"` && `git tag vX.Y.Z`
+5. `mise exec -- ./gradlew publishPlugins`
+6. `mise exec -- ./mvnw clean deploy -Prelease` (signs + publishes to Central)
+7. Bump to `X.Y.(Z+1)-SNAPSHOT` in `build.gradle.kts` and `pom.xml`
+8. `git commit -am "Bump to X.Y.Z-SNAPSHOT"` && `git push && git push --tags`
+
+Requires GPG key + Sonatype credentials in `~/.m2/settings.xml` (server id `central`).
+
+## Plan Management
+
+`plan.md` → active roadmap. When a feature is done, move its section to `plan-completed.md`.

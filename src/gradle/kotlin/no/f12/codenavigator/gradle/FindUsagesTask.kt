@@ -24,14 +24,14 @@ abstract class FindUsagesTask : DefaultTask() {
         val config = try {
             FindUsagesConfig.parse(
                 project.buildPropertyMap(
-                    propertyNames = listOf("ownerClass", "method", "type", "outside-package", "format", "llm"),
+                    propertyNames = listOf("ownerClass", "method", "field", "type", "outside-package", "format", "llm"),
                     flagNames = emptyList(),
                 ),
             )
         } catch (e: IllegalArgumentException) {
             throw GradleException(
-                "Missing required property. Provide either 'ownerClass' or 'type'.\n" +
-                    "Usage: ./gradlew cnavUsages -PownerClass=<class> [-Pmethod=<name>]\n" +
+                "${e.message}\n" +
+                    "Usage: ./gradlew cnavUsages -PownerClass=<class> [-Pmethod=<name>] [-Pfield=<name>]\n" +
                     "       ./gradlew cnavUsages -Ptype=<class>",
             )
         }
@@ -40,13 +40,13 @@ abstract class FindUsagesTask : DefaultTask() {
         val mainSourceSet = sourceSets.getByName("main")
         val classDirectories = mainSourceSet.output.classesDirs.files.toList()
 
-        val result = UsageScanner.scan(classDirectories, ownerClass = config.ownerClass, method = config.method, type = config.type)
+        val result = UsageScanner.scan(classDirectories, ownerClass = config.ownerClass, method = config.method, field = config.field, type = config.type)
         val reportFile = File(project.layout.buildDirectory.asFile.get(), "cnav/skipped-files.txt")
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { logger.warn(it) }
         val usages = UsageScanner.filterOutsidePackage(result.data, config.outsidePackage)
 
         if (usages.isEmpty()) {
-            logger.lifecycle(UsageFormatter.noResultsGuidance(config.ownerClass, config.method, config.type))
+            logger.lifecycle(UsageFormatter.noResultsGuidance(config.ownerClass, config.method, config.field, config.type))
             return
         }
 

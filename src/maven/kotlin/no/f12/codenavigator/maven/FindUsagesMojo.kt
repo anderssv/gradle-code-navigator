@@ -36,6 +36,9 @@ class FindUsagesMojo : AbstractMojo() {
     @Parameter(property = "method")
     private var method: String? = null
 
+    @Parameter(property = "field")
+    private var field: String? = null
+
     @Parameter(property = "type")
     private var type: String? = null
 
@@ -47,8 +50,8 @@ class FindUsagesMojo : AbstractMojo() {
             FindUsagesConfig.parse(buildPropertyMap())
         } catch (e: IllegalArgumentException) {
             throw MojoFailureException(
-                "Missing required property. Provide either 'ownerClass' or 'type'.\n" +
-                    "Usage: mvn cnav:find-usages -DownerClass=<class> [-Dmethod=<name>]\n" +
+                "${e.message}\n" +
+                    "Usage: mvn cnav:find-usages -DownerClass=<class> [-Dmethod=<name>] [-Dfield=<name>]\n" +
                     "       mvn cnav:find-usages -Dtype=<class>",
             )
         }
@@ -59,13 +62,13 @@ class FindUsagesMojo : AbstractMojo() {
             return
         }
 
-        val result = UsageScanner.scan(listOf(classesDir), ownerClass = config.ownerClass, method = config.method, type = config.type)
+        val result = UsageScanner.scan(listOf(classesDir), ownerClass = config.ownerClass, method = config.method, field = config.field, type = config.type)
         val reportFile = File(project.build.directory, "cnav/skipped-files.txt")
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { log.warn(it) }
         val usages = UsageScanner.filterOutsidePackage(result.data, config.outsidePackage)
 
         if (usages.isEmpty()) {
-            println(UsageFormatter.noResultsGuidance(config.ownerClass, config.method, config.type))
+            println(UsageFormatter.noResultsGuidance(config.ownerClass, config.method, config.field, config.type))
             return
         }
 
@@ -82,6 +85,7 @@ class FindUsagesMojo : AbstractMojo() {
         llm?.let { put("llm", it) }
         ownerClass?.let { put("ownerClass", it) }
         method?.let { put("method", it) }
+        field?.let { put("field", it) }
         type?.let { put("type", it) }
         outsidePackage?.let { put("outside-package", it) }
     }

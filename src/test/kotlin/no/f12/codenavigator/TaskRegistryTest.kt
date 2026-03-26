@@ -146,11 +146,12 @@ class TaskRegistryTest {
     }
 
     @Test
-    fun `find-usages has ownerClass, method, type, and outside-package params`() {
+    fun `find-usages has ownerClass, method, field, type, and outside-package params`() {
         val paramNames = TaskRegistry.FIND_USAGES.params.map { it.name }.toSet()
 
         assertTrue(paramNames.contains("ownerClass"))
         assertTrue(paramNames.contains("method"))
+        assertTrue(paramNames.contains("field"))
         assertTrue(paramNames.contains("type"))
         assertTrue(paramNames.contains("outside-package"))
     }
