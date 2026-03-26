@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.28
+
+- **Lower JDK requirement from 21 to 17** — the plugin now targets JDK 17 bytecode, making it usable on projects that require JDK 17. Still analyzes bytecode up to Java 24 (ASM 9.9.1). Gradle 9.x (which requires JDK 17+) is still required.
+- **Refactoring:** Move `OutputFormat` to new `config` package — breaks cyclic package dependency between root, `navigation`, and `analysis` packages (S1)
+- **Refactoring:** Remove resolution logic from `JsonFormatter.formatCallTree` — eliminates mixing of `CallTreeBuilder.build()` resolution with formatting, enforcing the parsing/resolution/formatting separation principle (S3)
+- **Refactoring:** Consolidate cache classes into generic `FileCache<T>` — unified `ClassIndexCache`, `SymbolIndexCache`, `InterfaceRegistryCache`, `CallGraphCache` under a shared abstract base with `isFresh()`, `getOrBuild()`, and `FIELD_SEPARATOR` (S4)
+- **Refactoring:** Consolidate duplicated methods across extractors — moved `isAccessorForField`, `isExcludedMethod`, `KOTLIN_ACCESSOR`, `EXCLUDED_FIELDS` into `KotlinMethodFilter` (S5)
+- **Refactoring:** Delete dead code — removed unused `CalleeTreeFormatter` and `CallerTreeFormatter` wrapper classes (S2)
+- **New:** Result Interpretation section in `cnavAgentHelp` output — heuristics for fan-in, fan-out, dead code, change coupling, and hotspots
+- **Tests:** Added bytecode version test for Java 24 to verify reading newest class files
+
 ## 0.1.27
 
 - **Fix:** `cnavUsages` simple name matching — owner class and type references now match correctly when using simple class names (#70)
