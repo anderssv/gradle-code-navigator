@@ -1,22 +1,20 @@
 package no.f12.codenavigator.navigation
 
 import no.f12.codenavigator.CacheFreshness
-
 import java.io.File
 
-object CallGraphCache {
+object CallGraphCache : FileCache<CallGraph>() {
 
-    private const val FIELD_SEPARATOR = "\t"
     private const val EDGES_HEADER = "[EDGES]"
     private const val SOURCES_HEADER = "[SOURCES]"
     private const val LINES_HEADER = "[LINES]"
 
-    fun write(cacheFile: File, graph: CallGraph) {
+    override fun write(cacheFile: File, data: CallGraph) {
         CacheFreshness.atomicWrite(cacheFile) { file ->
             file.bufferedWriter().use { writer ->
                 writer.write(EDGES_HEADER)
                 writer.newLine()
-                graph.forEachEdge { caller, callee ->
+                data.forEachEdge { caller, callee ->
                     writer.write(
                         listOf(
                             caller.className.toString(),
@@ -29,7 +27,7 @@ object CallGraphCache {
                 }
                 writer.write(SOURCES_HEADER)
                 writer.newLine()
-                graph.forEachSourceFile { className, sourceFile ->
+                data.forEachSourceFile { className, sourceFile ->
                     writer.write(
                         listOf(className.toString(), sourceFile).joinToString(FIELD_SEPARATOR),
                     )
@@ -37,7 +35,7 @@ object CallGraphCache {
                 }
                 writer.write(LINES_HEADER)
                 writer.newLine()
-                graph.forEachLineNumber { method, lineNumber ->
+                data.forEachLineNumber { method, lineNumber ->
                     writer.write(
                         listOf(method.className.toString(), method.methodName, lineNumber.toString()).joinToString(FIELD_SEPARATOR),
                     )
@@ -47,7 +45,7 @@ object CallGraphCache {
         }
     }
 
-    fun read(cacheFile: File): CallGraph {
+    override fun read(cacheFile: File): CallGraph {
         val callerToCallees = mutableMapOf<MethodRef, MutableSet<MethodRef>>()
         val sourceFiles = mutableMapOf<ClassName, String>()
         val lineNumbers = mutableMapOf<MethodRef, Int>()
@@ -81,20 +79,6 @@ object CallGraphCache {
         return CallGraph(callerToCallees, sourceFiles, lineNumbers)
     }
 
-    fun isFresh(cacheFile: File, classDirectories: List<File>): Boolean =
-        CacheFreshness.isFresh(cacheFile, classDirectories)
-
-    fun getOrBuild(cacheFile: File, classDirectories: List<File>): ScanResult<CallGraph> {
-        if (isFresh(cacheFile, classDirectories)) {
-            try {
-                return ScanResult(read(cacheFile), emptyList())
-            } catch (_: Exception) {
-                cacheFile.delete()
-            }
-        }
-
-        val result = CallGraphBuilder.build(classDirectories)
-        write(cacheFile, result.data)
-        return result
-    }
+    override fun build(classDirectories: List<File>): ScanResult<CallGraph> =
+        CallGraphBuilder.build(classDirectories)
 }
