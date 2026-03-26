@@ -43,7 +43,7 @@ object DeadCodeFinder {
         val results = mutableListOf<DeadCode>()
 
         for (cls in projectClasses) {
-            if (cls !in calledTypes && !isGeneratedClass(cls)) {
+            if (cls !in calledTypes && !cls.isGenerated()) {
                 results.add(
                     DeadCode(
                         className = cls,
@@ -59,7 +59,7 @@ object DeadCodeFinder {
             for (method in projectMethods) {
                 if (method.className in calledTypes &&
                     method !in calledMethods &&
-                    !isGeneratedClass(method.className) &&
+                    !method.className.isGenerated() &&
                     !KotlinMethodFilter.isGenerated(method.methodName)
                 ) {
                     results.add(
@@ -79,7 +79,4 @@ object DeadCodeFinder {
             .filter { item -> exclude == null || !exclude.containsMatchIn(item.className.value) }
             .sortedWith(compareBy({ it.kind }, { it.className }, { it.memberName ?: "" }))
     }
-
-    private fun isGeneratedClass(className: ClassName): Boolean =
-        '$' in className.value
 }

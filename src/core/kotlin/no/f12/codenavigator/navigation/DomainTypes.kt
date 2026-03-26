@@ -5,6 +5,8 @@ value class ClassName(val value: String) : Comparable<ClassName> {
     fun packageName(): PackageName =
         PackageName(value.substringBeforeLast('.', ""))
 
+    fun isGenerated(): Boolean = '$' in value
+
     override fun compareTo(other: ClassName): Int = value.compareTo(other.value)
 
     override fun toString(): String = value
