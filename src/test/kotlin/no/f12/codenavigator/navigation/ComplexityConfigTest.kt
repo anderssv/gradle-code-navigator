@@ -73,4 +73,18 @@ class ComplexityConfigTest {
 
         assertEquals(false, config.collapseLambdas)
     }
+
+    @Test
+    fun `defaults top to 50 when absent`() {
+        val config = ComplexityConfig.parse(mapOf("classname" to "Foo"))
+
+        assertEquals(50, config.top)
+    }
+
+    @Test
+    fun `parses top from properties`() {
+        val config = ComplexityConfig.parse(mapOf("classname" to "Foo", "top" to "10"))
+
+        assertEquals(10, config.top)
+    }
 }

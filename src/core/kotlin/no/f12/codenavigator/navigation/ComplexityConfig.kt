@@ -7,6 +7,7 @@ data class ComplexityConfig(
     val projectOnly: Boolean,
     val detail: Boolean,
     val collapseLambdas: Boolean,
+    val top: Int,
     val format: OutputFormat,
 ) {
     companion object {
@@ -15,6 +16,7 @@ data class ComplexityConfig(
             projectOnly = properties["projectonly"]?.toBoolean() ?: true,
             detail = properties["detail"]?.toBoolean() ?: false,
             collapseLambdas = properties["collapse-lambdas"]?.toBoolean() ?: true,
+            top = properties["top"]?.toIntOrNull() ?: 50,
             format = OutputFormat.from(
                 format = properties["format"],
                 llm = properties["llm"]?.toBoolean(),

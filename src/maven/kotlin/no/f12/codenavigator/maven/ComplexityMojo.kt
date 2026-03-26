@@ -35,6 +35,9 @@ class ComplexityMojo : AbstractMojo() {
     @Parameter(property = "detail")
     private var detail: String? = null
 
+    @Parameter(property = "top")
+    private var top: String? = null
+
     @Parameter(property = "format")
     private var format: String? = null
 
@@ -68,16 +71,17 @@ class ComplexityMojo : AbstractMojo() {
             projectOnly = config.projectOnly,
         )
         val results = if (config.collapseLambdas) LambdaCollapser.collapseComplexity(rawResults) else rawResults
+        val truncated = results.take(config.top)
 
-        if (results.isEmpty()) {
+        if (truncated.isEmpty()) {
             println("No matching classes found.")
             return
         }
 
         val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatComplexity(results)
-            OutputFormat.LLM -> LlmFormatter.formatComplexity(results)
-            OutputFormat.TEXT -> ComplexityFormatter.format(results)
+            OutputFormat.JSON -> JsonFormatter.formatComplexity(truncated)
+            OutputFormat.LLM -> LlmFormatter.formatComplexity(truncated)
+            OutputFormat.TEXT -> ComplexityFormatter.format(truncated)
         }
         println(OutputWrapper.wrap(output, config.format))
     }
@@ -86,6 +90,7 @@ class ComplexityMojo : AbstractMojo() {
         classname?.let { put("classname", it) }
         projectonly?.let { put("projectonly", it) }
         detail?.let { put("detail", it) }
+        top?.let { put("top", it) }
         collapseLambdas?.let { put("collapse-lambdas", it) }
         format?.let { put("format", it) }
         llm?.let { put("llm", it) }

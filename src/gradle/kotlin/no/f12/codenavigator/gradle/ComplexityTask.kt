@@ -24,7 +24,7 @@ abstract class ComplexityTask : DefaultTask() {
     fun showComplexity() {
         val config = ComplexityConfig.parse(
             project.buildPropertyMap(
-                propertyNames = listOf("classname", "projectonly", "detail", "collapse-lambdas", "format", "llm"),
+                propertyNames = listOf("classname", "projectonly", "detail", "collapse-lambdas", "top", "format", "llm"),
                 flagNames = emptyList(),
             ),
         )
@@ -45,16 +45,17 @@ abstract class ComplexityTask : DefaultTask() {
             projectOnly = config.projectOnly,
         )
         val results = if (config.collapseLambdas) LambdaCollapser.collapseComplexity(rawResults) else rawResults
+        val truncated = results.take(config.top)
 
-        if (results.isEmpty()) {
+        if (truncated.isEmpty()) {
             logger.lifecycle("No matching classes found.")
             return
         }
 
         val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatComplexity(results)
-            OutputFormat.LLM -> LlmFormatter.formatComplexity(results)
-            OutputFormat.TEXT -> ComplexityFormatter.format(results)
+            OutputFormat.JSON -> JsonFormatter.formatComplexity(truncated)
+            OutputFormat.LLM -> LlmFormatter.formatComplexity(truncated)
+            OutputFormat.TEXT -> ComplexityFormatter.format(truncated)
         }
         logger.lifecycle(OutputWrapper.wrap(output, config.format))
     }
