@@ -166,6 +166,95 @@ class ClassDetailExtractorTest {
 
     // [TEST-DONE] Class with no interfaces has empty list
 
+    @Test
+    fun `INSTANCE field is excluded from fields`() {
+        val classFile = writeClassFile("com/example/Singleton", "Singleton.kt") {
+            visitField(
+                Opcodes.ACC_PUBLIC or Opcodes.ACC_STATIC,
+                "INSTANCE",
+                "Lcom/example/Singleton;",
+                null,
+                null,
+            )
+            visitField(Opcodes.ACC_PUBLIC, "name", "Ljava/lang/String;", null, null)
+        }
+
+        val detail = ClassDetailExtractor.extract(classFile)
+
+        assertEquals(listOf("name"), detail.fields.map { it.name })
+    }
+
+    @Test
+    fun `is-prefix accessor for boolean field is filtered from methods`() {
+        val classFile = writeClassFile("com/example/Flags", "Flags.kt") {
+            visitField(Opcodes.ACC_PRIVATE, "active", "Z", null, null)
+            visitMethod(Opcodes.ACC_PUBLIC, "isActive", "()Z", null, null)
+            visitMethod(Opcodes.ACC_PUBLIC, "toggle", "()V", null, null)
+        }
+
+        val detail = ClassDetailExtractor.extract(classFile)
+
+        assertEquals(listOf("active"), detail.fields.map { it.name })
+        assertEquals(listOf("toggle"), detail.methods.map { it.name })
+    }
+
+    @Test
+    fun `simplifyType handles all primitive types`() {
+        val classFile = writeClassFile("com/example/Primitives", "Primitives.kt") {
+            visitField(Opcodes.ACC_PUBLIC, "flag", "Z", null, null)
+            visitField(Opcodes.ACC_PUBLIC, "letter", "C", null, null)
+            visitField(Opcodes.ACC_PUBLIC, "tiny", "B", null, null)
+            visitField(Opcodes.ACC_PUBLIC, "small", "S", null, null)
+            visitField(Opcodes.ACC_PUBLIC, "ratio", "F", null, null)
+            visitField(Opcodes.ACC_PUBLIC, "big", "J", null, null)
+            visitField(Opcodes.ACC_PUBLIC, "precise", "D", null, null)
+        }
+
+        val detail = ClassDetailExtractor.extract(classFile)
+
+        val fieldsByName = detail.fields.associateBy { it.name }
+        assertEquals("boolean", fieldsByName["flag"]?.type)
+        assertEquals("char", fieldsByName["letter"]?.type)
+        assertEquals("byte", fieldsByName["tiny"]?.type)
+        assertEquals("short", fieldsByName["small"]?.type)
+        assertEquals("float", fieldsByName["ratio"]?.type)
+        assertEquals("long", fieldsByName["big"]?.type)
+        assertEquals("double", fieldsByName["precise"]?.type)
+    }
+
+    @Test
+    fun `sourceFile defaults to unknown when no source is provided`() {
+        val classFile = writeClassFile("com/example/NoSource", null)
+
+        val detail = ClassDetailExtractor.extract(classFile)
+
+        assertEquals("<unknown>", detail.sourceFile)
+    }
+
+    @Test
+    fun `synthetic fields are excluded`() {
+        val classFile = writeClassFile("com/example/WithSynthetic", "WithSynthetic.kt") {
+            visitField(Opcodes.ACC_SYNTHETIC, "\$\$delegatedProperties", "[Ljava/lang/Object;", null, null)
+            visitField(Opcodes.ACC_PUBLIC, "realField", "Ljava/lang/String;", null, null)
+        }
+
+        val detail = ClassDetailExtractor.extract(classFile)
+
+        assertEquals(listOf("realField"), detail.fields.map { it.name })
+    }
+
+    @Test
+    fun `method with return type using array of primitives`() {
+        val classFile = writeClassFile("com/example/ArrayMethods", "ArrayMethods.kt") {
+            visitMethod(Opcodes.ACC_PUBLIC, "getIds", "()[I", null, null)
+        }
+
+        val detail = ClassDetailExtractor.extract(classFile)
+
+        assertEquals(1, detail.methods.size)
+        assertEquals("int[]", detail.methods.first().returnType)
+    }
+
     private fun writeClassFile(
         className: String,
         sourceFile: String?,
