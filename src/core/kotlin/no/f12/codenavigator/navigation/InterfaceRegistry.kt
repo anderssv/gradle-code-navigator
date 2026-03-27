@@ -27,6 +27,20 @@ class InterfaceRegistry(
         interfaceToImplementors.forEach { (iface, impls) -> action(iface, impls) }
     }
 
+    fun externalInterfacesOf(projectClasses: Set<ClassName>): Map<ClassName, Set<ClassName>> {
+        val result = mutableMapOf<ClassName, MutableSet<ClassName>>()
+        interfaceToImplementors.forEach { (interfaceName, implementors) ->
+            if (interfaceName !in projectClasses) {
+                for (impl in implementors) {
+                    if (impl.className in projectClasses) {
+                        result.getOrPut(impl.className) { mutableSetOf() }.add(interfaceName)
+                    }
+                }
+            }
+        }
+        return result
+    }
+
     companion object {
         fun build(classDirectories: List<File>): ScanResult<InterfaceRegistry> {
             val map = mutableMapOf<ClassName, MutableList<ImplementorInfo>>()

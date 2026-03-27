@@ -33,6 +33,7 @@ object DeadCodeFinder {
         interfaceImplementors: Map<ClassName, Set<ClassName>> = emptyMap(),
         classFields: Map<ClassName, Set<String>> = emptyMap(),
         inlineMethods: Set<MethodRef> = emptySet(),
+        classExternalInterfaces: Map<ClassName, Set<ClassName>> = emptyMap(),
     ): List<DeadCode> {
         val projectClasses = graph.projectClasses()
         if (projectClasses.isEmpty()) return emptyList()
@@ -107,7 +108,7 @@ object DeadCodeFinder {
                         memberName = null,
                         kind = DeadCodeKind.CLASS,
                         sourceFile = graph.sourceFileOf(cls),
-                        confidence = classConfidence(cls, null, testGraph, cls in testCalledTypes, classAnnotations, methodAnnotations),
+                        confidence = classConfidence(cls, null, testGraph, cls in testCalledTypes, classAnnotations, methodAnnotations, classExternalInterfaces),
                     )
                 )
             }
@@ -128,7 +129,7 @@ object DeadCodeFinder {
                             memberName = method.methodName,
                             kind = DeadCodeKind.METHOD,
                             sourceFile = graph.sourceFileOf(method.className),
-                            confidence = classConfidence(method.className, method, testGraph, method in testCalledMethods, classAnnotations, methodAnnotations),
+                            confidence = classConfidence(method.className, method, testGraph, method in testCalledMethods, classAnnotations, methodAnnotations, classExternalInterfaces),
                         )
                     )
                 }
@@ -149,10 +150,13 @@ object DeadCodeFinder {
         referencedInTests: Boolean,
         classAnnotations: Map<ClassName, Set<String>>,
         methodAnnotations: Map<MethodRef, Set<String>>,
+        classExternalInterfaces: Map<ClassName, Set<ClassName>>,
     ): DeadCodeConfidence {
         val hasClassAnnotations = classAnnotations.containsKey(className)
         val hasMethodAnnotations = method != null && methodAnnotations.containsKey(method)
         if (hasClassAnnotations || hasMethodAnnotations) return DeadCodeConfidence.LOW
+
+        if (method != null && classExternalInterfaces.containsKey(className)) return DeadCodeConfidence.LOW
 
         if (testGraph != null && referencedInTests) return DeadCodeConfidence.MEDIUM
 

@@ -18,6 +18,7 @@ class DeadCodeFinderTest {
         interfaceImplementors: Map<ClassName, Set<ClassName>> = emptyMap(),
         classFields: Map<ClassName, Set<String>> = emptyMap(),
         inlineMethods: Set<MethodRef> = emptySet(),
+        classExternalInterfaces: Map<ClassName, Set<ClassName>> = emptyMap(),
     ): List<DeadCode> = DeadCodeFinder.find(
         graph = graph,
         filter = filter,
@@ -30,6 +31,7 @@ class DeadCodeFinderTest {
         interfaceImplementors = interfaceImplementors,
         classFields = classFields,
         inlineMethods = inlineMethods,
+        classExternalInterfaces = classExternalInterfaces,
     )
 
     @Test
@@ -711,5 +713,76 @@ class DeadCodeFinderTest {
 
         val deadClasses = dead.filter { it.kind == DeadCodeKind.CLASS }.map { it.className.value }
         assertTrue("com.example.Orphan" in deadClasses, "Inline filtering only affects methods, not class-level dead code detection")
+    }
+
+    // === External interface implementation flagging tests ===
+
+    @Test
+    fun `dead method on class implementing external interface has LOW confidence`() {
+        val graph = testCallGraph(
+            method("com.example.Controller", "handle") to method("com.example.Adapter", "process"),
+            method("com.example.Adapter", "unmarshal") to method("com.example.Repo", "save"),
+            projectClasses = setOf("com.example.Controller", "com.example.Adapter", "com.example.Repo"),
+        )
+        val classExternalInterfaces = mapOf(
+            ClassName("com.example.Adapter") to setOf(ClassName("javax.xml.bind.XmlAdapter")),
+        )
+
+        val dead = findDead(graph, classExternalInterfaces = classExternalInterfaces)
+
+        val unmarshalDead = dead.first { it.memberName == "unmarshal" }
+        assertEquals(DeadCodeConfidence.LOW, unmarshalDead.confidence, "unmarshal() on class implementing external XmlAdapter should have LOW confidence")
+    }
+
+    @Test
+    fun `dead method on class implementing only in-scope interface stays HIGH`() {
+        val graph = testCallGraph(
+            method("com.example.Controller", "handle") to method("com.example.Service", "process"),
+            method("com.example.ServiceImpl", "unused") to method("com.example.Repo", "save"),
+            method("com.example.Controller", "init") to method("com.example.ServiceImpl", "setup"),
+            projectClasses = setOf("com.example.Controller", "com.example.Service", "com.example.ServiceImpl", "com.example.Repo"),
+        )
+        val classExternalInterfaces = emptyMap<ClassName, Set<ClassName>>()
+
+        val dead = findDead(graph, classExternalInterfaces = classExternalInterfaces)
+
+        val unusedDead = dead.first { it.memberName == "unused" }
+        assertEquals(DeadCodeConfidence.HIGH, unusedDead.confidence, "Method on class with no external interfaces should have HIGH confidence")
+    }
+
+    @Test
+    fun `dead class implementing external interface still has HIGH confidence`() {
+        val graph = testCallGraph(
+            method("com.example.Adapter", "unmarshal") to method("com.example.External", "call"),
+            projectClasses = setOf("com.example.Adapter"),
+        )
+        val classExternalInterfaces = mapOf(
+            ClassName("com.example.Adapter") to setOf(ClassName("javax.xml.bind.XmlAdapter")),
+        )
+
+        val dead = findDead(graph, classExternalInterfaces = classExternalInterfaces)
+
+        val deadClass = dead.first { it.kind == DeadCodeKind.CLASS }
+        assertEquals(DeadCodeConfidence.HIGH, deadClass.confidence, "Dead class should stay HIGH even if it implements external interface — if nobody constructs it, the interface methods are never called either")
+    }
+
+    @Test
+    fun `external interface LOW takes priority over test-graph MEDIUM`() {
+        val prodGraph = testCallGraph(
+            method("com.example.Caller", "main") to method("com.example.Adapter", "process"),
+            method("com.example.Adapter", "unmarshal") to method("com.example.Repo", "save"),
+            projectClasses = setOf("com.example.Caller", "com.example.Adapter", "com.example.Repo"),
+        )
+        val testGraph = testCallGraph(
+            method("com.example.AdapterTest", "testUnmarshal") to method("com.example.Adapter", "unmarshal"),
+        )
+        val classExternalInterfaces = mapOf(
+            ClassName("com.example.Adapter") to setOf(ClassName("javax.xml.bind.XmlAdapter")),
+        )
+
+        val dead = findDead(graph = prodGraph, testGraph = testGraph, classExternalInterfaces = classExternalInterfaces)
+
+        val unmarshalDead = dead.first { it.memberName == "unmarshal" }
+        assertEquals(DeadCodeConfidence.LOW, unmarshalDead.confidence, "External interface LOW should take priority over test-graph MEDIUM")
     }
 }

@@ -85,6 +85,8 @@ class DeadCodeMojo : AbstractMojo() {
 
         val inlineMethods = InlineMethodDetector.scanAll(listOf(classesDir))
 
+        val classExternalInterfaces = interfaceRegistry.externalInterfacesOf(graph.projectClasses())
+
         val dead = DeadCodeFinder.find(
             graph = graph,
             filter = config.filter,
@@ -97,6 +99,7 @@ class DeadCodeMojo : AbstractMojo() {
             interfaceImplementors = interfaceImplementors,
             classFields = classFields,
             inlineMethods = inlineMethods,
+            classExternalInterfaces = classExternalInterfaces,
         )
 
         if (dead.isEmpty()) {

@@ -74,6 +74,8 @@ abstract class DeadCodeTask : DefaultTask() {
 
         val inlineMethods = InlineMethodDetector.scanAll(classDirectories)
 
+        val classExternalInterfaces = interfaceRegistry.externalInterfacesOf(graph.projectClasses())
+
         val dead = DeadCodeFinder.find(
             graph = graph,
             filter = config.filter,
@@ -86,6 +88,7 @@ abstract class DeadCodeTask : DefaultTask() {
             interfaceImplementors = interfaceImplementors,
             classFields = classFields,
             inlineMethods = inlineMethods,
+            classExternalInterfaces = classExternalInterfaces,
         )
 
         if (dead.isEmpty()) {

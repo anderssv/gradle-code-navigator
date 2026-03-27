@@ -150,4 +150,51 @@ class InterfaceRegistryTest {
         val names = registry.implementorsOf(ClassName("com.example.Repository")).map { it.className.value }
         assertEquals(listOf("com.example.FakeRepo", "com.example.RealRepo"), names)
     }
+
+    // === externalInterfacesOf tests ===
+
+    @Test
+    fun `externalInterfacesOf returns external interfaces for project classes`() {
+        TestClassWriter.writeClassFile(
+            tempDir.toFile(), "com/example/Adapter", "Adapter.kt",
+            interfaces = arrayOf("javax/xml/bind/XmlAdapter"),
+        )
+
+        val registry = InterfaceRegistry.build(listOf(tempDir.toFile())).data
+        val projectClasses = setOf(ClassName("com.example.Adapter"))
+
+        val external = registry.externalInterfacesOf(projectClasses)
+
+        assertEquals(setOf(ClassName("javax.xml.bind.XmlAdapter")), external[ClassName("com.example.Adapter")])
+    }
+
+    @Test
+    fun `externalInterfacesOf excludes in-scope interfaces`() {
+        TestClassWriter.writeClassFile(
+            tempDir.toFile(), "com/example/ServiceImpl", "ServiceImpl.kt",
+            interfaces = arrayOf("com/example/Service"),
+        )
+
+        val registry = InterfaceRegistry.build(listOf(tempDir.toFile())).data
+        val projectClasses = setOf(ClassName("com.example.ServiceImpl"), ClassName("com.example.Service"))
+
+        val external = registry.externalInterfacesOf(projectClasses)
+
+        assertTrue(external.isEmpty(), "In-scope interface should not appear in externalInterfacesOf")
+    }
+
+    @Test
+    fun `externalInterfacesOf with mixed in-scope and external interfaces`() {
+        TestClassWriter.writeClassFile(
+            tempDir.toFile(), "com/example/Adapter", "Adapter.kt",
+            interfaces = arrayOf("com/example/Service", "javax/xml/bind/XmlAdapter"),
+        )
+
+        val registry = InterfaceRegistry.build(listOf(tempDir.toFile())).data
+        val projectClasses = setOf(ClassName("com.example.Adapter"), ClassName("com.example.Service"))
+
+        val external = registry.externalInterfacesOf(projectClasses)
+
+        assertEquals(setOf(ClassName("javax.xml.bind.XmlAdapter")), external[ClassName("com.example.Adapter")])
+    }
 }
