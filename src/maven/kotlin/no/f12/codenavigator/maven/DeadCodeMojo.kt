@@ -11,6 +11,7 @@ import no.f12.codenavigator.navigation.DeadCodeConfig
 import no.f12.codenavigator.navigation.DeadCodeFinder
 import no.f12.codenavigator.navigation.DeadCodeFormatter
 import no.f12.codenavigator.navigation.FieldExtractor
+import no.f12.codenavigator.navigation.InlineMethodDetector
 import no.f12.codenavigator.navigation.InterfaceRegistry
 import no.f12.codenavigator.navigation.SkippedFileReporter
 import org.apache.maven.plugin.AbstractMojo
@@ -82,6 +83,8 @@ class DeadCodeMojo : AbstractMojo() {
 
         val classFields = FieldExtractor.scanAll(listOf(classesDir))
 
+        val inlineMethods = InlineMethodDetector.scanAll(listOf(classesDir))
+
         val dead = DeadCodeFinder.find(
             graph = graph,
             filter = config.filter,
@@ -93,6 +96,7 @@ class DeadCodeMojo : AbstractMojo() {
             testGraph = testGraph,
             interfaceImplementors = interfaceImplementors,
             classFields = classFields,
+            inlineMethods = inlineMethods,
         )
 
         if (dead.isEmpty()) {

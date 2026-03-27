@@ -11,6 +11,7 @@ import no.f12.codenavigator.navigation.DeadCodeConfig
 import no.f12.codenavigator.navigation.DeadCodeFinder
 import no.f12.codenavigator.navigation.DeadCodeFormatter
 import no.f12.codenavigator.navigation.FieldExtractor
+import no.f12.codenavigator.navigation.InlineMethodDetector
 import no.f12.codenavigator.navigation.InterfaceRegistryCache
 import no.f12.codenavigator.navigation.SkippedFileReporter
 
@@ -71,6 +72,8 @@ abstract class DeadCodeTask : DefaultTask() {
 
         val classFields = FieldExtractor.scanAll(classDirectories)
 
+        val inlineMethods = InlineMethodDetector.scanAll(classDirectories)
+
         val dead = DeadCodeFinder.find(
             graph = graph,
             filter = config.filter,
@@ -82,6 +85,7 @@ abstract class DeadCodeTask : DefaultTask() {
             testGraph = testGraph,
             interfaceImplementors = interfaceImplementors,
             classFields = classFields,
+            inlineMethods = inlineMethods,
         )
 
         if (dead.isEmpty()) {

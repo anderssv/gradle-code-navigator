@@ -17,6 +17,7 @@ class DeadCodeFinderTest {
         testGraph: CallGraph? = null,
         interfaceImplementors: Map<ClassName, Set<ClassName>> = emptyMap(),
         classFields: Map<ClassName, Set<String>> = emptyMap(),
+        inlineMethods: Set<MethodRef> = emptySet(),
     ): List<DeadCode> = DeadCodeFinder.find(
         graph = graph,
         filter = filter,
@@ -28,6 +29,7 @@ class DeadCodeFinderTest {
         testGraph = testGraph,
         interfaceImplementors = interfaceImplementors,
         classFields = classFields,
+        inlineMethods = inlineMethods,
     )
 
     @Test
@@ -655,5 +657,59 @@ class DeadCodeFinderTest {
 
         assertEquals(1, dead.size)
         assertEquals(DeadCodeConfidence.HIGH, dead[0].confidence, "Without test graph, confidence should be HIGH not MEDIUM")
+    }
+
+    // === Kotlin inline function filtering tests ===
+
+    @Test
+    fun `inline method is filtered from dead method results`() {
+        val graph = testCallGraph(
+            method("com.example.Controller", "handle") to method("com.example.Service", "process"),
+            method("com.example.Service", "inlineHelper") to method("com.example.Repo", "save"),
+            projectClasses = setOf("com.example.Controller", "com.example.Service", "com.example.Repo"),
+        )
+        val inlineMethods = setOf(
+            MethodRef(ClassName("com.example.Service"), "inlineHelper"),
+        )
+
+        val dead = findDead(graph, inlineMethods = inlineMethods)
+
+        val deadMethods = dead.filter { it.kind == DeadCodeKind.METHOD }.map { "${it.className.value}.${it.memberName}" }
+        assertTrue("com.example.Service.inlineHelper" !in deadMethods, "inlineHelper() is inline and should be filtered from dead methods")
+    }
+
+    @Test
+    fun `non-inline method is still reported as dead alongside inline filtering`() {
+        val graph = testCallGraph(
+            method("com.example.Controller", "handle") to method("com.example.Service", "process"),
+            method("com.example.Service", "inlineHelper") to method("com.example.Repo", "save"),
+            method("com.example.Service", "reallyUnused") to method("com.example.Repo", "save"),
+            projectClasses = setOf("com.example.Controller", "com.example.Service", "com.example.Repo"),
+        )
+        val inlineMethods = setOf(
+            MethodRef(ClassName("com.example.Service"), "inlineHelper"),
+        )
+
+        val dead = findDead(graph, inlineMethods = inlineMethods)
+
+        val deadMethods = dead.filter { it.kind == DeadCodeKind.METHOD }.map { "${it.className.value}.${it.memberName}" }
+        assertTrue("com.example.Service.reallyUnused" in deadMethods, "reallyUnused() is not inline and should still be dead")
+        assertTrue("com.example.Service.inlineHelper" !in deadMethods, "inlineHelper() is inline and should be filtered")
+    }
+
+    @Test
+    fun `inline methods do not affect dead class detection`() {
+        val graph = testCallGraph(
+            method("com.example.Orphan", "inlineMethod") to method("com.example.External", "call"),
+            projectClasses = setOf("com.example.Orphan"),
+        )
+        val inlineMethods = setOf(
+            MethodRef(ClassName("com.example.Orphan"), "inlineMethod"),
+        )
+
+        val dead = findDead(graph, inlineMethods = inlineMethods)
+
+        val deadClasses = dead.filter { it.kind == DeadCodeKind.CLASS }.map { it.className.value }
+        assertTrue("com.example.Orphan" in deadClasses, "Inline filtering only affects methods, not class-level dead code detection")
     }
 }

@@ -16,6 +16,27 @@ Most tasks only scan the project's compiled output directories. When checking wh
 - **Why high value**: AI agents frequently need to check library API signatures to write correct code. Classpath scanning gives ground-truth answers from the actual dependency versions in the project.
 - **Note**: Item 40 (`cnavFindSymbol` external type references) is largely covered by combining classpath scanning with `cnavUsages -Ptype=<class>` for finding project references to external types. May only need documentation pointing users to `cnavUsages` for this use case.
 
+### 68. `cnavJar` — print methods and signatures from JAR files (High value, medium effort)
+
+Inspect the methods and signatures of classes inside a JAR file, whether or not the JAR is on the project classpath.
+
+```bash
+# Scan a JAR on the runtime classpath by artifact coordinates
+./gradlew cnavJar -Partifact=com.fasterxml.jackson.core:jackson-databind -Ppattern=ObjectMapper
+
+# Scan an arbitrary JAR file by path
+./gradlew cnavJar -Pjar=/path/to/some.jar -Ppattern=SomeClass
+```
+
+- **Two modes**:
+  1. `-Partifact=<group:name>` — resolve the JAR from the project's runtime classpath by matching group and artifact name. No version needed (uses whatever version the project declares).
+  2. `-Pjar=<path>` — scan an arbitrary JAR file by absolute path, regardless of classpath.
+- **Parameters**: `-Ppattern=<class-name-filter>` (optional, narrows which classes to show), `-Pformat=text|json|llm`
+- **Output**: For each matching class: fully qualified name, declared methods with full signatures (parameter types, return type, visibility), constructors, and static methods.
+- **Implementation**: Reuse `ClassDetailExtractor` / `ClassDetailScanner` but feed it entries from a `JarFile` instead of a class directory. For `-Partifact`, resolve the JAR path via Gradle's `configurations.runtimeClasspath.resolvedConfiguration` / Maven's `project.runtimeClasspathElements`.
+- **Relationship to item 38**: Item 38 adds `-Pclasspath=true` to existing tasks, scanning all dependency classes into the existing index. This task is different — it's a focused inspection tool for quickly checking "what methods does class X in library Y have?" without indexing the entire classpath.
+- **Why high value**: AI agents frequently need to check library API signatures. Looking up docs is slow and sometimes wrong (version mismatch). Bytecode gives ground-truth for the exact version in the project.
+
 ### 56. `cnavContext` — smart context gathering for AI agents (High value, medium effort)
 
 AI agents typically need 4-5 sequential tool calls to understand a class. Given a class or method, automatically gather "everything an agent needs": class signature, callers (depth 2), callees (depth 2), interface implementations, and source file path.

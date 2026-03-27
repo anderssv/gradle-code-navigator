@@ -37,6 +37,7 @@ repositories {
 
 dependencies {
     implementation("org.ow2.asm:asm:9.9.1")
+    implementation("org.jetbrains.kotlin:kotlin-metadata-jvm:2.2.0")
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.12.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

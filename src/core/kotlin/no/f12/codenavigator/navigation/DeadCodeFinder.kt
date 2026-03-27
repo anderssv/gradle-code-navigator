@@ -32,6 +32,7 @@ object DeadCodeFinder {
         testGraph: CallGraph?,
         interfaceImplementors: Map<ClassName, Set<ClassName>> = emptyMap(),
         classFields: Map<ClassName, Set<String>> = emptyMap(),
+        inlineMethods: Set<MethodRef> = emptySet(),
     ): List<DeadCode> {
         val projectClasses = graph.projectClasses()
         if (projectClasses.isEmpty()) return emptyList()
@@ -118,7 +119,8 @@ object DeadCodeFinder {
                     method !in calledMethods &&
                     !method.className.isGenerated() &&
                     !method.isGenerated() &&
-                    !isPropertyAccessor(method, classFields)
+                    !isPropertyAccessor(method, classFields) &&
+                    method !in inlineMethods
                 ) {
                     results.add(
                         DeadCode(
