@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.29
+
+- **New:** Progressive section loading for `cnavAgentHelp` — split monolithic output (~330 lines) into on-demand sections via `-Psection=<name>`. Default output is now a compact task-selection guide (~150 lines). Available sections: `install` (AGENTS.md snippet), `workflow` (step-by-step analysis), `interpretation` (result heuristics), `schemas` (JSON output schemas), `extraction` (output extraction, jq examples).
+- **New:** `cnavHelp` output now includes a hint for AI coding agents to run `cnavAgentHelp`.
+- **Fix:** Simplified `sed` extraction examples — removed `2>/dev/null` and arcane sed patterns that triggered agent approval prompts.
+
 ## 0.1.28
 
 - **Lower JDK requirement from 21 to 17** — the plugin now targets JDK 17 bytecode, making it usable on projects that require JDK 17. Still analyzes bytecode up to Java 24 (ASM 9.9.1). Gradle 9.x (which requires JDK 17+) is still required.
