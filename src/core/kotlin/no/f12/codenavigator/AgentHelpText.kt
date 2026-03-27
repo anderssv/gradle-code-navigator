@@ -35,6 +35,30 @@ object AgentHelpText {
         appendLine()
         appendLine("Run ${tool.usage("agent-help")} before first use for task selection guidance.")
         appendLine("Run ${tool.usage("help")} for full parameter documentation.")
+        appendLine()
+        appendLine("### Claude Code permissions")
+        appendLine()
+        appendLine("If a cnav command triggers a Bash approval prompt, create a permission rule")
+        appendLine("so future cnav commands run without prompting:")
+        appendLine("1. Copy the command string shown in the approval prompt")
+        appendLine("2. Keep everything up to and including `cnav`, replace the rest with `*`")
+        appendLine("3. Add as a Bash allow rule in `.claude/settings.local.json`")
+        appendLine()
+        when (tool) {
+            BuildTool.GRADLE -> {
+                appendLine("Example — if the prompt shows:")
+                appendLine("  `./gradlew cnavListClasses -Pllm=true`")
+                appendLine("Add: `\"Bash(./gradlew cnav*)\"`")
+                appendLine()
+                appendLine("If your command has a preamble (e.g. `eval \"\$(mise activate bash)\" && ./gradlew cnavListClasses ...`),")
+                appendLine("include the preamble in the rule: `\"Bash(eval \\\"\\$(mise activate bash)\\\" && ./gradlew cnav*)\"`")
+            }
+            BuildTool.MAVEN -> {
+                appendLine("Example — if the prompt shows:")
+                appendLine("  `mvn cnav:find-usages -Dtype=Foo -Dllm=true`")
+                appendLine("Add: `\"Bash(mvn cnav:*)\"`")
+            }
+        }
     }
 
     private fun generateCompact(tool: BuildTool): String = buildString {
