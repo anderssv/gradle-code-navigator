@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.30
+
+- **New:** Claude Code permission rule guidance added to README and `cnavAgentHelp` install section — explains how to auto-approve cnav Bash commands with wildcard permission rules for both Gradle and Maven.
+
 ## 0.1.29
 
 - **New:** Progressive section loading for `cnavAgentHelp` — split monolithic output (~330 lines) into on-demand sections via `-Psection=<name>`. Default output is now a compact task-selection guide (~150 lines). Available sections: `install` (AGENTS.md snippet), `workflow` (step-by-step analysis), `interpretation` (result heuristics), `schemas` (JSON output schemas), `extraction` (output extraction, jq examples).
