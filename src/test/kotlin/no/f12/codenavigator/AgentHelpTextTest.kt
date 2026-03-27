@@ -71,20 +71,38 @@ class AgentHelpTextTest {
     }
 
     @Test
-    fun `install section contains all non-help task names`() {
+    fun `install section does not list individual task names`() {
         val text = AgentHelpText.generate(BuildTool.GRADLE, section = "install")
 
-        val helpGoals = setOf("help", "agent-help", "config-help")
-        for (task in TaskRegistry.ALL_TASKS.filter { it.goal !in helpGoals }) {
-            assertTrue(
-                text.contains(task.taskName(BuildTool.GRADLE)),
-                "install should mention ${task.taskName(BuildTool.GRADLE)}",
-            )
-        }
+        assertFalse(
+            text.contains("cnavListClasses"),
+            "install should not list individual tasks — that detail belongs in cnavAgentHelp",
+        )
     }
 
     @Test
-    fun `Maven install section uses Maven task names`() {
+    fun `install section is concise`() {
+        val text = AgentHelpText.generate(BuildTool.GRADLE, section = "install")
+        val lines = text.trimEnd().lines()
+
+        assertTrue(
+            lines.size <= 15,
+            "install section should be concise (was ${lines.size} lines)",
+        )
+    }
+
+    @Test
+    fun `install section does not contain Claude Code permissions`() {
+        val text = AgentHelpText.generate(BuildTool.GRADLE, section = "install")
+
+        assertFalse(
+            text.contains("Claude Code permissions"),
+            "install should not contain permission setup details",
+        )
+    }
+
+    @Test
+    fun `Maven install section references Maven agent-help goal`() {
         val text = AgentHelpText.generate(BuildTool.MAVEN, section = "install")
 
         assertContains(text, "cnav:agent-help")
@@ -135,6 +153,7 @@ class AgentHelpTextTest {
 
         assertContains(text, "Unknown section")
         assertContains(text, "install")
+        assertContains(text, "setup")
         assertContains(text, "workflow")
         assertContains(text, "schemas")
     }
@@ -550,5 +569,36 @@ class AgentHelpTextTest {
         val text = AgentHelpText.generate(BuildTool.GRADLE, section = "interpretation")
 
         assertTrue(text.contains("Result Interpretation"), "Should have a Result Interpretation section")
+    }
+
+    // --- Setup section ---
+
+    @Test
+    fun `setup section contains Claude Code permission instructions`() {
+        val text = AgentHelpText.generate(BuildTool.GRADLE, section = "setup")
+
+        assertContains(text, "Bash(./gradlew cnav*)")
+    }
+
+    @Test
+    fun `setup section contains preamble example for Gradle`() {
+        val text = AgentHelpText.generate(BuildTool.GRADLE, section = "setup")
+
+        assertContains(text, "mise")
+    }
+
+    @Test
+    fun `Maven setup section uses Maven permission pattern`() {
+        val text = AgentHelpText.generate(BuildTool.MAVEN, section = "setup")
+
+        assertContains(text, "Bash(mvn cnav:*)")
+        assertFalse(text.contains("./gradlew"), "Maven setup should not mention gradlew")
+    }
+
+    @Test
+    fun `section directory lists setup section`() {
+        val text = AgentHelpText.generate(BuildTool.GRADLE)
+
+        assertContains(text, "section=setup")
     }
 }

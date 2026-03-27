@@ -1,11 +1,12 @@
 package no.f12.codenavigator
 
 object AgentHelpText {
-    private val VALID_SECTIONS = setOf("install", "workflow", "interpretation", "schemas", "extraction")
+    private val VALID_SECTIONS = setOf("install", "setup", "workflow", "interpretation", "schemas", "extraction")
 
     fun generate(tool: BuildTool = BuildTool.GRADLE, section: String? = null): String = when (section) {
         null -> generateCompact(tool)
         "install" -> generateInstall(tool)
+        "setup" -> generateSetup(tool)
         "workflow" -> generateWorkflow(tool)
         "interpretation" -> generateInterpretation(tool)
         "schemas" -> generateSchemas(tool)
@@ -14,14 +15,6 @@ object AgentHelpText {
     }
 
     private fun generateInstall(tool: BuildTool): String = buildString {
-        val t = { goal: String -> tool.taskName(goal) }
-        val p = { name: String, value: String -> tool.param(name, value) }
-
-        val helpGoals = setOf("help", "agent-help", "config-help")
-        val taskNames = TaskRegistry.ALL_TASKS
-            .filter { it.goal !in helpGoals }
-            .joinToString(", ") { it.taskName(tool) }
-
         appendLine("## code-navigator")
         appendLine()
         appendLine("code-navigator analyzes JVM bytecode and git history.")
@@ -29,14 +22,13 @@ object AgentHelpText {
         appendLine("Bytecode queries (callers, dependencies, implementors) return accurate, complete results")
         appendLine("in a single call — no iterative searching needed.")
         appendLine()
-        appendLine("Available tasks: $taskNames")
+        appendLine("Run ${tool.usage("agent-help")} for task selection guidance, parameters, and workflows.")
+    }
+
+    private fun generateSetup(tool: BuildTool): String = buildString {
+        appendLine("=== code-navigator: Setup ===")
         appendLine()
-        appendLine("All tasks support ${p("llm", "true")} for compact output and ${p("format", "json")} for structured output.")
-        appendLine()
-        appendLine("Run ${tool.usage("agent-help")} before first use for task selection guidance.")
-        appendLine("Run ${tool.usage("help")} for full parameter documentation.")
-        appendLine()
-        appendLine("### Claude Code permissions")
+        appendLine("### Permissions")
         appendLine()
         appendLine("If a cnav command triggers a Bash approval prompt, create a permission rule")
         appendLine("so future cnav commands run without prompting:")
@@ -388,6 +380,7 @@ object AgentHelpText {
         appendLine()
         appendLine("Run with ${p("section", "<topic>")} for more detail:")
         appendLine("  ${p("section", "install")}          — snippet to paste into AGENTS.md / CLAUDE.md")
+        appendLine("  ${p("section", "setup")}            — permissions and environment setup")
         appendLine("  ${p("section", "workflow")}         — step-by-step analysis workflow")
         appendLine("  ${p("section", "interpretation")}   — heuristics for reading results")
         appendLine("  ${p("section", "schemas")}          — JSON output schemas per task")
