@@ -385,6 +385,45 @@ From user feedback: all bytecode tasks mix production and test callers in a sing
 
 Added a "Result Interpretation" section to `AgentHelpText` with heuristics for fan-in, fan-out, dead code, change coupling, and hotspots.
 
+## 63. `cnavUsages` fuzzy/short-name matching (Medium value, low effort)
+
+From user feedback: `cnavUsages` requires a fully qualified class name. If you don't know the FQN, you must first run `cnavFindClass` to resolve it, then `cnavUsages` — a wasted round-trip. Other tasks like `cnavCallers` and `cnavFindClass` already support short-name/fuzzy matching via `PatternEnhancer`.
+
+- **Question**: "Find all usages of `AccountAdapter` without knowing the full package path"
+- **Approach**: Apply the same `PatternEnhancer` logic used by `cnavCallers`/`cnavFindClass` to the `-Ptype` parameter. If the pattern doesn't contain dots, treat it as a simple name and match any class ending with that name. If multiple classes match, either error with suggestions or scan all matches.
+- **Why useful**: Saves one round-trip per usage search — the most common navigation workflow becomes a single command.
+
+## 65. Show annotations in `cnavClass` output (High value, medium effort)
+
+From user feedback on a Spring Boot codebase: `cnavClass` shows methods, fields, supertypes, and interfaces but not annotations. Spring annotations like `@CircuitBreaker`, `@Cacheable`, `@Transactional` on methods — and `@RestController`, `@Service`, `@Component` on classes — are invisible. Understanding Spring wiring currently requires reading source files.
+
+- **Question**: "What annotations are on this class and its methods?"
+- **Needs**: `visitAnnotation()` in `ClassDetailExtractor` — ASM already provides annotation visitors, they just aren't extracted yet
+- **Approach**: Extract both class-level and method-level annotations (including annotation parameters for the most common ones). Add an `annotations` field to the class detail result structure. Formatters display annotations above the class/method they annotate.
+- **Overlap**: Items 53 and 54 also need `visitAnnotation()` for dead code exclusion. The bytecode scanning work is shared — extract annotations once, use for both class-detail display and dead code annotation-based filtering.
+- **Why high value**: Annotations are the primary configuration mechanism for Spring, Jakarta EE, Micronaut, and Quarkus. Without them, class-detail output is incomplete for annotation-driven frameworks.
+
+## 66. `cnavFindStringConstant` — search string literals in bytecode (Medium value, medium effort)
+
+From user feedback: there's no way to search for string literals embedded in method bodies — e.g., finding which class sets a specific HTTP header value, URL path, or configuration key. This currently requires grep on source files, which misses constants composed at compile time.
+
+- **Question**: "Which class references the string `/api/v2/accounts`?"
+- **Needs**: ASM's `visitLdcInsn()` to capture `LDC` (load constant) instructions that push string values onto the stack
+- **Approach**: Walk all methods in all classes, collect string constants from `LDC` instructions. Support `-Ppattern=<regex>` to filter. Report class name, method name, and the matched string.
+- **Output**: `ClassName.methodName: "matched string value"`
+- **Caveats**: Only finds compile-time string constants. String concatenation, template strings, and runtime-constructed strings won't appear. Still covers the majority of URL paths, header names, config keys, SQL fragments, etc.
+
+## 67. DI-aware `cnavInjectors` — find where a type is injected (Medium value, high effort)
+
+From user feedback on a Spring Boot codebase: tracing "what injects `BaseAccountRestAdapter`?" requires manually reading constructors or grep. A DI-aware task could use constructor parameter types + framework annotations to answer this.
+
+- **Question**: "Which classes receive `AccountService` via constructor injection?"
+- **Approach**: Scan all constructors for parameters matching the target type. For Spring, also check `@Autowired` fields and `@Bean` methods. Report the injection site (constructor parameter, field, or factory method).
+- **Needs**: Constructor parameter type extraction (already partially available via `ClassDetailExtractor`) + annotation detection (shared with items 53/65)
+- **Caveats**: Framework-specific — Spring, Jakarta CDI, Guice, and Dagger all have different injection patterns. Start with constructor injection (framework-agnostic) and `@Autowired`/`@Inject` field injection.
+- **Why medium value**: Constructor parameter scanning alone covers the majority of modern DI patterns (constructor injection is the recommended approach in Spring). Field injection and factory methods are secondary.
+- **Alternative**: This may already be partially solvable with `cnavUsages -Ptype=AccountService` which finds all references including constructor parameters. If so, better documentation may be sufficient.
+
 ## Future ideas (not yet planned)
 
 - **Consider removing the cnav disk cache**: Benchmarking on a ~20k LOC / 488-class project showed zero measurable difference between warm and cold cache — Gradle per-invocation overhead (~0.7s) completely dominates. The cache adds complexity across four cache classes, freshness checks, atomic writes, and corrupt-cache recovery. Removing it would simplify the codebase significantly. Needs testing on larger projects (thousands of classes) to confirm the cache isn't needed there either.
