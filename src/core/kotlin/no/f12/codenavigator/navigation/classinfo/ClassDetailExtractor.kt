@@ -3,6 +3,7 @@ package no.f12.codenavigator.navigation.classinfo
 import no.f12.codenavigator.navigation.AnnotationName
 import no.f12.codenavigator.navigation.ClassName
 import no.f12.codenavigator.navigation.KotlinMethodFilter
+import no.f12.codenavigator.navigation.annotationParameterVisitor
 import no.f12.codenavigator.navigation.createClassReader
 import org.objectweb.asm.AnnotationVisitor
 import org.objectweb.asm.ClassReader
@@ -165,82 +166,14 @@ object ClassDetailExtractor {
     private fun annotationFqn(descriptor: String): AnnotationName =
         AnnotationName(Type.getType(descriptor).className)
 
-    private fun typeSimpleName(descriptor: String): String =
-        Type.getType(descriptor).className.substringAfterLast('.')
-
     private fun collectAnnotation(
         descriptor: String?,
         annotations: MutableList<AnnotationDetail>,
     ): AnnotationVisitor? {
         if (descriptor == null) return null
         val name = annotationFqn(descriptor)
-        val parameters = mutableMapOf<String, String>()
-
-        return object : AnnotationVisitor(Opcodes.ASM9) {
-            override fun visit(paramName: String?, value: Any?) {
-                if (paramName != null && value != null) {
-                    parameters[paramName] = value.toString()
-                }
-            }
-
-            override fun visitEnum(paramName: String?, descriptor: String, value: String) {
-                if (paramName != null) {
-                    val enumClass = typeSimpleName(descriptor)
-                    parameters[paramName] = "$enumClass.$value"
-                }
-            }
-
-            override fun visitArray(paramName: String?): AnnotationVisitor? {
-                if (paramName == null) return null
-                val elements = mutableListOf<String>()
-                return object : AnnotationVisitor(Opcodes.ASM9) {
-                    override fun visit(name: String?, value: Any?) {
-                        if (value != null) {
-                            elements.add(value.toString())
-                        }
-                    }
-
-                    override fun visitEnum(name: String?, descriptor: String, value: String) {
-                        val enumClass = typeSimpleName(descriptor)
-                        elements.add("$enumClass.$value")
-                    }
-
-                    override fun visitEnd() {
-                        parameters[paramName] = when (elements.size) {
-                            0 -> "[]"
-                            1 -> elements.first()
-                            else -> "[${elements.joinToString(", ")}]"
-                        }
-                    }
-                }
-            }
-
-            override fun visitAnnotation(paramName: String?, descriptor: String): AnnotationVisitor? {
-                if (paramName == null) return null
-                val nestedName = typeSimpleName(descriptor)
-                val nestedParams = mutableMapOf<String, String>()
-                return object : AnnotationVisitor(Opcodes.ASM9) {
-                    override fun visit(name: String?, value: Any?) {
-                        if (name != null && value != null) {
-                            nestedParams[name] = value.toString()
-                        }
-                    }
-
-                    override fun visitEnd() {
-                        val paramStr = if (nestedParams.isEmpty()) {
-                            "@$nestedName"
-                        } else {
-                            val entries = nestedParams.entries.joinToString(", ") { "${it.key}=${it.value}" }
-                            "@$nestedName($entries)"
-                        }
-                        parameters[paramName] = paramStr
-                    }
-                }
-            }
-
-            override fun visitEnd() {
-                annotations.add(AnnotationDetail(name, parameters.toMap()))
-            }
+        return annotationParameterVisitor { parameters ->
+            annotations.add(AnnotationDetail(name, parameters))
         }
     }
 }
