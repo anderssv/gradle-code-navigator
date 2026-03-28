@@ -489,12 +489,12 @@ class AgentHelpTextTest {
             .substringBefore("--- Global Parameters ---")
 
         val callersTask = TaskRegistry.FIND_CALLERS.taskName(BuildTool.MAVEN)
-        val methodParam = TaskRegistry.METHOD.render(BuildTool.MAVEN)
-        val gradleMethodParam = TaskRegistry.METHOD.render(BuildTool.GRADLE)
+        val patternParam = TaskRegistry.CALL_PATTERN.render(BuildTool.MAVEN)
+        val gradlePatternParam = TaskRegistry.CALL_PATTERN.render(BuildTool.GRADLE)
 
         assertTrue(taskReferenceSection.contains(callersTask), "Should use Maven task names")
-        assertTrue(taskReferenceSection.contains(methodParam), "Should use -D params")
-        assertFalse(taskReferenceSection.contains(gradleMethodParam), "Should not use -P params")
+        assertTrue(taskReferenceSection.contains(patternParam), "Should use -D params")
+        assertFalse(taskReferenceSection.contains(gradlePatternParam), "Should not use -P params")
     }
 
 
@@ -518,21 +518,21 @@ class AgentHelpTextTest {
     }
 
     @Test
-    fun `common questions maps caller question to find-callers with method param`() {
+    fun `common questions maps caller question to find-callers with pattern param`() {
         val text = AgentHelpText.generate(BuildTool.GRADLE)
         val commonQuestionsSection = text.substringAfter("Common Questions")
             .substringBefore("--- Task Reference ---")
 
         val findCallersTask = TaskRegistry.FIND_CALLERS.taskName(BuildTool.GRADLE)
-        val methodParam = TaskRegistry.METHOD.render(BuildTool.GRADLE)
+        val patternParam = TaskRegistry.CALL_PATTERN.render(BuildTool.GRADLE)
 
         assertTrue(
             commonQuestionsSection.contains(findCallersTask),
             "Common Questions should mention $findCallersTask",
         )
         assertTrue(
-            commonQuestionsSection.contains(methodParam) || commonQuestionsSection.contains("-Pmethod"),
-            "Common Questions should mention -Pmethod param",
+            commonQuestionsSection.contains(patternParam) || commonQuestionsSection.contains("-Ppattern"),
+            "Common Questions should mention -Ppattern param",
         )
     }
 

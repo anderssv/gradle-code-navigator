@@ -13,7 +13,7 @@ class CallGraphConfigTest {
     @Test
     fun `parses all properties from map`() {
         val props = mapOf(
-            "method" to "com.example.MyClass.myMethod",
+            "pattern" to "com.example.MyClass.myMethod",
             "maxdepth" to "5",
             "projectonly" to "true",
             "format" to "json",
@@ -29,18 +29,18 @@ class CallGraphConfigTest {
     }
 
     @Test
-    fun `throws when method is missing`() {
+    fun `throws when pattern is missing`() {
         val exception = assertFailsWith<IllegalArgumentException> {
             CallGraphConfig.parse(mapOf("maxdepth" to "3"))
         }
 
-        assertEquals(true, exception.message?.contains("method"))
+        assertEquals(true, exception.message?.contains("pattern"))
     }
 
     @Test
     fun `defaults maxdepth to 3 when not provided`() {
         val config = CallGraphConfig.parse(
-            mapOf("method" to "com.example.MyClass.myMethod"),
+            mapOf("pattern" to "com.example.MyClass.myMethod"),
         )
 
         assertEquals(3, config.maxDepth)
@@ -49,7 +49,7 @@ class CallGraphConfigTest {
     @Test
     fun `defaults projectOnly to false`() {
         val config = CallGraphConfig.parse(
-            mapOf("method" to "com.example.MyClass.myMethod", "maxdepth" to "3")
+            mapOf("pattern" to "com.example.MyClass.myMethod", "maxdepth" to "3")
         )
 
         assertEquals(false, config.projectOnly)
@@ -58,7 +58,7 @@ class CallGraphConfigTest {
     @Test
     fun `defaults to TEXT format`() {
         val config = CallGraphConfig.parse(
-            mapOf("method" to "com.example.MyClass.myMethod", "maxdepth" to "3")
+            mapOf("pattern" to "com.example.MyClass.myMethod", "maxdepth" to "3")
         )
 
         assertEquals(OutputFormat.TEXT, config.format)
@@ -67,7 +67,7 @@ class CallGraphConfigTest {
     @Test
     fun `parses LLM format`() {
         val config = CallGraphConfig.parse(
-            mapOf("method" to "com.example.MyClass.myMethod", "maxdepth" to "3", "llm" to "true")
+            mapOf("pattern" to "com.example.MyClass.myMethod", "maxdepth" to "3", "llm" to "true")
         )
 
         assertEquals(OutputFormat.LLM, config.format)
@@ -76,7 +76,7 @@ class CallGraphConfigTest {
     @Test
     fun `parses filter-synthetic as false when explicitly set`() {
         val config = CallGraphConfig.parse(
-            mapOf("method" to "com.example.MyClass.myMethod", "filter-synthetic" to "false"),
+            mapOf("pattern" to "com.example.MyClass.myMethod", "filter-synthetic" to "false"),
         )
 
         assertEquals(false, config.filterSynthetic)
@@ -85,7 +85,7 @@ class CallGraphConfigTest {
     @Test
     fun `defaults filterSynthetic to true when not provided`() {
         val config = CallGraphConfig.parse(
-            mapOf("method" to "com.example.MyClass.myMethod"),
+            mapOf("pattern" to "com.example.MyClass.myMethod"),
         )
 
         assertEquals(true, config.filterSynthetic)

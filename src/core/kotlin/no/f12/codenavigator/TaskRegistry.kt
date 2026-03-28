@@ -103,6 +103,7 @@ object TaskRegistry {
     val FORMAT = ParamDef("format", "json", "Output as machine-readable JSON", flag = false, defaultValue = null, enhancePattern = false, type = ParamType.STRING)
     val LLM = ParamDef("llm", "true", "Output in compact, token-efficient LLM format", flag = false, defaultValue = null, enhancePattern = false, type = ParamType.BOOLEAN)
     val PATTERN = ParamDef("pattern", "<regex>", "Class/symbol name regex (camelCase-aware: MyService matches com.example.MyService)", flag = false, defaultValue = null, enhancePattern = true, type = ParamType.STRING)
+    val CALL_PATTERN = ParamDef("pattern", "<regex>", "Class.method name regex (camelCase-aware: MyService.doWork matches com.example.MyService.doWork)", flag = false, defaultValue = null, enhancePattern = true, type = ParamType.STRING)
     val METHOD = ParamDef("method", "<regex>", "Method name regex", flag = false, defaultValue = null, enhancePattern = false, type = ParamType.STRING)
     val MAXDEPTH = ParamDef("maxdepth", "<N>", "Max call tree depth", flag = false, defaultValue = "3", enhancePattern = false, type = ParamType.INT)
     val PROJECTONLY = ParamDef("projectonly", "true", "Hide JDK/stdlib/library classes", flag = false, defaultValue = "false", enhancePattern = false, type = ParamType.BOOLEAN)
@@ -179,14 +180,14 @@ object TaskRegistry {
     val FIND_CALLERS = TaskDef(
         goal = "find-callers",
         description = "Find callers of a method (call tree)",
-        params = FORMAT_PARAMS + listOf(METHOD, MAXDEPTH, PROJECTONLY, FILTER_SYNTHETIC),
+        params = FORMAT_PARAMS + listOf(CALL_PATTERN, MAXDEPTH, PROJECTONLY, FILTER_SYNTHETIC),
         requiresCompilation = true,
     )
 
     val FIND_CALLEES = TaskDef(
         goal = "find-callees",
         description = "Find methods called by a method (call tree)",
-        params = FORMAT_PARAMS + listOf(METHOD, MAXDEPTH, PROJECTONLY, FILTER_SYNTHETIC),
+        params = FORMAT_PARAMS + listOf(CALL_PATTERN, MAXDEPTH, PROJECTONLY, FILTER_SYNTHETIC),
         requiresCompilation = true,
     )
 

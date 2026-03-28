@@ -34,8 +34,8 @@ class FindCalleesMojo : AbstractMojo() {
     @Parameter(property = "llm")
     private var llm: String? = null
 
-    @Parameter(property = "method")
-    private var method: String? = null
+    @Parameter(property = "pattern")
+    private var pattern: String? = null
 
     @Parameter(property = "maxdepth")
     private var maxdepth: String? = null
@@ -51,7 +51,7 @@ class FindCalleesMojo : AbstractMojo() {
             CallGraphConfig.parse(buildPropertyMap())
         } catch (e: IllegalArgumentException) {
             throw MojoFailureException(
-                "Missing required property. Usage: mvn cnav:find-callees -Dmethod=<regex> -Dmaxdepth=3",
+                "Missing required property. Usage: mvn cnav:find-callees -Dpattern=<regex> -Dmaxdepth=3",
             )
         }
 
@@ -96,7 +96,7 @@ class FindCalleesMojo : AbstractMojo() {
     private fun buildPropertyMap(): Map<String, String?> = buildMap {
         format?.let { put("format", it) }
         llm?.let { put("llm", it) }
-        method?.let { put("method", it) }
+        pattern?.let { put("pattern", it) }
         maxdepth?.let { put("maxdepth", it) }
         projectonly?.let { put("projectonly", it) }
         filterSynthetic?.let { put("filter-synthetic", it) }

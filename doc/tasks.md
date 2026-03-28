@@ -105,12 +105,12 @@ Shows who calls a given method as an indented tree. Walks callers transitively u
 
 ```bash
 # Gradle
-./gradlew cnavCallers -Pmethod=resetPassword
-./gradlew cnavCallers -Pmethod=".*Service\.find.*" -Pmaxdepth=5
+./gradlew cnavCallers -Ppattern=resetPassword
+./gradlew cnavCallers -Ppattern=".*Service\.find.*" -Pmaxdepth=5
 
 # Maven
-mvn cnav:find-callers -Dmethod=resetPassword
-mvn cnav:find-callers -Dmethod=".*Service\.find.*" -Dmaxdepth=5
+mvn cnav:find-callers -Dpattern=resetPassword
+mvn cnav:find-callers -Dpattern=".*Service\.find.*" -Dmaxdepth=5
 ```
 
 Output:
@@ -127,12 +127,12 @@ Shows what a method calls as an indented tree. Walks callees transitively up to 
 
 ```bash
 # Gradle
-./gradlew cnavCallees -Pmethod="Controller\.handle.*"
-./gradlew cnavCallees -Pmethod="Service\.create" -Pmaxdepth=5
+./gradlew cnavCallees -Ppattern="Controller\.handle.*"
+./gradlew cnavCallees -Ppattern="Service\.create" -Pmaxdepth=5
 
 # Maven
-mvn cnav:find-callees -Dmethod="Controller\.handle.*"
-mvn cnav:find-callees -Dmethod="Service\.create" -Dmaxdepth=5
+mvn cnav:find-callees -Dpattern="Controller\.handle.*"
+mvn cnav:find-callees -Dpattern="Service\.create" -Dmaxdepth=5
 ```
 
 ### class-detail
