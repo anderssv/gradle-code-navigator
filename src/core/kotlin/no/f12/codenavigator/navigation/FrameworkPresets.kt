@@ -49,7 +49,7 @@ object FrameworkPresets {
         "org.springframework.cache.annotation.CachePut",
         "org.springframework.transaction.annotation.Transactional",
         "org.springframework.scheduling.annotation.Async",
-    )
+    ).map { AnnotationName(it) }.toSet()
 
     private val JPA = setOf(
         "jakarta.persistence.Entity",
@@ -57,14 +57,14 @@ object FrameworkPresets {
         "jakarta.persistence.Embeddable",
         "jakarta.persistence.Converter",
         "jakarta.persistence.EntityListeners",
-    )
+    ).map { AnnotationName(it) }.toSet()
 
     private val JACKSON = setOf(
         "com.fasterxml.jackson.annotation.JsonCreator",
         "com.fasterxml.jackson.annotation.JsonProperty",
         "com.fasterxml.jackson.databind.annotation.JsonDeserialize",
         "com.fasterxml.jackson.databind.annotation.JsonSerialize",
-    )
+    ).map { AnnotationName(it) }.toSet()
 
     private val JUNIT = setOf(
         "org.junit.jupiter.api.Test",
@@ -80,17 +80,17 @@ object FrameworkPresets {
         "org.junit.jupiter.api.Tag",
         "org.junit.jupiter.api.Nested",
         "org.junit.jupiter.api.DisplayName",
-    )
+    ).map { AnnotationName(it) }.toSet()
 
-    private val PRESETS: Map<String, Set<String>> = mapOf(
+    private val PRESETS: Map<String, Set<AnnotationName>> = mapOf(
         "spring" to SPRING + JPA,
         "jpa" to JPA,
         "jackson" to JACKSON,
         "junit" to JUNIT,
     )
 
-    private val ANNOTATION_TO_FRAMEWORK: Map<String, String> by lazy {
-        val result = mutableMapOf<String, String>()
+    private val ANNOTATION_TO_FRAMEWORK: Map<AnnotationName, String> by lazy {
+        val result = mutableMapOf<AnnotationName, String>()
         val specificity = listOf("jpa" to JPA, "jackson" to JACKSON, "junit" to JUNIT, "spring" to SPRING)
         for ((framework, annotations) in specificity) {
             for (annotation in annotations) {
@@ -100,14 +100,14 @@ object FrameworkPresets {
         result
     }
 
-    fun resolve(framework: String): Set<String> =
+    fun resolve(framework: String): Set<AnnotationName> =
         PRESETS[framework.lowercase()] ?: emptySet()
 
-    fun resolveAll(frameworks: List<String>): Set<String> =
+    fun resolveAll(frameworks: List<String>): Set<AnnotationName> =
         frameworks.flatMap { resolve(it) }.toSet()
 
     fun availablePresets(): Set<String> = PRESETS.keys
 
-    fun frameworkOf(annotationFqn: String): String? =
-        ANNOTATION_TO_FRAMEWORK[annotationFqn]
+    fun frameworkOf(annotation: AnnotationName): String? =
+        ANNOTATION_TO_FRAMEWORK[annotation]
 }

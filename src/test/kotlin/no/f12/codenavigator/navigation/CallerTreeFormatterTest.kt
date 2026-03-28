@@ -339,7 +339,7 @@ class CallerTreeFormatterTest {
                         sourceFile = "Controller.kt",
                         lineNumber = 42,
                         children = emptyList(),
-                        annotations = listOf(AnnotationTag("GetMapping", "spring")),
+                        annotations = listOf(AnnotationTag(AnnotationName("GetMapping"), "spring")),
                     ),
                 ),
             ),
@@ -364,7 +364,7 @@ class CallerTreeFormatterTest {
                 sourceFile = "Controller.kt",
                 lineNumber = null,
                 children = emptyList(),
-                annotations = listOf(AnnotationTag("GetMapping", "spring"), AnnotationTag("ResponseBody", "spring")),
+                annotations = listOf(AnnotationTag(AnnotationName("GetMapping"), "spring"), AnnotationTag(AnnotationName("ResponseBody"), "spring")),
             ),
         )
 
@@ -409,7 +409,7 @@ class CallerTreeFormatterTest {
                 sourceFile = "Controller.kt",
                 lineNumber = null,
                 children = emptyList(),
-                annotations = listOf(AnnotationTag("GetMapping", "spring"), AnnotationTag("CustomAnnotation")),
+                annotations = listOf(AnnotationTag(AnnotationName("GetMapping"), "spring"), AnnotationTag(AnnotationName("CustomAnnotation"))),
             ),
         )
 

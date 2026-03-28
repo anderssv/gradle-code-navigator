@@ -11,7 +11,7 @@ class AnnotationQueryFormatterTest {
             AnnotationMatch(
                 className = ClassName("com.example.MyController"),
                 sourceFile = "MyController.kt",
-                classAnnotations = setOf("RestController"),
+                classAnnotations = setOf(AnnotationName("RestController")),
                 matchedMethods = emptyList(),
             ),
         )
@@ -30,7 +30,7 @@ class AnnotationQueryFormatterTest {
             AnnotationMatch(
                 className = ClassName("com.example.MyController"),
                 sourceFile = "MyController.kt",
-                classAnnotations = setOf("RestController", "RequestMapping"),
+                classAnnotations = setOf(AnnotationName("RestController"), AnnotationName("RequestMapping")),
                 matchedMethods = emptyList(),
             ),
         )
@@ -49,11 +49,11 @@ class AnnotationQueryFormatterTest {
             AnnotationMatch(
                 className = ClassName("com.example.MyController"),
                 sourceFile = "MyController.kt",
-                classAnnotations = setOf("RestController"),
+                classAnnotations = setOf(AnnotationName("RestController")),
                 matchedMethods = listOf(
                     MethodAnnotationMatch(
                         method = MethodRef(ClassName("com.example.MyController"), "getUsers"),
-                        annotations = setOf("GetMapping"),
+                        annotations = setOf(AnnotationName("GetMapping")),
                     ),
                 ),
             ),
@@ -74,13 +74,13 @@ class AnnotationQueryFormatterTest {
             AnnotationMatch(
                 className = ClassName("com.example.ControllerA"),
                 sourceFile = "ControllerA.kt",
-                classAnnotations = setOf("RestController"),
+                classAnnotations = setOf(AnnotationName("RestController")),
                 matchedMethods = emptyList(),
             ),
             AnnotationMatch(
                 className = ClassName("com.example.ControllerB"),
                 sourceFile = "ControllerB.kt",
-                classAnnotations = setOf("RestController"),
+                classAnnotations = setOf(AnnotationName("RestController")),
                 matchedMethods = emptyList(),
             ),
         )
@@ -111,7 +111,7 @@ class AnnotationQueryFormatterTest {
                 matchedMethods = listOf(
                     MethodAnnotationMatch(
                         method = MethodRef(ClassName("com.example.Plain"), "scheduled"),
-                        annotations = setOf("Scheduled"),
+                        annotations = setOf(AnnotationName("Scheduled")),
                     ),
                 ),
             ),

@@ -39,7 +39,7 @@ object CallTreeFormatter {
     private fun formatAnnotationTags(annotations: List<AnnotationTag>): String =
         if (annotations.isEmpty()) "" else " [${annotations.joinToString(", ") { tag ->
             val suffix = if (tag.framework != null) " [${tag.framework}]" else ""
-            "@${tag.name}$suffix"
+            "@${tag.name.simpleName()}$suffix"
         }}]"
 
     private fun StringBuilder.renderChildren(

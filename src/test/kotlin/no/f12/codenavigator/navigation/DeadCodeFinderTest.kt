@@ -12,8 +12,8 @@ class DeadCodeFinderTest {
         exclude: Regex? = null,
         classesOnly: Boolean = false,
         excludeAnnotated: Set<String> = emptySet(),
-        classAnnotations: Map<ClassName, Set<String>> = emptyMap(),
-        methodAnnotations: Map<MethodRef, Set<String>> = emptyMap(),
+        classAnnotations: Map<ClassName, Set<AnnotationName>> = emptyMap(),
+        methodAnnotations: Map<MethodRef, Set<AnnotationName>> = emptyMap(),
         testGraph: CallGraph? = null,
         interfaceImplementors: Map<ClassName, Set<ClassName>> = emptyMap(),
         classFields: Map<ClassName, Set<String>> = emptyMap(),
@@ -327,7 +327,7 @@ class DeadCodeFinderTest {
         val dead = findDead(
             graph = graph,
             excludeAnnotated = setOf("RestController"),
-            classAnnotations = mapOf(ClassName("com.example.Controller") to setOf("RestController")),
+            classAnnotations = mapOf(ClassName("com.example.Controller") to setOf(AnnotationName("RestController"))),
         )
 
         assertTrue(dead.isEmpty(), "Controller annotated with @RestController should be excluded")
@@ -345,7 +345,7 @@ class DeadCodeFinderTest {
             graph = graph,
             excludeAnnotated = setOf("Scheduled"),
             methodAnnotations = mapOf(
-                MethodRef(ClassName("com.example.Service"), "scheduledTask") to setOf("Scheduled"),
+                MethodRef(ClassName("com.example.Service"), "scheduledTask") to setOf(AnnotationName("Scheduled")),
             ),
         )
 
@@ -367,7 +367,7 @@ class DeadCodeFinderTest {
         val dead = findDead(
             graph = graph,
             excludeAnnotated = setOf("RestController"),
-            classAnnotations = mapOf(ClassName("com.example.Service") to setOf("Service")),
+            classAnnotations = mapOf(ClassName("com.example.Service") to setOf(AnnotationName("Service"))),
         )
 
         val deadClassNames = dead.filter { it.kind == DeadCodeKind.CLASS }.map { it.className.value }
@@ -571,7 +571,7 @@ class DeadCodeFinderTest {
 
         val dead = findDead(
             graph = graph,
-            classAnnotations = mapOf(ClassName("com.example.Controller") to setOf("RestController")),
+            classAnnotations = mapOf(ClassName("com.example.Controller") to setOf(AnnotationName("RestController"))),
         )
 
         assertEquals(1, dead.size)
@@ -589,7 +589,7 @@ class DeadCodeFinderTest {
         val dead = findDead(
             graph = graph,
             methodAnnotations = mapOf(
-                MethodRef(ClassName("com.example.Service"), "scheduled") to setOf("Scheduled"),
+                MethodRef(ClassName("com.example.Service"), "scheduled") to setOf(AnnotationName("Scheduled")),
             ),
         )
 
@@ -643,7 +643,7 @@ class DeadCodeFinderTest {
         val dead = findDead(
             graph = prodGraph,
             testGraph = testGraph,
-            classAnnotations = mapOf(ClassName("com.example.Controller") to setOf("RestController")),
+            classAnnotations = mapOf(ClassName("com.example.Controller") to setOf(AnnotationName("RestController"))),
         )
 
         assertEquals(1, dead.size)

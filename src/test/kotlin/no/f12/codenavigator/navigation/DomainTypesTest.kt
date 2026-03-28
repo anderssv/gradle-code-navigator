@@ -377,6 +377,68 @@ class PackageNameTest {
     }
 }
 
+class AnnotationNameTest {
+
+    @Test
+    fun `stores full FQN as value`() {
+        val annotation = AnnotationName("org.springframework.web.bind.annotation.GetMapping")
+
+        assertEquals("org.springframework.web.bind.annotation.GetMapping", annotation.value)
+    }
+
+    @Test
+    fun `simpleName returns last segment after dot`() {
+        val annotation = AnnotationName("org.springframework.web.bind.annotation.GetMapping")
+
+        assertEquals("GetMapping", annotation.simpleName())
+    }
+
+    @Test
+    fun `simpleName returns full value when no dots`() {
+        val annotation = AnnotationName("Deprecated")
+
+        assertEquals("Deprecated", annotation.simpleName())
+    }
+
+    @Test
+    fun `packageName returns everything before last dot`() {
+        val annotation = AnnotationName("org.springframework.web.bind.annotation.GetMapping")
+
+        assertEquals("org.springframework.web.bind.annotation", annotation.packageName())
+    }
+
+    @Test
+    fun `packageName returns empty string when no dots`() {
+        val annotation = AnnotationName("Deprecated")
+
+        assertEquals("", annotation.packageName())
+    }
+
+    @Test
+    fun `toString returns the full FQN`() {
+        val annotation = AnnotationName("org.springframework.stereotype.Service")
+
+        assertEquals("org.springframework.stereotype.Service", annotation.toString())
+    }
+
+    @Test
+    fun `comparable sorts alphabetically by FQN`() {
+        val a = AnnotationName("jakarta.persistence.Entity")
+        val b = AnnotationName("org.springframework.stereotype.Service")
+
+        assertTrue(a < b)
+    }
+
+    @Test
+    fun `matches regex against full FQN`() {
+        val annotation = AnnotationName("org.springframework.web.bind.annotation.GetMapping")
+
+        assertTrue(annotation.matches(Regex("GetMapping")))
+        assertTrue(annotation.matches(Regex("springframework")))
+        assertFalse(annotation.matches(Regex("PostMapping")))
+    }
+}
+
 class MethodRefTest {
 
     @Test

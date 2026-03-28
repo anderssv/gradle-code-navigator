@@ -4,6 +4,7 @@ import no.f12.codenavigator.analysis.CoupledPair
 import no.f12.codenavigator.analysis.FileChurn
 import no.f12.codenavigator.analysis.Hotspot
 import no.f12.codenavigator.navigation.AnnotationDetail
+import no.f12.codenavigator.navigation.AnnotationName
 import no.f12.codenavigator.navigation.CallDirection
 import no.f12.codenavigator.navigation.AnnotationTag
 import no.f12.codenavigator.navigation.CallTreeNode
@@ -97,11 +98,11 @@ class LlmFormatterTest {
                 sourceFile = "UserService.kt",
                 superClass = null,
                 interfaces = emptyList(),
-                fields = listOf(FieldDetail("repo", "UserRepository", listOf(AnnotationDetail("Inject", emptyMap())))),
+                fields = listOf(FieldDetail("repo", "UserRepository", listOf(AnnotationDetail(AnnotationName("Inject"), emptyMap())))),
                 methods = listOf(MethodDetail("findById", listOf("long"), "User", listOf(
-                    AnnotationDetail("Cacheable", mapOf("value" to "users")),
+                    AnnotationDetail(AnnotationName("Cacheable"), mapOf("value" to "users")),
                 ))),
-                annotations = listOf(AnnotationDetail("Service", emptyMap())),
+                annotations = listOf(AnnotationDetail(AnnotationName("Service"), emptyMap())),
             )
         )
 
@@ -580,7 +581,7 @@ class LlmFormatterTest {
             AnnotationMatch(
                 className = ClassName("com.example.MyController"),
                 sourceFile = "MyController.kt",
-                classAnnotations = setOf("RestController"),
+                classAnnotations = setOf(AnnotationName("RestController")),
                 matchedMethods = emptyList(),
             ),
         )
@@ -596,11 +597,11 @@ class LlmFormatterTest {
             AnnotationMatch(
                 className = ClassName("com.example.MyController"),
                 sourceFile = "MyController.kt",
-                classAnnotations = setOf("RestController"),
+                classAnnotations = setOf(AnnotationName("RestController")),
                 matchedMethods = listOf(
                     MethodAnnotationMatch(
                         method = MethodRef(ClassName("com.example.MyController"), "getUsers"),
-                        annotations = setOf("GetMapping"),
+                        annotations = setOf(AnnotationName("GetMapping")),
                     ),
                 ),
             ),
@@ -631,7 +632,7 @@ class LlmFormatterTest {
                         sourceFile = "Controller.kt",
                         lineNumber = 42,
                         children = emptyList(),
-                        annotations = listOf(AnnotationTag("GetMapping", "spring")),
+                        annotations = listOf(AnnotationTag(AnnotationName("GetMapping"), "spring")),
                     ),
                 ),
             ),
@@ -653,7 +654,7 @@ class LlmFormatterTest {
                 sourceFile = "Controller.kt",
                 lineNumber = null,
                 children = emptyList(),
-                annotations = listOf(AnnotationTag("GetMapping", "spring"), AnnotationTag("ResponseBody", "spring")),
+                annotations = listOf(AnnotationTag(AnnotationName("GetMapping"), "spring"), AnnotationTag(AnnotationName("ResponseBody"), "spring")),
             ),
         )
 
@@ -689,7 +690,7 @@ class LlmFormatterTest {
                 sourceFile = "Controller.kt",
                 lineNumber = null,
                 children = emptyList(),
-                annotations = listOf(AnnotationTag("GetMapping", "spring"), AnnotationTag("CustomAnnotation")),
+                annotations = listOf(AnnotationTag(AnnotationName("GetMapping"), "spring"), AnnotationTag(AnnotationName("CustomAnnotation"))),
             ),
         )
 

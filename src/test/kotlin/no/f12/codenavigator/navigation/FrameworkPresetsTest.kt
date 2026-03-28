@@ -10,13 +10,13 @@ class FrameworkPresetsTest {
     fun `spring preset includes Controller and Component`() {
         val annotations = FrameworkPresets.resolve("spring")
 
-        assertTrue(annotations.contains("org.springframework.stereotype.Controller"))
-        assertTrue(annotations.contains("org.springframework.stereotype.Component"))
-        assertTrue(annotations.contains("org.springframework.web.bind.annotation.RestController"))
-        assertTrue(annotations.contains("org.springframework.stereotype.Service"))
-        assertTrue(annotations.contains("org.springframework.stereotype.Repository"))
-        assertTrue(annotations.contains("org.springframework.context.annotation.Configuration"))
-        assertTrue(annotations.contains("org.springframework.context.annotation.Bean"))
+        assertTrue(annotations.contains(AnnotationName("org.springframework.stereotype.Controller")))
+        assertTrue(annotations.contains(AnnotationName("org.springframework.stereotype.Component")))
+        assertTrue(annotations.contains(AnnotationName("org.springframework.web.bind.annotation.RestController")))
+        assertTrue(annotations.contains(AnnotationName("org.springframework.stereotype.Service")))
+        assertTrue(annotations.contains(AnnotationName("org.springframework.stereotype.Repository")))
+        assertTrue(annotations.contains(AnnotationName("org.springframework.context.annotation.Configuration")))
+        assertTrue(annotations.contains(AnnotationName("org.springframework.context.annotation.Bean")))
     }
 
     @Test
@@ -30,15 +30,15 @@ class FrameworkPresetsTest {
     fun `resolving multiple frameworks merges their annotations`() {
         val annotations = FrameworkPresets.resolveAll(listOf("spring"))
 
-        assertTrue(annotations.contains("org.springframework.stereotype.Controller"))
-        assertTrue(annotations.contains("org.springframework.context.annotation.Bean"))
+        assertTrue(annotations.contains(AnnotationName("org.springframework.stereotype.Controller")))
+        assertTrue(annotations.contains(AnnotationName("org.springframework.context.annotation.Bean")))
     }
 
     @Test
     fun `resolving multiple frameworks with unknown returns only known`() {
         val annotations = FrameworkPresets.resolveAll(listOf("spring", "unknown"))
 
-        assertTrue(annotations.contains("org.springframework.stereotype.Controller"))
+        assertTrue(annotations.contains(AnnotationName("org.springframework.stereotype.Controller")))
         assertTrue(annotations.isNotEmpty())
     }
 
@@ -63,38 +63,38 @@ class FrameworkPresetsTest {
     fun `spring preset includes JPA annotations`() {
         val annotations = FrameworkPresets.resolve("spring")
 
-        assertTrue(annotations.contains("jakarta.persistence.Entity"))
-        assertTrue(annotations.contains("jakarta.persistence.MappedSuperclass"))
+        assertTrue(annotations.contains(AnnotationName("jakarta.persistence.Entity")))
+        assertTrue(annotations.contains(AnnotationName("jakarta.persistence.MappedSuperclass")))
     }
 
     @Test
     fun `spring preset includes SpringBootApplication`() {
         val annotations = FrameworkPresets.resolve("spring")
 
-        assertTrue(annotations.contains("org.springframework.boot.autoconfigure.SpringBootApplication"))
+        assertTrue(annotations.contains(AnnotationName("org.springframework.boot.autoconfigure.SpringBootApplication")))
     }
 
     @Test
     fun `jpa preset includes Entity`() {
         val annotations = FrameworkPresets.resolve("jpa")
 
-        assertTrue(annotations.contains("jakarta.persistence.Entity"))
-        assertTrue(annotations.contains("jakarta.persistence.MappedSuperclass"))
+        assertTrue(annotations.contains(AnnotationName("jakarta.persistence.Entity")))
+        assertTrue(annotations.contains(AnnotationName("jakarta.persistence.MappedSuperclass")))
     }
 
     @Test
     fun `jackson preset includes JsonCreator`() {
         val annotations = FrameworkPresets.resolve("jackson")
 
-        assertTrue(annotations.contains("com.fasterxml.jackson.annotation.JsonCreator"))
+        assertTrue(annotations.contains(AnnotationName("com.fasterxml.jackson.annotation.JsonCreator")))
     }
 
     @Test
     fun `resolving multiple distinct frameworks merges all annotations`() {
         val annotations = FrameworkPresets.resolveAll(listOf("jpa", "jackson"))
 
-        assertTrue(annotations.contains("jakarta.persistence.Entity"))
-        assertTrue(annotations.contains("com.fasterxml.jackson.annotation.JsonCreator"))
+        assertTrue(annotations.contains(AnnotationName("jakarta.persistence.Entity")))
+        assertTrue(annotations.contains(AnnotationName("com.fasterxml.jackson.annotation.JsonCreator")))
     }
 
     @Test
@@ -106,28 +106,28 @@ class FrameworkPresetsTest {
 
     @Test
     fun `frameworkOf returns spring for a Spring annotation`() {
-        val framework = FrameworkPresets.frameworkOf("org.springframework.stereotype.Controller")
+        val framework = FrameworkPresets.frameworkOf(AnnotationName("org.springframework.stereotype.Controller"))
 
         assertEquals("spring", framework)
     }
 
     @Test
     fun `frameworkOf returns jpa for a JPA annotation not spring`() {
-        val framework = FrameworkPresets.frameworkOf("jakarta.persistence.Entity")
+        val framework = FrameworkPresets.frameworkOf(AnnotationName("jakarta.persistence.Entity"))
 
         assertEquals("jpa", framework)
     }
 
     @Test
     fun `frameworkOf returns jackson for a Jackson annotation`() {
-        val framework = FrameworkPresets.frameworkOf("com.fasterxml.jackson.annotation.JsonCreator")
+        val framework = FrameworkPresets.frameworkOf(AnnotationName("com.fasterxml.jackson.annotation.JsonCreator"))
 
         assertEquals("jackson", framework)
     }
 
     @Test
     fun `frameworkOf returns null for unknown annotation`() {
-        val framework = FrameworkPresets.frameworkOf("com.example.CustomAnnotation")
+        val framework = FrameworkPresets.frameworkOf(AnnotationName("com.example.CustomAnnotation"))
 
         assertEquals(null, framework)
     }
@@ -136,16 +136,16 @@ class FrameworkPresetsTest {
     fun `junit preset includes Test and BeforeEach`() {
         val annotations = FrameworkPresets.resolve("junit")
 
-        assertTrue(annotations.contains("org.junit.jupiter.api.Test"))
-        assertTrue(annotations.contains("org.junit.jupiter.api.BeforeEach"))
-        assertTrue(annotations.contains("org.junit.jupiter.api.AfterEach"))
-        assertTrue(annotations.contains("org.junit.jupiter.params.ParameterizedTest"))
-        assertTrue(annotations.contains("org.junit.jupiter.api.Disabled"))
+        assertTrue(annotations.contains(AnnotationName("org.junit.jupiter.api.Test")))
+        assertTrue(annotations.contains(AnnotationName("org.junit.jupiter.api.BeforeEach")))
+        assertTrue(annotations.contains(AnnotationName("org.junit.jupiter.api.AfterEach")))
+        assertTrue(annotations.contains(AnnotationName("org.junit.jupiter.params.ParameterizedTest")))
+        assertTrue(annotations.contains(AnnotationName("org.junit.jupiter.api.Disabled")))
     }
 
     @Test
     fun `frameworkOf returns junit for Test annotation`() {
-        val framework = FrameworkPresets.frameworkOf("org.junit.jupiter.api.Test")
+        val framework = FrameworkPresets.frameworkOf(AnnotationName("org.junit.jupiter.api.Test"))
 
         assertEquals("junit", framework)
     }

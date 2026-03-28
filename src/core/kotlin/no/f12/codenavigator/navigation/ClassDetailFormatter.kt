@@ -42,7 +42,7 @@ object ClassDetailFormatter {
     }.trimEnd()
 
     private fun formatAnnotation(annotation: AnnotationDetail): String = buildString {
-        append("@${annotation.name}")
+        append("@${annotation.name.simpleName()}")
         if (annotation.parameters.isNotEmpty()) {
             val params = annotation.parameters.entries.joinToString(", ") { "${it.key}=\"${it.value}\"" }
             append("($params)")

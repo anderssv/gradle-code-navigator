@@ -35,8 +35,8 @@ object DeadCodeFinder {
         exclude: Regex?,
         classesOnly: Boolean,
         excludeAnnotated: Set<String>,
-        classAnnotations: Map<ClassName, Set<String>>,
-        methodAnnotations: Map<MethodRef, Set<String>>,
+        classAnnotations: Map<ClassName, Set<AnnotationName>>,
+        methodAnnotations: Map<MethodRef, Set<AnnotationName>>,
         testGraph: CallGraph?,
         interfaceImplementors: Map<ClassName, Set<ClassName>> = emptyMap(),
         classFields: Map<ClassName, Set<String>> = emptyMap(),
@@ -164,8 +164,8 @@ object DeadCodeFinder {
         method: MethodRef?,
         testGraph: CallGraph?,
         referencedInTests: Boolean,
-        classAnnotations: Map<ClassName, Set<String>>,
-        methodAnnotations: Map<MethodRef, Set<String>>,
+        classAnnotations: Map<ClassName, Set<AnnotationName>>,
+        methodAnnotations: Map<MethodRef, Set<AnnotationName>>,
         classExternalInterfaces: Map<ClassName, Set<ClassName>>,
     ): DeadCodeConfidence {
         val hasClassAnnotations = classAnnotations.containsKey(className)
@@ -190,16 +190,16 @@ object DeadCodeFinder {
     private fun isExcludedByAnnotation(
         item: DeadCode,
         excludeAnnotated: Set<String>,
-        classAnnotations: Map<ClassName, Set<String>>,
-        methodAnnotations: Map<MethodRef, Set<String>>,
+        classAnnotations: Map<ClassName, Set<AnnotationName>>,
+        methodAnnotations: Map<MethodRef, Set<AnnotationName>>,
     ): Boolean {
         if (excludeAnnotated.isEmpty()) return false
         val classAnns = classAnnotations[item.className] ?: emptySet()
-        if (classAnns.any { it in excludeAnnotated }) return true
+        if (classAnns.any { it.value in excludeAnnotated || it.simpleName() in excludeAnnotated }) return true
         if (item.kind == DeadCodeKind.METHOD && item.memberName != null) {
             val methodRef = MethodRef(item.className, item.memberName)
             val methodAnns = methodAnnotations[methodRef] ?: emptySet()
-            if (methodAnns.any { it in excludeAnnotated }) return true
+            if (methodAnns.any { it.value in excludeAnnotated || it.simpleName() in excludeAnnotated }) return true
         }
         return false
     }

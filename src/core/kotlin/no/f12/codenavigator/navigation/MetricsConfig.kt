@@ -18,7 +18,7 @@ data class MetricsConfig(
             val explicit = TaskRegistry.EXCLUDE_ANNOTATED.parse(properties["exclude-annotated"])
             val frameworks = TaskRegistry.FRAMEWORK.parse(properties["framework"])
             val frameworkAnnotations = FrameworkPresets.resolveAll(frameworks)
-            val merged = (explicit + frameworkAnnotations).distinct()
+            val merged = (explicit + frameworkAnnotations.map { it.value }).distinct()
 
             return MetricsConfig(
                 after = TaskRegistry.AFTER.parse(properties["after"]),

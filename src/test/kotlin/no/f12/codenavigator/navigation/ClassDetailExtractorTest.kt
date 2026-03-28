@@ -254,7 +254,7 @@ class ClassDetailExtractorTest {
         val detail = ClassDetailExtractor.extract(classFile)
 
         val annotation = detail.methods.first().annotations.first()
-        assertEquals("io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker", annotation.name)
+        assertEquals(AnnotationName("io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker"), annotation.name)
         assertEquals(mapOf("name" to "backend", "fallbackMethod" to "fallback"), annotation.parameters)
     }
 
@@ -270,7 +270,7 @@ class ClassDetailExtractorTest {
         val detail = ClassDetailExtractor.extract(classFile)
 
         val annotation = detail.methods.first().annotations.first()
-        assertEquals("org.springframework.cache.annotation.Cacheable", annotation.name)
+        assertEquals(AnnotationName("org.springframework.cache.annotation.Cacheable"), annotation.name)
         assertEquals(mapOf("value" to "users"), annotation.parameters)
     }
 
@@ -285,7 +285,7 @@ class ClassDetailExtractorTest {
 
         assertEquals(1, detail.fields.size)
         assertEquals(1, detail.fields.first().annotations.size)
-        assertEquals("jakarta.inject.Inject", detail.fields.first().annotations.first().name)
+        assertEquals(AnnotationName("jakarta.inject.Inject"), detail.fields.first().annotations.first().name)
     }
 
     @Test
@@ -300,8 +300,8 @@ class ClassDetailExtractorTest {
         assertEquals(2, detail.annotations.size)
         assertEquals(
             listOf(
-                "org.springframework.stereotype.Service",
-                "org.springframework.transaction.annotation.Transactional",
+                AnnotationName("org.springframework.stereotype.Service"),
+                AnnotationName("org.springframework.transaction.annotation.Transactional"),
             ),
             detail.annotations.map { it.name },
         )
@@ -319,7 +319,7 @@ class ClassDetailExtractorTest {
         assertEquals(1, detail.methods.size)
         assertEquals(1, detail.methods.first().annotations.size)
         assertEquals(
-            "io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker",
+            AnnotationName("io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker"),
             detail.methods.first().annotations.first().name,
         )
     }
@@ -333,7 +333,7 @@ class ClassDetailExtractorTest {
         val detail = ClassDetailExtractor.extract(classFile)
 
         assertEquals(1, detail.annotations.size)
-        assertEquals("org.springframework.stereotype.Component", detail.annotations.first().name)
+        assertEquals(AnnotationName("org.springframework.stereotype.Component"), detail.annotations.first().name)
     }
 
     @Test
@@ -366,7 +366,7 @@ class ClassDetailExtractorTest {
         val detail = ClassDetailExtractor.extract(classFile)
 
         val annotation = detail.methods.first().annotations.first()
-        assertEquals("io.swagger.v3.oas.annotations.Operation", annotation.name)
+        assertEquals(AnnotationName("io.swagger.v3.oas.annotations.Operation"), annotation.name)
         assertEquals(mapOf("summary" to "@ApiResponse(responseCode=200, description=OK)"), annotation.parameters)
     }
 
@@ -385,7 +385,7 @@ class ClassDetailExtractorTest {
         val detail = ClassDetailExtractor.extract(classFile)
 
         val annotation = detail.methods.first().annotations.first()
-        assertEquals("org.springframework.web.bind.annotation.RequestMapping", annotation.name)
+        assertEquals(AnnotationName("org.springframework.web.bind.annotation.RequestMapping"), annotation.name)
         assertEquals(mapOf("value" to "[/api/users, /api/v2/users]"), annotation.parameters)
     }
 
@@ -452,7 +452,7 @@ class ClassDetailExtractorTest {
         val detail = ClassDetailExtractor.extract(classFile)
 
         val annotation = detail.methods.first().annotations.first()
-        assertEquals("org.springframework.web.bind.annotation.RequestMapping", annotation.name)
+        assertEquals(AnnotationName("org.springframework.web.bind.annotation.RequestMapping"), annotation.name)
         assertEquals(mapOf("method" to "RequestMethod.GET"), annotation.parameters)
     }
 

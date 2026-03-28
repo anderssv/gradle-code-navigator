@@ -262,11 +262,11 @@ object JsonFormatter {
             jsonObject(
                 "className" to match.className.value,
                 "sourceFile" to match.sourceFile,
-                "classAnnotations" to JsonRaw(jsonStringArray(match.classAnnotations.sorted())),
+                "classAnnotations" to JsonRaw(jsonStringArray(match.classAnnotations.sorted().map { it.value })),
                 "methods" to JsonRaw(jsonArray(match.matchedMethods) { method ->
                     jsonObject(
                         "method" to method.method.methodName,
-                        "annotations" to JsonRaw(jsonStringArray(method.annotations.sorted())),
+                        "annotations" to JsonRaw(jsonStringArray(method.annotations.sorted().map { it.value })),
                     )
                 }),
             )
@@ -340,9 +340,9 @@ object JsonFormatter {
     private fun renderAnnotationTags(tags: List<AnnotationTag>): String =
         tags.joinToString(",", "[", "]") { tag ->
             if (tag.framework != null) {
-                jsonObject("name" to tag.name, "framework" to tag.framework)
+                jsonObject("name" to tag.name.value, "framework" to tag.framework)
             } else {
-                jsonObject("name" to tag.name)
+                jsonObject("name" to tag.name.value)
             }
         }
 
@@ -390,7 +390,7 @@ object JsonFormatter {
     private fun renderAnnotations(annotations: List<AnnotationDetail>): String =
         jsonArray(annotations) { a ->
             jsonObject(
-                "name" to a.name,
+                "name" to a.name.value,
                 "parameters" to JsonRaw(jsonObject(*a.parameters.map { (k, v) -> k to v }.toTypedArray())),
             )
         }

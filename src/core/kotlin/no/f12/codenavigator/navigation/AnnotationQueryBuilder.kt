@@ -5,13 +5,13 @@ import java.io.File
 data class AnnotationMatch(
     val className: ClassName,
     val sourceFile: String?,
-    val classAnnotations: Set<String>,
+    val classAnnotations: Set<AnnotationName>,
     val matchedMethods: List<MethodAnnotationMatch>,
 )
 
 data class MethodAnnotationMatch(
     val method: MethodRef,
-    val annotations: Set<String>,
+    val annotations: Set<AnnotationName>,
 )
 
 object AnnotationQueryBuilder {
@@ -32,10 +32,10 @@ object AnnotationQueryBuilder {
                     .forEach { classFile ->
                         try {
                             val scanResult = AnnotationExtractor.extract(classFile)
-                            val classMatches = scanResult.classAnnotations.any { regex.containsMatchIn(it) }
+                            val classMatches = scanResult.classAnnotations.any { it.matches(regex) }
                             val matchingMethods = if (methods) {
                                 scanResult.methodAnnotations
-                                    .filter { (_, annotations) -> annotations.any { regex.containsMatchIn(it) } }
+                                    .filter { (_, annotations) -> annotations.any { it.matches(regex) } }
                                     .map { (methodRef, annotations) -> MethodAnnotationMatch(methodRef, annotations) }
                                     .sortedBy { it.method.methodName }
                             } else {

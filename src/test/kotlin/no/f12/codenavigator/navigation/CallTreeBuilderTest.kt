@@ -395,8 +395,8 @@ class CallTreeBuilderTest {
         )
         val methodAnnotations = mapOf(
             target to setOf(
-                "org.springframework.web.bind.annotation.GetMapping",
-                "org.springframework.web.bind.annotation.ResponseBody",
+                AnnotationName("org.springframework.web.bind.annotation.GetMapping"),
+                AnnotationName("org.springframework.web.bind.annotation.ResponseBody"),
             ),
         )
 
@@ -407,8 +407,8 @@ class CallTreeBuilderTest {
 
         assertEquals(
             listOf(
-                AnnotationTag("org.springframework.web.bind.annotation.GetMapping", "spring"),
-                AnnotationTag("org.springframework.web.bind.annotation.ResponseBody", "spring"),
+                AnnotationTag(AnnotationName("org.springframework.web.bind.annotation.GetMapping"), "spring"),
+                AnnotationTag(AnnotationName("org.springframework.web.bind.annotation.ResponseBody"), "spring"),
             ),
             result[0].annotations.sortedBy { it.name },
         )
@@ -422,7 +422,7 @@ class CallTreeBuilderTest {
             sourceFiles = mapOf(ClassName("com.example.Controller") to "Controller.kt"),
         )
         val classAnnotations = mapOf(
-            ClassName("com.example.Controller") to setOf("org.springframework.web.bind.annotation.RestController"),
+            ClassName("com.example.Controller") to setOf(AnnotationName("org.springframework.web.bind.annotation.RestController")),
         )
 
         val result = CallTreeBuilder.build(
@@ -431,7 +431,7 @@ class CallTreeBuilderTest {
         )
 
         assertEquals(
-            listOf(AnnotationTag("org.springframework.web.bind.annotation.RestController", "spring")),
+            listOf(AnnotationTag(AnnotationName("org.springframework.web.bind.annotation.RestController"), "spring")),
             result[0].annotations,
         )
     }
@@ -455,7 +455,7 @@ class CallTreeBuilderTest {
             sourceFiles = mapOf(ClassName("com.example.Controller") to "Controller.kt"),
         )
         val methodAnnotations = mapOf(
-            caller to setOf("org.springframework.web.bind.annotation.GetMapping"),
+            caller to setOf(AnnotationName("org.springframework.web.bind.annotation.GetMapping")),
         )
 
         val result = CallTreeBuilder.build(
@@ -464,7 +464,7 @@ class CallTreeBuilderTest {
         )
 
         assertEquals(
-            listOf(AnnotationTag("org.springframework.web.bind.annotation.GetMapping", "spring")),
+            listOf(AnnotationTag(AnnotationName("org.springframework.web.bind.annotation.GetMapping"), "spring")),
             result[0].children[0].annotations,
         )
     }
@@ -477,7 +477,7 @@ class CallTreeBuilderTest {
             sourceFiles = mapOf(ClassName("com.example.Controller") to "Controller.kt"),
         )
         val methodAnnotations = mapOf(
-            target to setOf("com.example.CustomAnnotation"),
+            target to setOf(AnnotationName("com.example.CustomAnnotation")),
         )
 
         val result = CallTreeBuilder.build(
@@ -485,7 +485,7 @@ class CallTreeBuilderTest {
             methodAnnotations = methodAnnotations,
         )
 
-        assertEquals(listOf(AnnotationTag("com.example.CustomAnnotation", null)), result[0].annotations)
+        assertEquals(listOf(AnnotationTag(AnnotationName("com.example.CustomAnnotation"), null)), result[0].annotations)
     }
 
     @Test
@@ -496,7 +496,7 @@ class CallTreeBuilderTest {
             sourceFiles = mapOf(ClassName("com.example.Controller") to "Controller.kt"),
         )
         val methodAnnotations = mapOf(
-            target to setOf("org.springframework.web.bind.annotation.GetMapping", "com.example.CustomAnnotation"),
+            target to setOf(AnnotationName("org.springframework.web.bind.annotation.GetMapping"), AnnotationName("com.example.CustomAnnotation")),
         )
 
         val result = CallTreeBuilder.build(
@@ -506,8 +506,8 @@ class CallTreeBuilderTest {
 
         assertEquals(
             listOf(
-                AnnotationTag("com.example.CustomAnnotation", null),
-                AnnotationTag("org.springframework.web.bind.annotation.GetMapping", "spring"),
+                AnnotationTag(AnnotationName("com.example.CustomAnnotation"), null),
+                AnnotationTag(AnnotationName("org.springframework.web.bind.annotation.GetMapping"), "spring"),
             ),
             result[0].annotations,
         )

@@ -130,11 +130,11 @@ object LlmFormatter {
             buildString {
                 append("${match.className.value} ${match.sourceFile ?: "<unknown>"}")
                 if (match.classAnnotations.isNotEmpty()) {
-                    append(" ${match.classAnnotations.sorted().joinToString(",") { "@$it" }}")
+                    append(" ${match.classAnnotations.sorted().joinToString(",") { "@${it.simpleName()}" }}")
                 }
                 for (method in match.matchedMethods) {
                     appendLine()
-                    append("  ${method.method.methodName} ${method.annotations.sorted().joinToString(",") { "@$it" }}")
+                    append("  ${method.method.methodName} ${method.annotations.sorted().joinToString(",") { "@${it.simpleName()}" }}")
                 }
             }
         }
@@ -245,11 +245,11 @@ object LlmFormatter {
     private fun formatAnnotationTags(annotations: List<AnnotationTag>): String =
         if (annotations.isEmpty()) "" else " [${annotations.joinToString(", ") { tag ->
             val suffix = if (tag.framework != null) " [${tag.framework}]" else ""
-            "@${tag.name}$suffix"
+            "@${tag.name.simpleName()}$suffix"
         }}]"
 
     private fun formatAnnotation(annotation: AnnotationDetail): String = buildString {
-        append("@${annotation.name}")
+        append("@${annotation.name.simpleName()}")
         if (annotation.parameters.isNotEmpty()) {
             val params = annotation.parameters.entries.joinToString(",") { "${it.key}=\"${it.value}\"" }
             append("($params)")

@@ -11,8 +11,8 @@ import java.io.File
 data class AnnotationScanResult(
     val className: ClassName,
     val sourceFile: String?,
-    val classAnnotations: Set<String>,
-    val methodAnnotations: Map<MethodRef, Set<String>>,
+    val classAnnotations: Set<AnnotationName>,
+    val methodAnnotations: Map<MethodRef, Set<AnnotationName>>,
 )
 
 /**
@@ -26,8 +26,8 @@ object AnnotationExtractor {
         val reader = createClassReader(classFile)
         var className = ClassName("")
         var sourceFile: String? = null
-        val classAnnotations = mutableSetOf<String>()
-        val methodAnnotations = mutableMapOf<MethodRef, Set<String>>()
+        val classAnnotations = mutableSetOf<AnnotationName>()
+        val methodAnnotations = mutableMapOf<MethodRef, Set<AnnotationName>>()
 
         reader.accept(
             object : ClassVisitor(Opcodes.ASM9) {
@@ -64,7 +64,7 @@ object AnnotationExtractor {
                         return null
                     }
                     val methodRef = MethodRef(className, name)
-                    val annotations = mutableSetOf<String>()
+                    val annotations = mutableSetOf<AnnotationName>()
 
                     return object : MethodVisitor(Opcodes.ASM9) {
                         override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor? {
@@ -98,9 +98,9 @@ object AnnotationExtractor {
      * and method-level annotation maps. Only includes entries that have
      * at least one annotation.
      */
-    fun scanAll(classDirectories: List<File>): Pair<Map<ClassName, Set<String>>, Map<MethodRef, Set<String>>> {
-        val classAnnotations = mutableMapOf<ClassName, Set<String>>()
-        val methodAnnotations = mutableMapOf<MethodRef, Set<String>>()
+    fun scanAll(classDirectories: List<File>): Pair<Map<ClassName, Set<AnnotationName>>, Map<MethodRef, Set<AnnotationName>>> {
+        val classAnnotations = mutableMapOf<ClassName, Set<AnnotationName>>()
+        val methodAnnotations = mutableMapOf<MethodRef, Set<AnnotationName>>()
 
         for (dir in classDirectories) {
             dir.walk()
@@ -121,6 +121,6 @@ object AnnotationExtractor {
         return Pair(classAnnotations, methodAnnotations)
     }
 
-    private fun annotationFqn(descriptor: String): String =
-        Type.getType(descriptor).className
+    private fun annotationFqn(descriptor: String): AnnotationName =
+        AnnotationName(Type.getType(descriptor).className)
 }

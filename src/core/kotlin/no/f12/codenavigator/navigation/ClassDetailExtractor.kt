@@ -10,7 +10,7 @@ import org.objectweb.asm.Type
 import java.io.File
 
 data class AnnotationDetail(
-    val name: String,
+    val name: AnnotationName,
     val parameters: Map<String, String>,
 )
 
@@ -158,8 +158,8 @@ object ClassDetailExtractor {
         else -> type.className
     }
 
-    private fun annotationFqn(descriptor: String): String =
-        Type.getType(descriptor).className
+    private fun annotationFqn(descriptor: String): AnnotationName =
+        AnnotationName(Type.getType(descriptor).className)
 
     private fun typeSimpleName(descriptor: String): String =
         Type.getType(descriptor).className.substringAfterLast('.')

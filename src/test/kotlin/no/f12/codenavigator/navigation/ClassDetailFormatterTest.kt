@@ -173,8 +173,8 @@ class ClassDetailFormatterTest {
             fields = emptyList(),
             methods = listOf(MethodDetail("doWork", emptyList(), "void", emptyList())),
             annotations = listOf(
-                AnnotationDetail("Service", emptyMap()),
-                AnnotationDetail("Transactional", emptyMap()),
+                AnnotationDetail(AnnotationName("Service"), emptyMap()),
+                AnnotationDetail(AnnotationName("Transactional"), emptyMap()),
             ),
         )
 
@@ -202,7 +202,7 @@ class ClassDetailFormatterTest {
             fields = emptyList(),
             methods = listOf(
                 MethodDetail("resilientCall", emptyList(), "void", listOf(
-                    AnnotationDetail("CircuitBreaker", mapOf("name" to "backend")),
+                    AnnotationDetail(AnnotationName("CircuitBreaker"), mapOf("name" to "backend")),
                 )),
                 MethodDetail("doWork", emptyList(), "void", emptyList()),
             ),
@@ -230,7 +230,7 @@ class ClassDetailFormatterTest {
             superClass = null,
             interfaces = emptyList(),
             fields = listOf(
-                FieldDetail("repo", "Repository", listOf(AnnotationDetail("Inject", emptyMap()))),
+                FieldDetail("repo", "Repository", listOf(AnnotationDetail(AnnotationName("Inject"), emptyMap()))),
                 FieldDetail("name", "String", emptyList()),
             ),
             methods = emptyList(),

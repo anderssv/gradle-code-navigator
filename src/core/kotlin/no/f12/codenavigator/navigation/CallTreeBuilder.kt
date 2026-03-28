@@ -1,7 +1,7 @@
 package no.f12.codenavigator.navigation
 
 data class AnnotationTag(
-    val name: String,
+    val name: AnnotationName,
     val framework: String? = null,
 )
 
@@ -23,8 +23,8 @@ object CallTreeBuilder {
         filter: ((MethodRef) -> Boolean)? = null,
         interfaceImplementors: Map<ClassName, Set<ClassName>> = emptyMap(),
         classToInterfaces: Map<ClassName, Set<ClassName>> = emptyMap(),
-        classAnnotations: Map<ClassName, Set<String>> = emptyMap(),
-        methodAnnotations: Map<MethodRef, Set<String>> = emptyMap(),
+        classAnnotations: Map<ClassName, Set<AnnotationName>> = emptyMap(),
+        methodAnnotations: Map<MethodRef, Set<AnnotationName>> = emptyMap(),
     ): List<CallTreeNode> {
         return roots.map { method ->
             buildNode(graph, method, maxDepth, direction, depth = 0, visited = mutableSetOf(), filter = filter, interfaceImplementors = interfaceImplementors, classToInterfaces = classToInterfaces, classAnnotations = classAnnotations, methodAnnotations = methodAnnotations)
@@ -41,8 +41,8 @@ object CallTreeBuilder {
         filter: ((MethodRef) -> Boolean)?,
         interfaceImplementors: Map<ClassName, Set<ClassName>>,
         classToInterfaces: Map<ClassName, Set<ClassName>>,
-        classAnnotations: Map<ClassName, Set<String>>,
-        methodAnnotations: Map<MethodRef, Set<String>>,
+        classAnnotations: Map<ClassName, Set<AnnotationName>>,
+        methodAnnotations: Map<MethodRef, Set<AnnotationName>>,
     ): CallTreeNode {
         val sourceFile = graph.sourceFileOf(method.className)
         val lineNumber = graph.lineNumberOf(method)
@@ -66,8 +66,8 @@ object CallTreeBuilder {
 
     private fun resolveAnnotations(
         method: MethodRef,
-        classAnnotations: Map<ClassName, Set<String>>,
-        methodAnnotations: Map<MethodRef, Set<String>>,
+        classAnnotations: Map<ClassName, Set<AnnotationName>>,
+        methodAnnotations: Map<MethodRef, Set<AnnotationName>>,
     ): List<AnnotationTag> {
         val names = methodAnnotations[method]
             ?: classAnnotations[method.className]

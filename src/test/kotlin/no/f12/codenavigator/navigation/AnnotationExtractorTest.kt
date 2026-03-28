@@ -24,7 +24,7 @@ class AnnotationExtractorTest {
 
         val result = AnnotationExtractor.extract(classFile)
 
-        assertEquals(setOf("org.springframework.web.bind.annotation.RestController"), result.classAnnotations)
+        assertEquals(setOf(AnnotationName("org.springframework.web.bind.annotation.RestController")), result.classAnnotations)
     }
 
     @Test
@@ -40,7 +40,7 @@ class AnnotationExtractorTest {
         val result = AnnotationExtractor.extract(classFile)
 
         val methodRef = MethodRef(ClassName("com.example.MyService"), "process")
-        assertEquals(setOf("org.springframework.scheduling.annotation.Scheduled"), result.methodAnnotations[methodRef])
+        assertEquals(setOf(AnnotationName("org.springframework.scheduling.annotation.Scheduled")), result.methodAnnotations[methodRef])
     }
 
     @Test
@@ -60,12 +60,12 @@ class AnnotationExtractorTest {
         val result = AnnotationExtractor.extract(classFile)
 
         assertEquals(
-            setOf("org.springframework.web.bind.annotation.RestController", "org.springframework.stereotype.Component"),
+            setOf(AnnotationName("org.springframework.web.bind.annotation.RestController"), AnnotationName("org.springframework.stereotype.Component")),
             result.classAnnotations,
         )
         val methodRef = MethodRef(ClassName("com.example.MyController"), "handle")
         assertEquals(
-            setOf("org.springframework.web.bind.annotation.GetMapping", "io.micrometer.core.annotation.Timed"),
+            setOf(AnnotationName("org.springframework.web.bind.annotation.GetMapping"), AnnotationName("io.micrometer.core.annotation.Timed")),
             result.methodAnnotations[methodRef],
         )
     }
@@ -120,18 +120,18 @@ class AnnotationExtractorTest {
         val (classAnnotations, methodAnnotations) = AnnotationExtractor.scanAll(listOf(dir))
 
         assertEquals(
-            setOf("org.springframework.web.bind.annotation.RestController"),
+            setOf(AnnotationName("org.springframework.web.bind.annotation.RestController")),
             classAnnotations[ClassName("com.example.Controller")],
         )
         assertEquals(
-            setOf("org.springframework.stereotype.Service"),
+            setOf(AnnotationName("org.springframework.stereotype.Service")),
             classAnnotations[ClassName("com.example.Service")],
         )
         assertTrue(ClassName("com.example.Plain") !in classAnnotations)
 
         val handleRef = MethodRef(ClassName("com.example.Controller"), "handle")
         assertEquals(
-            setOf("org.springframework.web.bind.annotation.GetMapping"),
+            setOf(AnnotationName("org.springframework.web.bind.annotation.GetMapping")),
             methodAnnotations[handleRef],
         )
     }

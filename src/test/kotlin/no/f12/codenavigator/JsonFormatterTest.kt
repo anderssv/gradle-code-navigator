@@ -4,6 +4,7 @@ import no.f12.codenavigator.analysis.CoupledPair
 import no.f12.codenavigator.analysis.FileChurn
 import no.f12.codenavigator.analysis.Hotspot
 import no.f12.codenavigator.navigation.AnnotationDetail
+import no.f12.codenavigator.navigation.AnnotationName
 import no.f12.codenavigator.navigation.CallDirection
 import no.f12.codenavigator.navigation.CallGraph
 import no.f12.codenavigator.navigation.CallTreeBuilder
@@ -192,11 +193,11 @@ class JsonFormatterTest {
                 sourceFile = "Annotated.kt",
                 superClass = null,
                 interfaces = emptyList(),
-                fields = listOf(FieldDetail("repo", "Repository", listOf(AnnotationDetail("Inject", emptyMap())))),
+                fields = listOf(FieldDetail("repo", "Repository", listOf(AnnotationDetail(AnnotationName("Inject"), emptyMap())))),
                 methods = listOf(MethodDetail("find", emptyList(), "User", listOf(
-                    AnnotationDetail("Cacheable", mapOf("value" to "users")),
+                    AnnotationDetail(AnnotationName("Cacheable"), mapOf("value" to "users")),
                 ))),
-                annotations = listOf(AnnotationDetail("Service", emptyMap())),
+                annotations = listOf(AnnotationDetail(AnnotationName("Service"), emptyMap())),
             ),
         )
 
@@ -822,7 +823,7 @@ class JsonFormatterTest {
             AnnotationMatch(
                 className = ClassName("com.example.MyController"),
                 sourceFile = "MyController.kt",
-                classAnnotations = setOf("RestController"),
+                classAnnotations = setOf(AnnotationName("RestController")),
                 matchedMethods = emptyList(),
             ),
         )
@@ -841,11 +842,11 @@ class JsonFormatterTest {
             AnnotationMatch(
                 className = ClassName("com.example.MyController"),
                 sourceFile = "MyController.kt",
-                classAnnotations = setOf("RestController"),
+                classAnnotations = setOf(AnnotationName("RestController")),
                 matchedMethods = listOf(
                     MethodAnnotationMatch(
                         method = MethodRef(ClassName("com.example.MyController"), "getUsers"),
-                        annotations = setOf("GetMapping"),
+                        annotations = setOf(AnnotationName("GetMapping")),
                     ),
                 ),
             ),
@@ -872,7 +873,7 @@ class JsonFormatterTest {
                 sourceFile = "Controller.kt",
                 lineNumber = null,
                 children = emptyList(),
-                annotations = listOf(AnnotationTag("GetMapping", "spring"), AnnotationTag("ResponseBody", "spring")),
+                annotations = listOf(AnnotationTag(AnnotationName("GetMapping"), "spring"), AnnotationTag(AnnotationName("ResponseBody"), "spring")),
             ),
         )
 
@@ -891,8 +892,8 @@ class JsonFormatterTest {
                 lineNumber = null,
                 children = emptyList(),
                 annotations = listOf(
-                    AnnotationTag("GetMapping", "spring"),
-                    AnnotationTag("CustomAnnotation"),
+                    AnnotationTag(AnnotationName("GetMapping"), "spring"),
+                    AnnotationTag(AnnotationName("CustomAnnotation")),
                 ),
             ),
         )
@@ -930,7 +931,7 @@ class JsonFormatterTest {
             sourceFile = "Controller.kt",
             lineNumber = 42,
             children = emptyList(),
-            annotations = listOf(AnnotationTag("GetMapping", "spring")),
+                annotations = listOf(AnnotationTag(AnnotationName("GetMapping"), "spring")),
         )
         val trees = listOf(
             CallTreeNode(

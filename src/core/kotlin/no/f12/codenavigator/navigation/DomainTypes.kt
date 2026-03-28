@@ -65,6 +65,21 @@ value class ClassName(val value: String) : Comparable<ClassName> {
 }
 
 @JvmInline
+value class AnnotationName(val value: String) : Comparable<AnnotationName> {
+    fun simpleName(): String =
+        value.substringAfterLast('.')
+
+    fun packageName(): String =
+        value.substringBeforeLast('.', "")
+
+    fun matches(regex: Regex): Boolean = regex.containsMatchIn(value)
+
+    override fun compareTo(other: AnnotationName): Int = value.compareTo(other.value)
+
+    override fun toString(): String = value
+}
+
+@JvmInline
 value class PackageName(val value: String) : Comparable<PackageName> {
     fun isEmpty(): Boolean = value.isEmpty()
 
