@@ -208,3 +208,20 @@ Added interface dispatch resolution to `CallTreeBuilder` so that `cnavCallers` a
 **Wired into**: Gradle `FindCallersTask`, `FindCalleesTask` (via `InterfaceRegistryCache`), Maven `FindCallersMojo`, `FindCalleesMojo` (via `InterfaceRegistry.build()`). Added `implementorMap()` and `classToInterfacesMap()` convenience methods to `InterfaceRegistry`.
 
 **Tested on Spring Petclinic**: `find-callers` for `OwnerRepository.findById` now correctly shows callers from `OwnerController`, `PetController`, and `VisitController`. 5 new tests (3 in `CallTreeBuilderTest`, 2 in `InterfaceRegistryTest`).
+
+## ~~79. `cnavAnnotations` — query by annotation~~ DONE
+
+New task to query classes and methods by annotation pattern. Parameters: `-Ppattern=<annotation-name-regex>` (required), `-Pmethods=true` (show method-level matches, not just class-level).
+
+**Implementation**: Three-layer architecture following project conventions:
+- `AnnotationQueryConfig` — parses pattern (required) and methods flag (optional), 6 tests
+- `AnnotationQueryBuilder` — uses `AnnotationExtractor.scanAll()` results, filters with `regex.containsMatchIn()` (substring matching, consistent with all other tasks), returns `AnnotationMatch` / `MethodAnnotationMatch` data classes, 9 tests
+- `AnnotationQueryFormatter` — TEXT format output, 6 tests
+- `LlmFormatter.formatAnnotations()` — 3 tests
+- `JsonFormatter.formatAnnotations()` — 3 tests
+
+**Enhanced `AnnotationExtractor`** with `sourceFile` field via `visitSource()` callback, so results include source file locations.
+
+**Registered as**: `cnavAnnotations` (Gradle) / `cnav:annotations` (Maven). Added `METHODS` ParamDef and `ANNOTATIONS` TaskDef to `TaskRegistry` (26 goals total). Updated `BuildTool`, `HelpText`, `AgentHelpText`.
+
+**Tested on Spring Petclinic**: `cnav:annotations -Dpattern=Controller`, `-Dpattern=Mapping -Dmethods=true`, `-Dpattern=Entity -Dformat=json` all work correctly.

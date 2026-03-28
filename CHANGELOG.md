@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.38
+
+- **New:** `cnavAnnotations` task / `cnav:annotations` goal — query classes and methods by annotation pattern. Parameters: `-Ppattern=<annotation-name-regex>` (required), `-Pmethods=true` (show method-level matches). Finds all classes/methods bearing matching annotations with source file locations. Supports TEXT, JSON, and LLM output formats. Useful for endpoint discovery (`@GetMapping`), transaction boundary analysis (`@Transactional`), async method inventory (`@Async`), and more.
+- **Improved:** `cnavCallers`/`cnavCallees` — interface dispatch resolution. When tracing callers of `Impl.method()`, also finds callers of `Interface.method()` where `Impl` implements `Interface`. When tracing callees from a call to `Interface.method()`, shows concrete implementor methods. Always on — no flag needed. Fixes a major gap in Spring/DI-heavy codebases where calls go through interfaces.
+- **Improved:** `cnavDead` — framework annotation presets. New `-Pframework=spring|jpa|jackson` parameter auto-excludes known framework annotations from dead code results. Multiple presets can be combined (`-Pframework=spring,jackson`). The Spring preset includes Controller, Service, Component, Repository, Configuration, Bean, Entity, and 15+ more annotations. Reduces false positives significantly in framework-heavy projects.
+- **Improved:** `cnavDead` — `package-info` classes are now automatically filtered from dead code results (they are metadata-only and never referenced by other classes).
+- **Improved:** `cnavDead` — dead code reason tagging. Added `reason` field (`NO_REFERENCES` or `TEST_ONLY`) and `-Pprod-only=true` filter to distinguish "never referenced anywhere" from "only used in tests."
+
 ## 0.1.37
 
 - **Improved:** Dead code detection — external interface confidence flagging. Dead methods on classes that implement interfaces from outside the project scope (e.g. `javax.xml.bind.XmlAdapter`, `com.sksamuel.hoplite.Decoder`, `javax.net.ssl.HostnameVerifier`) are now flagged with LOW confidence instead of HIGH, since they are likely invoked by frameworks via reflection. Dead classes are not affected — if no one constructs the class, the external interface doesn't help.

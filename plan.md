@@ -242,7 +242,7 @@ Spring Data repositories (e.g., `OwnerRepository extends JpaRepository`) are int
 - **Alternative**: Subsumable by item 76 (meta-annotation traversal) if `@Repository` is on the interface. But many Spring Data repos don't have `@Repository` — the `extends JpaRepository` is sufficient for Spring to pick them up.
 - **Relationship to item 75**: Framework presets would handle `@Repository`-annotated repos, but this item catches the common pattern where `@Repository` is omitted.
 
-### 79. `cnavAnnotations` — query by annotation (Medium value, low effort)
+### ~~79. `cnavAnnotations` — query by annotation~~ DONE
 
 No task currently answers "find all `@Transactional` methods" or "find all `@GetMapping` endpoints." The annotation extraction infrastructure exists (`AnnotationExtractor`, `ClassDetailExtractor`) but no task exposes it as a query.
 
