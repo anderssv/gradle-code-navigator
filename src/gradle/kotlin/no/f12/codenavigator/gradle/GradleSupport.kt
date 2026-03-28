@@ -15,7 +15,7 @@ fun Project.buildPropertyMap(
     return taskDef.enhanceProperties(raw)
 }
 
-fun Project.buildPropertyMap(
+private fun Project.buildPropertyMap(
     propertyNames: List<String>,
     flagNames: List<String>,
 ): Map<String, String?> {
