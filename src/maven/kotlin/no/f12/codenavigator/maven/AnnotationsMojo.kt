@@ -4,6 +4,7 @@ import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
 import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
+import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.navigation.AnnotationQueryBuilder
 import no.f12.codenavigator.navigation.AnnotationQueryConfig
 import no.f12.codenavigator.navigation.AnnotationQueryFormatter
@@ -37,7 +38,7 @@ class AnnotationsMojo : AbstractMojo() {
 
     override fun execute() {
         val config = try {
-            AnnotationQueryConfig.parse(buildPropertyMap())
+            AnnotationQueryConfig.parse(TaskRegistry.ANNOTATIONS.enhanceProperties(buildPropertyMap()))
         } catch (e: IllegalArgumentException) {
             throw MojoFailureException(
                 "Missing required property. Usage: mvn cnav:annotations -Dpattern=<regex> [-Dmethods=true]",

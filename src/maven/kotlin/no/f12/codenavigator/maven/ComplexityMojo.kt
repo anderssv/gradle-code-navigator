@@ -4,6 +4,7 @@ import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
 import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
+import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.navigation.CallGraphBuilder
 import no.f12.codenavigator.navigation.ClassComplexityAnalyzer
 import no.f12.codenavigator.navigation.ComplexityConfig
@@ -55,7 +56,7 @@ class ComplexityMojo : AbstractMojo() {
         }
 
         val config = try {
-            ComplexityConfig.parse(buildPropertyMap())
+            ComplexityConfig.parse(TaskRegistry.COMPLEXITY.enhanceProperties(buildPropertyMap()))
         } catch (e: IllegalArgumentException) {
             throw MojoFailureException(e.message)
         }

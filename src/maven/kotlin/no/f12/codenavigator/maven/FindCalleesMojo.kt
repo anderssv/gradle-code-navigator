@@ -4,6 +4,7 @@ import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
 import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
+import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.navigation.AnnotationExtractor
 import no.f12.codenavigator.navigation.CallDirection
 import no.f12.codenavigator.navigation.CallGraphBuilder
@@ -48,7 +49,7 @@ class FindCalleesMojo : AbstractMojo() {
 
     override fun execute() {
         val config = try {
-            CallGraphConfig.parse(buildPropertyMap())
+            CallGraphConfig.parse(TaskRegistry.FIND_CALLEES.enhanceProperties(buildPropertyMap()))
         } catch (e: IllegalArgumentException) {
             throw MojoFailureException(
                 "Missing required property. Usage: mvn cnav:find-callees -Dpattern=<regex> -Dmaxdepth=3",
