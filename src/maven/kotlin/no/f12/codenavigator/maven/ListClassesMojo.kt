@@ -4,8 +4,8 @@ import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TableFormatter
-import no.f12.codenavigator.navigation.ClassScanner
-import no.f12.codenavigator.navigation.ListClassesConfig
+import no.f12.codenavigator.navigation.classinfo.ClassScanner
+import no.f12.codenavigator.navigation.classinfo.ListClassesConfig
 import no.f12.codenavigator.navigation.SkippedFileReporter
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugins.annotations.Execute

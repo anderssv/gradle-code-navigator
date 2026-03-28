@@ -1,5 +1,7 @@
 package no.f12.codenavigator.navigation
 
+import no.f12.codenavigator.navigation.callgraph.CallGraph
+import no.f12.codenavigator.navigation.callgraph.MethodRef
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

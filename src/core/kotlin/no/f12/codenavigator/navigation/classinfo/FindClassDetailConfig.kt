@@ -1,4 +1,4 @@
-package no.f12.codenavigator.navigation
+package no.f12.codenavigator.navigation.classinfo
 
 import no.f12.codenavigator.ParamDef
 import no.f12.codenavigator.config.OutputFormat

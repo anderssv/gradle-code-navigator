@@ -5,13 +5,13 @@ import no.f12.codenavigator.LlmFormatter
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.navigation.annotation.AnnotationExtractor
-import no.f12.codenavigator.navigation.CallGraphCache
+import no.f12.codenavigator.navigation.callgraph.CallGraphCache
 import no.f12.codenavigator.navigation.ClassName
-import no.f12.codenavigator.navigation.DeadCodeConfig
-import no.f12.codenavigator.navigation.DeadCodeFinder
-import no.f12.codenavigator.navigation.DeadCodeFormatter
-import no.f12.codenavigator.navigation.FieldExtractor
-import no.f12.codenavigator.navigation.InlineMethodDetector
+import no.f12.codenavigator.navigation.deadcode.DeadCodeConfig
+import no.f12.codenavigator.navigation.deadcode.DeadCodeFinder
+import no.f12.codenavigator.navigation.deadcode.DeadCodeFormatter
+import no.f12.codenavigator.navigation.deadcode.FieldExtractor
+import no.f12.codenavigator.navigation.deadcode.InlineMethodDetector
 import no.f12.codenavigator.navigation.interfaces.InterfaceRegistryCache
 import no.f12.codenavigator.navigation.SkippedFileReporter
 

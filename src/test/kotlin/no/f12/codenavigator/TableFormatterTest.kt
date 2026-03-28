@@ -1,6 +1,6 @@
 package no.f12.codenavigator
 
-import no.f12.codenavigator.navigation.ClassInfo
+import no.f12.codenavigator.navigation.classinfo.ClassInfo
 import no.f12.codenavigator.navigation.ClassName
 import kotlin.test.Test
 import kotlin.test.assertEquals

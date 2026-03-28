@@ -1,5 +1,6 @@
 package no.f12.codenavigator.navigation
 
+import no.f12.codenavigator.navigation.classinfo.ClassInfoExtractor
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
 import kotlin.test.Test

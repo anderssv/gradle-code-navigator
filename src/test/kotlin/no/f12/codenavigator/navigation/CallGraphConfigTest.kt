@@ -1,5 +1,8 @@
 package no.f12.codenavigator.navigation
 
+import no.f12.codenavigator.navigation.callgraph.CallGraph
+import no.f12.codenavigator.navigation.callgraph.CallGraphConfig
+import no.f12.codenavigator.navigation.callgraph.MethodRef
 import no.f12.codenavigator.config.OutputFormat
 import kotlin.test.Test
 import kotlin.test.assertEquals

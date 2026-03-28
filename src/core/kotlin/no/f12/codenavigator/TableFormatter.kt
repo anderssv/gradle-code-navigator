@@ -1,6 +1,6 @@
 package no.f12.codenavigator
 
-import no.f12.codenavigator.navigation.ClassInfo
+import no.f12.codenavigator.navigation.classinfo.ClassInfo
 
 object TableFormatter {
     fun format(classes: List<ClassInfo>): String {

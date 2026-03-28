@@ -1,5 +1,7 @@
-package no.f12.codenavigator.navigation
+package no.f12.codenavigator.navigation.callgraph
 
+import no.f12.codenavigator.navigation.AnnotationName
+import no.f12.codenavigator.navigation.ClassName
 import no.f12.codenavigator.navigation.annotation.FrameworkPresets
 
 data class AnnotationTag(

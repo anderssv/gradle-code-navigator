@@ -1,12 +1,12 @@
-package no.f12.codenavigator.navigation
+package no.f12.codenavigator.navigation.classinfo
 
+import no.f12.codenavigator.navigation.ScanResult
+import no.f12.codenavigator.navigation.UnsupportedBytecodeVersionException
 import java.io.File
 
-object ClassDetailScanner {
-
-    fun scan(classDirectories: List<File>, pattern: String): ScanResult<List<ClassDetail>> {
-        val regex = Regex(pattern, RegexOption.IGNORE_CASE)
-        val details = mutableListOf<ClassDetail>()
+object ClassScanner {
+    fun scan(classDirectories: List<File>): ScanResult<List<ClassInfo>> {
+        val classes = mutableListOf<ClassInfo>()
         val skipped = mutableListOf<UnsupportedBytecodeVersionException>()
 
         classDirectories
@@ -17,8 +17,8 @@ object ClassDetailScanner {
                     .forEach { classFile ->
                         try {
                             val info = ClassInfoExtractor.extract(classFile)
-                            if (info.isUserDefinedClass && info.className.matches(regex)) {
-                                details.add(ClassDetailExtractor.extract(classFile))
+                            if (info.isUserDefinedClass) {
+                                classes.add(info)
                             }
                         } catch (e: UnsupportedBytecodeVersionException) {
                             skipped.add(e)
@@ -27,7 +27,7 @@ object ClassDetailScanner {
             }
 
         return ScanResult(
-            data = details.sortedBy { it.className },
+            data = classes.sortedBy { it.className },
             skippedFiles = skipped,
         )
     }

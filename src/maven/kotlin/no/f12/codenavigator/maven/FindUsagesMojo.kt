@@ -4,10 +4,10 @@ import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
-import no.f12.codenavigator.navigation.FindUsagesConfig
+import no.f12.codenavigator.navigation.callgraph.FindUsagesConfig
 import no.f12.codenavigator.navigation.SkippedFileReporter
-import no.f12.codenavigator.navigation.UsageFormatter
-import no.f12.codenavigator.navigation.UsageScanner
+import no.f12.codenavigator.navigation.callgraph.UsageFormatter
+import no.f12.codenavigator.navigation.callgraph.UsageScanner
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoFailureException
 import org.apache.maven.plugins.annotations.Execute

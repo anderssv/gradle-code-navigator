@@ -7,10 +7,10 @@ import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.analysis.GitLogRunner
 import no.f12.codenavigator.analysis.HotspotBuilder
 import no.f12.codenavigator.navigation.annotation.AnnotationExtractor
-import no.f12.codenavigator.navigation.CallGraphCache
-import no.f12.codenavigator.navigation.ClassScanner
+import no.f12.codenavigator.navigation.callgraph.CallGraphCache
+import no.f12.codenavigator.navigation.classinfo.ClassScanner
 import no.f12.codenavigator.navigation.CycleDetector
-import no.f12.codenavigator.navigation.DeadCodeFinder
+import no.f12.codenavigator.navigation.deadcode.DeadCodeFinder
 import no.f12.codenavigator.navigation.DsmDependencyExtractor
 import no.f12.codenavigator.navigation.DsmMatrixBuilder
 import no.f12.codenavigator.navigation.MetricsBuilder

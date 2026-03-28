@@ -1,5 +1,8 @@
 package no.f12.codenavigator.navigation
 
+import no.f12.codenavigator.navigation.callgraph.CallGraph
+import no.f12.codenavigator.navigation.callgraph.MethodRef
+
 class PackageDependencies(
     private val packageToDeps: Map<PackageName, List<PackageName>>,
 ) {

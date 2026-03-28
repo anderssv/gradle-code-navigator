@@ -1,5 +1,7 @@
 package no.f12.codenavigator.navigation
 
+import no.f12.codenavigator.navigation.classinfo.ClassIndexCache
+import no.f12.codenavigator.navigation.classinfo.ClassInfo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.io.TempDir
 import org.objectweb.asm.ClassWriter

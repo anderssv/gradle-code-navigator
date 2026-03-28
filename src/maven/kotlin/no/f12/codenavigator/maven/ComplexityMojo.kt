@@ -4,7 +4,7 @@ import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
-import no.f12.codenavigator.navigation.CallGraphBuilder
+import no.f12.codenavigator.navigation.callgraph.CallGraphBuilder
 import no.f12.codenavigator.navigation.complexity.ClassComplexityAnalyzer
 import no.f12.codenavigator.navigation.complexity.ComplexityConfig
 import no.f12.codenavigator.navigation.complexity.ComplexityFormatter

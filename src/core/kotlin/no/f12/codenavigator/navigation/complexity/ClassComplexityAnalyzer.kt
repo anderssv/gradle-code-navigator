@@ -1,6 +1,6 @@
 package no.f12.codenavigator.navigation.complexity
 
-import no.f12.codenavigator.navigation.CallGraph
+import no.f12.codenavigator.navigation.callgraph.CallGraph
 import no.f12.codenavigator.navigation.ClassName
 
 data class ClassComplexity(

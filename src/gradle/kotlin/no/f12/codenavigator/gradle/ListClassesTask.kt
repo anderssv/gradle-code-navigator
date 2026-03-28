@@ -5,8 +5,8 @@ import no.f12.codenavigator.LlmFormatter
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TableFormatter
 import no.f12.codenavigator.TaskRegistry
-import no.f12.codenavigator.navigation.ClassIndexCache
-import no.f12.codenavigator.navigation.ListClassesConfig
+import no.f12.codenavigator.navigation.classinfo.ClassIndexCache
+import no.f12.codenavigator.navigation.classinfo.ListClassesConfig
 import no.f12.codenavigator.navigation.SkippedFileReporter
 
 import org.gradle.api.DefaultTask

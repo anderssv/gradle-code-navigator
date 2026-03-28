@@ -1,5 +1,8 @@
 package no.f12.codenavigator.navigation
 
+import no.f12.codenavigator.navigation.callgraph.UsageKind
+import no.f12.codenavigator.navigation.callgraph.UsageScanner
+import no.f12.codenavigator.navigation.callgraph.UsageSite
 import org.objectweb.asm.Opcodes
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.io.TempDir

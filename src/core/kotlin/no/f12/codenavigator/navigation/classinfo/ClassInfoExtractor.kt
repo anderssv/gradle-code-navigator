@@ -1,4 +1,7 @@
-package no.f12.codenavigator.navigation
+package no.f12.codenavigator.navigation.classinfo
+
+import no.f12.codenavigator.navigation.ClassName
+import no.f12.codenavigator.navigation.createClassReader
 
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor

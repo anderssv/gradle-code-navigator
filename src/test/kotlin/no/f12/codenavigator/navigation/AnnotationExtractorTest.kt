@@ -1,5 +1,6 @@
 package no.f12.codenavigator.navigation
 
+import no.f12.codenavigator.navigation.callgraph.MethodRef
 import no.f12.codenavigator.navigation.annotation.AnnotationExtractor
 import org.objectweb.asm.AnnotationVisitor
 import org.objectweb.asm.Opcodes

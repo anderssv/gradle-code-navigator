@@ -4,7 +4,7 @@ import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
-import no.f12.codenavigator.navigation.CallGraphCache
+import no.f12.codenavigator.navigation.callgraph.CallGraphCache
 import no.f12.codenavigator.navigation.SkippedFileReporter
 import no.f12.codenavigator.navigation.rank.RankConfig
 import no.f12.codenavigator.navigation.rank.RankFormatter

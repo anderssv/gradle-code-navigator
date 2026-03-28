@@ -4,9 +4,9 @@ import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
-import no.f12.codenavigator.navigation.ClassDetailFormatter
-import no.f12.codenavigator.navigation.ClassDetailScanner
-import no.f12.codenavigator.navigation.FindClassDetailConfig
+import no.f12.codenavigator.navigation.classinfo.ClassDetailFormatter
+import no.f12.codenavigator.navigation.classinfo.ClassDetailScanner
+import no.f12.codenavigator.navigation.classinfo.FindClassDetailConfig
 import no.f12.codenavigator.navigation.SkippedFileReporter
 
 import org.gradle.api.DefaultTask

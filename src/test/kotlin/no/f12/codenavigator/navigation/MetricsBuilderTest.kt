@@ -1,6 +1,11 @@
 package no.f12.codenavigator.navigation
 
 import no.f12.codenavigator.analysis.Hotspot
+import no.f12.codenavigator.navigation.classinfo.ClassInfo
+import no.f12.codenavigator.navigation.deadcode.DeadCode
+import no.f12.codenavigator.navigation.deadcode.DeadCodeConfidence
+import no.f12.codenavigator.navigation.deadcode.DeadCodeKind
+import no.f12.codenavigator.navigation.deadcode.DeadCodeReason
 import no.f12.codenavigator.navigation.rank.RankedType
 import kotlin.test.Test
 import kotlin.test.assertEquals

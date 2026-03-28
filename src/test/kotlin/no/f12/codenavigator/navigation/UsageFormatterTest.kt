@@ -1,5 +1,8 @@
 package no.f12.codenavigator.navigation
 
+import no.f12.codenavigator.navigation.callgraph.UsageFormatter
+import no.f12.codenavigator.navigation.callgraph.UsageKind
+import no.f12.codenavigator.navigation.callgraph.UsageSite
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
 import kotlin.test.Test

@@ -1,5 +1,10 @@
 package no.f12.codenavigator.navigation
 
+import no.f12.codenavigator.navigation.classinfo.AnnotationDetail
+import no.f12.codenavigator.navigation.classinfo.ClassDetail
+import no.f12.codenavigator.navigation.classinfo.ClassDetailFormatter
+import no.f12.codenavigator.navigation.classinfo.FieldDetail
+import no.f12.codenavigator.navigation.classinfo.MethodDetail
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

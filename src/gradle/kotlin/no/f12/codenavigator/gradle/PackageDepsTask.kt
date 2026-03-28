@@ -4,8 +4,8 @@ import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
-import no.f12.codenavigator.navigation.CallGraphCache
-import no.f12.codenavigator.navigation.MethodRef
+import no.f12.codenavigator.navigation.callgraph.CallGraphCache
+import no.f12.codenavigator.navigation.callgraph.MethodRef
 import no.f12.codenavigator.navigation.PackageDependencyBuilder
 import no.f12.codenavigator.navigation.PackageDependencyFormatter
 import no.f12.codenavigator.navigation.PackageDepsConfig

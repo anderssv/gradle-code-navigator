@@ -1,5 +1,6 @@
 package no.f12.codenavigator.navigation
 
+import no.f12.codenavigator.navigation.classinfo.ClassScanner
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.io.TempDir
 import java.io.File

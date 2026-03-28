@@ -5,31 +5,31 @@ import no.f12.codenavigator.analysis.FileAge
 import no.f12.codenavigator.analysis.FileChurn
 import no.f12.codenavigator.analysis.Hotspot
 import no.f12.codenavigator.analysis.ModuleAuthors
-import no.f12.codenavigator.navigation.AnnotationDetail
-import no.f12.codenavigator.navigation.CallDirection
-import no.f12.codenavigator.navigation.CallTreeNode
+import no.f12.codenavigator.navigation.callgraph.CallDirection
+import no.f12.codenavigator.navigation.callgraph.CallTreeNode
 import no.f12.codenavigator.navigation.complexity.ClassComplexity
 import no.f12.codenavigator.navigation.CycleDetail
-import no.f12.codenavigator.navigation.ClassDetail
-import no.f12.codenavigator.navigation.ClassInfo
 import no.f12.codenavigator.navigation.ClassName
-import no.f12.codenavigator.navigation.FieldDetail
+import no.f12.codenavigator.navigation.classinfo.AnnotationDetail
+import no.f12.codenavigator.navigation.classinfo.ClassDetail
+import no.f12.codenavigator.navigation.classinfo.ClassInfo
+import no.f12.codenavigator.navigation.classinfo.FieldDetail
 import no.f12.codenavigator.navigation.interfaces.InterfaceRegistry
-import no.f12.codenavigator.navigation.MethodDetail
+import no.f12.codenavigator.navigation.classinfo.MethodDetail
 import no.f12.codenavigator.navigation.PackageDependencies
 import no.f12.codenavigator.navigation.PackageName
 import no.f12.codenavigator.navigation.symbol.SymbolInfo
 import no.f12.codenavigator.navigation.DsmMatrix
 import no.f12.codenavigator.navigation.rank.RankedType
-import no.f12.codenavigator.navigation.DeadCode
+import no.f12.codenavigator.navigation.deadcode.DeadCode
 import no.f12.codenavigator.navigation.stringconstant.StringConstantMatch
 import no.f12.codenavigator.navigation.hierarchy.SupertypeInfo
 import no.f12.codenavigator.navigation.hierarchy.SupertypeKind
 import no.f12.codenavigator.navigation.MetricsResult
 import no.f12.codenavigator.navigation.hierarchy.TypeHierarchyResult
-import no.f12.codenavigator.navigation.UsageSite
+import no.f12.codenavigator.navigation.callgraph.UsageSite
 import no.f12.codenavigator.navigation.annotation.AnnotationMatch
-import no.f12.codenavigator.navigation.AnnotationTag
+import no.f12.codenavigator.navigation.callgraph.AnnotationTag
 
 object LlmFormatter {
 

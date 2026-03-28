@@ -2,7 +2,7 @@ package no.f12.codenavigator.navigation.annotation
 
 import no.f12.codenavigator.navigation.AnnotationName
 import no.f12.codenavigator.navigation.ClassName
-import no.f12.codenavigator.navigation.MethodRef
+import no.f12.codenavigator.navigation.callgraph.MethodRef
 import no.f12.codenavigator.navigation.UnsupportedBytecodeVersionException
 import java.io.File
 

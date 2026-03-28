@@ -1,5 +1,8 @@
 package no.f12.codenavigator.navigation
 
+import no.f12.codenavigator.navigation.classinfo.AnnotationDetail
+import no.f12.codenavigator.navigation.classinfo.ClassDetailExtractor
+import no.f12.codenavigator.navigation.classinfo.FieldDetail
 import org.objectweb.asm.Opcodes
 import org.junit.jupiter.api.io.TempDir
 import java.io.File

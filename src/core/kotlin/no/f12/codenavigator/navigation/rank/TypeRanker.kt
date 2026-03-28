@@ -1,6 +1,6 @@
 package no.f12.codenavigator.navigation.rank
 
-import no.f12.codenavigator.navigation.CallGraph
+import no.f12.codenavigator.navigation.callgraph.CallGraph
 import no.f12.codenavigator.navigation.ClassName
 import no.f12.codenavigator.navigation.LambdaCollapser
 

@@ -1,4 +1,4 @@
-package no.f12.codenavigator.navigation
+package no.f12.codenavigator.navigation.deadcode
 
 import no.f12.codenavigator.navigation.annotation.FrameworkPresets
 import no.f12.codenavigator.ParamDef

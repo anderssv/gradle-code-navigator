@@ -1,6 +1,9 @@
 package no.f12.codenavigator.navigation
 
 import no.f12.codenavigator.analysis.Hotspot
+import no.f12.codenavigator.navigation.classinfo.ClassInfo
+import no.f12.codenavigator.navigation.deadcode.DeadCode
+import no.f12.codenavigator.navigation.deadcode.DeadCodeKind
 import no.f12.codenavigator.navigation.rank.RankedType
 
 data class MetricsResult(

@@ -1,4 +1,4 @@
-package no.f12.codenavigator.navigation
+package no.f12.codenavigator.navigation.classinfo
 
 object ClassFilter {
     fun filter(classes: List<ClassInfo>, pattern: String): List<ClassInfo> {
