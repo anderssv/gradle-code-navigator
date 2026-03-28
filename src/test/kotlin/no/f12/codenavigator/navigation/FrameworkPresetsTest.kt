@@ -149,4 +149,97 @@ class FrameworkPresetsTest {
 
         assertEquals("junit", framework)
     }
+
+    @Test
+    fun `jakarta preset includes PostConstruct and PreDestroy`() {
+        val annotations = FrameworkPresets.resolve("jakarta")
+
+        assertTrue(annotations.contains(AnnotationName("jakarta.annotation.PostConstruct")))
+        assertTrue(annotations.contains(AnnotationName("jakarta.annotation.PreDestroy")))
+    }
+
+    @Test
+    fun `jakarta preset includes Inject and Named`() {
+        val annotations = FrameworkPresets.resolve("jakarta")
+
+        assertTrue(annotations.contains(AnnotationName("jakarta.inject.Inject")))
+        assertTrue(annotations.contains(AnnotationName("jakarta.inject.Named")))
+        assertTrue(annotations.contains(AnnotationName("jakarta.inject.Singleton")))
+    }
+
+    @Test
+    fun `jakarta preset is available in availablePresets`() {
+        val presets = FrameworkPresets.availablePresets()
+
+        assertTrue(presets.contains("jakarta"))
+    }
+
+    @Test
+    fun `frameworkOf returns jakarta for PostConstruct`() {
+        val framework = FrameworkPresets.frameworkOf(AnnotationName("jakarta.annotation.PostConstruct"))
+
+        assertEquals("jakarta", framework)
+    }
+
+    @Test
+    fun `spring preset includes jakarta annotations`() {
+        val annotations = FrameworkPresets.resolve("spring")
+
+        assertTrue(annotations.contains(AnnotationName("jakarta.annotation.PostConstruct")))
+        assertTrue(annotations.contains(AnnotationName("jakarta.annotation.PreDestroy")))
+        assertTrue(annotations.contains(AnnotationName("jakarta.inject.Inject")))
+    }
+
+    @Test
+    fun `validation preset includes jakarta validation Valid`() {
+        val annotations = FrameworkPresets.resolve("validation")
+
+        assertTrue(annotations.contains(AnnotationName("jakarta.validation.Valid")))
+    }
+
+    @Test
+    fun `validation preset includes jakarta validation constraints`() {
+        val annotations = FrameworkPresets.resolve("validation")
+
+        assertTrue(annotations.contains(AnnotationName("jakarta.validation.constraints.NotBlank")))
+        assertTrue(annotations.contains(AnnotationName("jakarta.validation.constraints.NotNull")))
+        assertTrue(annotations.contains(AnnotationName("jakarta.validation.constraints.Size")))
+        assertTrue(annotations.contains(AnnotationName("jakarta.validation.constraints.Min")))
+        assertTrue(annotations.contains(AnnotationName("jakarta.validation.constraints.Max")))
+        assertTrue(annotations.contains(AnnotationName("jakarta.validation.constraints.Pattern")))
+        assertTrue(annotations.contains(AnnotationName("jakarta.validation.constraints.Email")))
+    }
+
+    @Test
+    fun `validation preset includes hibernate validator annotations`() {
+        val annotations = FrameworkPresets.resolve("validation")
+
+        assertTrue(annotations.contains(AnnotationName("org.hibernate.validator.constraints.Length")))
+        assertTrue(annotations.contains(AnnotationName("org.hibernate.validator.constraints.Range")))
+        assertTrue(annotations.contains(AnnotationName("org.hibernate.validator.constraints.URL")))
+    }
+
+    @Test
+    fun `validation preset is available in availablePresets`() {
+        val presets = FrameworkPresets.availablePresets()
+
+        assertTrue(presets.contains("validation"))
+    }
+
+    @Test
+    fun `frameworkOf returns validation for NotBlank`() {
+        val framework = FrameworkPresets.frameworkOf(AnnotationName("jakarta.validation.constraints.NotBlank"))
+
+        assertEquals("validation", framework)
+    }
+
+    @Test
+    fun `spring preset includes validation annotations`() {
+        val annotations = FrameworkPresets.resolve("spring")
+
+        assertTrue(annotations.contains(AnnotationName("jakarta.validation.Valid")))
+        assertTrue(annotations.contains(AnnotationName("jakarta.validation.constraints.NotBlank")))
+        assertTrue(annotations.contains(AnnotationName("jakarta.validation.constraints.NotNull")))
+    }
+
 }

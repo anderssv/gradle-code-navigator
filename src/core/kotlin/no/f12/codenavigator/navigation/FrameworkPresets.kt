@@ -12,8 +12,6 @@ object FrameworkPresets {
         "org.springframework.context.annotation.Bean",
         "org.springframework.scheduling.annotation.Scheduled",
         "org.springframework.context.event.EventListener",
-        "jakarta.annotation.PostConstruct",
-        "jakarta.annotation.PreDestroy",
         "org.springframework.web.bind.annotation.ExceptionHandler",
         "org.springframework.web.bind.annotation.ControllerAdvice",
         "org.springframework.boot.actuate.endpoint.annotation.Endpoint",
@@ -66,6 +64,45 @@ object FrameworkPresets {
         "com.fasterxml.jackson.databind.annotation.JsonSerialize",
     ).map { AnnotationName(it) }.toSet()
 
+    private val JAKARTA = setOf(
+        "jakarta.annotation.PostConstruct",
+        "jakarta.annotation.PreDestroy",
+        "jakarta.inject.Inject",
+        "jakarta.inject.Named",
+        "jakarta.inject.Singleton",
+        "jakarta.inject.Qualifier",
+    ).map { AnnotationName(it) }.toSet()
+
+    private val VALIDATION = setOf(
+        "jakarta.validation.Valid",
+        "jakarta.validation.constraints.NotNull",
+        "jakarta.validation.constraints.NotBlank",
+        "jakarta.validation.constraints.NotEmpty",
+        "jakarta.validation.constraints.Size",
+        "jakarta.validation.constraints.Min",
+        "jakarta.validation.constraints.Max",
+        "jakarta.validation.constraints.Pattern",
+        "jakarta.validation.constraints.Email",
+        "jakarta.validation.constraints.Positive",
+        "jakarta.validation.constraints.PositiveOrZero",
+        "jakarta.validation.constraints.Negative",
+        "jakarta.validation.constraints.NegativeOrZero",
+        "jakarta.validation.constraints.Past",
+        "jakarta.validation.constraints.PastOrPresent",
+        "jakarta.validation.constraints.Future",
+        "jakarta.validation.constraints.FutureOrPresent",
+        "jakarta.validation.constraints.Digits",
+        "jakarta.validation.constraints.DecimalMin",
+        "jakarta.validation.constraints.DecimalMax",
+        "jakarta.validation.constraints.AssertTrue",
+        "jakarta.validation.constraints.AssertFalse",
+        "jakarta.validation.constraints.Null",
+        "org.hibernate.validator.constraints.Length",
+        "org.hibernate.validator.constraints.Range",
+        "org.hibernate.validator.constraints.URL",
+        "org.hibernate.validator.constraints.CreditCardNumber",
+    ).map { AnnotationName(it) }.toSet()
+
     private val JUNIT = setOf(
         "org.junit.jupiter.api.Test",
         "org.junit.jupiter.api.BeforeEach",
@@ -83,15 +120,17 @@ object FrameworkPresets {
     ).map { AnnotationName(it) }.toSet()
 
     private val PRESETS: Map<String, Set<AnnotationName>> = mapOf(
-        "spring" to SPRING + JPA,
+        "spring" to SPRING + JPA + JAKARTA + VALIDATION,
         "jpa" to JPA,
         "jackson" to JACKSON,
+        "jakarta" to JAKARTA,
+        "validation" to VALIDATION,
         "junit" to JUNIT,
     )
 
     private val ANNOTATION_TO_FRAMEWORK: Map<AnnotationName, String> by lazy {
         val result = mutableMapOf<AnnotationName, String>()
-        val specificity = listOf("jpa" to JPA, "jackson" to JACKSON, "junit" to JUNIT, "spring" to SPRING)
+        val specificity = listOf("jpa" to JPA, "jackson" to JACKSON, "jakarta" to JAKARTA, "validation" to VALIDATION, "junit" to JUNIT, "spring" to SPRING)
         for ((framework, annotations) in specificity) {
             for (annotation in annotations) {
                 result.putIfAbsent(annotation, framework)
