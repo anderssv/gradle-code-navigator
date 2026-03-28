@@ -116,7 +116,7 @@ object TaskRegistry {
 
     // --- Task-specific parameter definitions ---
 
-    val INCLUDETEST = ParamDef("includetest", "true", "Include test source set", flag = false, defaultValue = null, enhancePattern = false, type = ParamType.BOOLEAN)
+    val INCLUDETEST = ParamDef("include-test", "true", "Include test source set", flag = false, defaultValue = null, enhancePattern = false, type = ParamType.BOOLEAN)
     val PACKAGE = ParamDef("package", "<regex>", "Filter packages by regex", flag = false, defaultValue = null, enhancePattern = false, type = ParamType.STRING)
     val REVERSE = ParamDef("reverse", "true", "Show reverse dependencies", flag = false, defaultValue = null, enhancePattern = false, type = ParamType.BOOLEAN)
     val ROOT_PACKAGE = ParamDef("root-package", "<pkg>", "Only include packages under this prefix", flag = false, defaultValue = "all", enhancePattern = false, type = ParamType.STRING)

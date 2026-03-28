@@ -34,8 +34,8 @@ class FindInterfaceImplsMojo : AbstractMojo() {
     @Parameter(property = "pattern", required = true)
     private var pattern: String? = null
 
-    @Parameter(property = "includetest")
-    private var includetest: String? = null
+    @Parameter(property = "include-test")
+    private var includeTest: String? = null
 
     override fun execute() {
         val config = try {
@@ -82,6 +82,6 @@ class FindInterfaceImplsMojo : AbstractMojo() {
         format?.let { put("format", it) }
         llm?.let { put("llm", it) }
         pattern?.let { put("pattern", it) }
-        includetest?.let { put("includetest", it) }
+        includeTest?.let { put("include-test", it) }
     }
 }

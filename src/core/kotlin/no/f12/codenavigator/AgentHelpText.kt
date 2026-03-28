@@ -179,7 +179,7 @@ object AgentHelpText {
         appendLine()
         appendLine("5. MAP: Understand abstractions")
         appendLine("   ${u("find-interfaces", p("pattern", "Repository"))}")
-        appendLine("   # Add ${p("includetest", "true")} to see test fakes and stubs")
+        appendLine("   # Add ${p("include-test", "true")} to see test fakes and stubs")
         appendLine("   ${u("type-hierarchy", p("pattern", "Service"))}")
         appendLine("   # Shows superclass chain upward + implementors downward")
         appendLine()

@@ -460,7 +460,7 @@ class TaskRegistryTest {
             "after" to ParamType.DATE,
             "no-follow" to ParamType.FLAG,
             "min-revs" to ParamType.INT,
-            "includetest" to ParamType.BOOLEAN,
+            "include-test" to ParamType.BOOLEAN,
             "package" to ParamType.STRING,
             "reverse" to ParamType.BOOLEAN,
             "root-package" to ParamType.STRING,

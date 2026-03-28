@@ -11,7 +11,7 @@ class FindInterfaceImplsConfigTest {
     fun `parses all properties from map`() {
         val props = mapOf(
             "pattern" to "MyInterface",
-            "includetest" to "true",
+            "include-test" to "true",
             "format" to "json",
             "llm" to "false",
         )
