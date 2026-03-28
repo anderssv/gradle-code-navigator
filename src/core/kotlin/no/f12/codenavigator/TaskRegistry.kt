@@ -291,7 +291,7 @@ object TaskRegistry {
     val METRICS = TaskDef(
         goal = "metrics",
         description = "Quick project health snapshot: classes, packages, fan-in/out, cycles, dead code, hotspots",
-        params = FORMAT_PARAMS + listOf(AFTER, METRICS_TOP, NO_FOLLOW, ROOT_PACKAGE),
+        params = FORMAT_PARAMS + listOf(AFTER, METRICS_TOP, NO_FOLLOW, ROOT_PACKAGE, EXCLUDE_ANNOTATED, FRAMEWORK),
         requiresCompilation = true,
     )
 

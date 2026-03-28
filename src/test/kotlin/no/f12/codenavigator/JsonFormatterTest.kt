@@ -7,6 +7,7 @@ import no.f12.codenavigator.navigation.AnnotationDetail
 import no.f12.codenavigator.navigation.CallDirection
 import no.f12.codenavigator.navigation.CallGraph
 import no.f12.codenavigator.navigation.CallTreeBuilder
+import no.f12.codenavigator.navigation.CallTreeNode
 import no.f12.codenavigator.navigation.ClassDetail
 import no.f12.codenavigator.navigation.ClassInfo
 import no.f12.codenavigator.navigation.ClassName
@@ -858,5 +859,69 @@ class JsonFormatterTest {
     @Test
     fun `formats empty annotation matches as empty JSON array`() {
         assertEquals("[]", JsonFormatter.formatAnnotations(emptyList()))
+    }
+
+    // === Call tree annotation tags ===
+
+    @Test
+    fun `call tree JSON includes annotations when present`() {
+        val trees = listOf(
+            CallTreeNode(
+                method = MethodRef(ClassName("com.example.Controller"), "getOwner"),
+                sourceFile = "Controller.kt",
+                lineNumber = null,
+                children = emptyList(),
+                annotations = listOf("GetMapping", "ResponseBody"),
+            ),
+        )
+
+        val result = JsonFormatter.renderCallTrees(trees)
+
+        assertTrue(result.contains("\"annotations\":[\"GetMapping\",\"ResponseBody\"]"))
+    }
+
+    @Test
+    fun `call tree JSON omits annotations when empty`() {
+        val trees = listOf(
+            CallTreeNode(
+                method = MethodRef(ClassName("com.example.Service"), "doWork"),
+                sourceFile = "Service.kt",
+                lineNumber = null,
+                children = emptyList(),
+            ),
+        )
+
+        val result = JsonFormatter.renderCallTrees(trees)
+
+        assertEquals(
+            """[{"method":"com.example.Service.doWork","sourceFile":"Service.kt","children":[]}]""",
+            result,
+        )
+    }
+
+    @Test
+    fun `call tree JSON includes annotations on nested child nodes`() {
+        val child = CallTreeNode(
+            method = MethodRef(ClassName("com.example.Controller"), "getOwner"),
+            sourceFile = "Controller.kt",
+            lineNumber = 42,
+            children = emptyList(),
+            annotations = listOf("GetMapping"),
+        )
+        val trees = listOf(
+            CallTreeNode(
+                method = MethodRef(ClassName("com.example.Service"), "doWork"),
+                sourceFile = "Service.kt",
+                lineNumber = null,
+                children = listOf(child),
+            ),
+        )
+
+        val result = JsonFormatter.renderCallTrees(trees)
+
+        assertTrue(result.contains("\"annotations\":[\"GetMapping\"]"))
+        // Root node should NOT have annotations key (empty list = omitted)
+        val rootPart = result.substringBefore("\"children\":[{")
+        assertTrue(!rootPart.contains("\"annotations\""), "Root node without annotations should not have annotations key")
     }
 }

@@ -5,6 +5,7 @@ data class CallTreeNode(
     val sourceFile: String?,
     val lineNumber: Int?,
     val children: List<CallTreeNode>,
+    val annotations: List<String> = emptyList(),
 )
 
 object CallTreeBuilder {
@@ -17,9 +18,11 @@ object CallTreeBuilder {
         filter: ((MethodRef) -> Boolean)? = null,
         interfaceImplementors: Map<ClassName, Set<ClassName>> = emptyMap(),
         classToInterfaces: Map<ClassName, Set<ClassName>> = emptyMap(),
+        classAnnotations: Map<ClassName, Set<String>> = emptyMap(),
+        methodAnnotations: Map<MethodRef, Set<String>> = emptyMap(),
     ): List<CallTreeNode> {
         return roots.map { method ->
-            buildNode(graph, method, maxDepth, direction, depth = 0, visited = mutableSetOf(), filter = filter, interfaceImplementors = interfaceImplementors, classToInterfaces = classToInterfaces)
+            buildNode(graph, method, maxDepth, direction, depth = 0, visited = mutableSetOf(), filter = filter, interfaceImplementors = interfaceImplementors, classToInterfaces = classToInterfaces, classAnnotations = classAnnotations, methodAnnotations = methodAnnotations)
         }
     }
 
@@ -33,9 +36,12 @@ object CallTreeBuilder {
         filter: ((MethodRef) -> Boolean)?,
         interfaceImplementors: Map<ClassName, Set<ClassName>>,
         classToInterfaces: Map<ClassName, Set<ClassName>>,
+        classAnnotations: Map<ClassName, Set<String>>,
+        methodAnnotations: Map<MethodRef, Set<String>>,
     ): CallTreeNode {
         val sourceFile = graph.sourceFileOf(method.className)
         val lineNumber = graph.lineNumberOf(method)
+        val annotations = resolveAnnotations(method, classAnnotations, methodAnnotations)
         val depthCheck = depth < maxDepth
         val visitedCheck = method !in visited
         val children = if (depthCheck && visitedCheck) {
@@ -45,12 +51,24 @@ object CallTreeBuilder {
             val related = (direct + dispatched)
                 .let { refs -> if (filter != null) refs.filter(filter).toSet() else refs }
             related.sortedBy { it.qualifiedName }.map { child ->
-                buildNode(graph, child, maxDepth, direction, depth + 1, visited, filter, interfaceImplementors, classToInterfaces)
+                buildNode(graph, child, maxDepth, direction, depth + 1, visited, filter, interfaceImplementors, classToInterfaces, classAnnotations, methodAnnotations)
             }
         } else {
             emptyList()
         }
-        return CallTreeNode(method, sourceFile, lineNumber, children)
+        return CallTreeNode(method, sourceFile, lineNumber, children, annotations)
+    }
+
+    private fun resolveAnnotations(
+        method: MethodRef,
+        classAnnotations: Map<ClassName, Set<String>>,
+        methodAnnotations: Map<MethodRef, Set<String>>,
+    ): List<String> {
+        val methodAnns = methodAnnotations[method]
+        if (methodAnns != null) return methodAnns.sorted()
+        val classAnns = classAnnotations[method.className]
+        if (classAnns != null) return classAnns.sorted()
+        return emptyList()
     }
 
     private fun resolveInterfaceDispatch(

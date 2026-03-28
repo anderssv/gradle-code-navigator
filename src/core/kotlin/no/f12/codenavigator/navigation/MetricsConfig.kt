@@ -10,15 +10,24 @@ data class MetricsConfig(
     val top: Int,
     val followRenames: Boolean,
     val rootPackage: PackageName,
+    val excludeAnnotated: List<String>,
     val format: OutputFormat,
 ) {
     companion object {
-        fun parse(properties: Map<String, String?>): MetricsConfig = MetricsConfig(
-            after = TaskRegistry.AFTER.parse(properties["after"]),
-            top = TaskRegistry.METRICS_TOP.parse(properties["top"]),
-            followRenames = !TaskRegistry.NO_FOLLOW.parseFrom(properties),
-            rootPackage = PackageName(properties["root-package"] ?: ""),
-            format = ParamDef.parseFormat(properties),
-        )
+        fun parse(properties: Map<String, String?>): MetricsConfig {
+            val explicit = TaskRegistry.EXCLUDE_ANNOTATED.parse(properties["exclude-annotated"])
+            val frameworks = TaskRegistry.FRAMEWORK.parse(properties["framework"])
+            val frameworkAnnotations = FrameworkPresets.resolveAll(frameworks)
+            val merged = (explicit + frameworkAnnotations).distinct()
+
+            return MetricsConfig(
+                after = TaskRegistry.AFTER.parse(properties["after"]),
+                top = TaskRegistry.METRICS_TOP.parse(properties["top"]),
+                followRenames = !TaskRegistry.NO_FOLLOW.parseFrom(properties),
+                rootPackage = PackageName(properties["root-package"] ?: ""),
+                excludeAnnotated = merged,
+                format = ParamDef.parseFormat(properties),
+            )
+        }
     }
 }

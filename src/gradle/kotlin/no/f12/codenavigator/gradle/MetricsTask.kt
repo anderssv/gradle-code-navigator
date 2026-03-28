@@ -6,6 +6,7 @@ import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.analysis.GitLogRunner
 import no.f12.codenavigator.analysis.HotspotBuilder
+import no.f12.codenavigator.navigation.AnnotationExtractor
 import no.f12.codenavigator.navigation.CallGraphCache
 import no.f12.codenavigator.navigation.ClassScanner
 import no.f12.codenavigator.navigation.CycleDetector
@@ -35,7 +36,7 @@ abstract class MetricsTask : DefaultTask() {
 
         val config = MetricsConfig.parse(
             project.buildPropertyMap(
-                propertyNames = listOf("after", "top", "format", "llm"),
+                propertyNames = listOf("after", "top", "exclude-annotated", "framework", "format", "llm"),
                 flagNames = listOf("no-follow"),
             ) + ("root-package" to resolvedRootPackage),
         )
@@ -53,14 +54,18 @@ abstract class MetricsTask : DefaultTask() {
         val classResult = ClassScanner.scan(classDirectories)
         val packages = PackageDependencyBuilder.build(graph).allPackages()
         val rankedTypes = TypeRanker.rank(graph, projectOnly = true, collapseLambdas = true)
+
+        val excludeAnnotated = config.excludeAnnotated.toSet()
+        val (classAnnotations, methodAnnotations) = AnnotationExtractor.scanAll(classDirectories)
+
         val deadCode = DeadCodeFinder.find(
             graph = graph,
             filter = null,
             exclude = null,
             classesOnly = false,
-            excludeAnnotated = emptySet(),
-            classAnnotations = emptyMap(),
-            methodAnnotations = emptyMap(),
+            excludeAnnotated = excludeAnnotated,
+            classAnnotations = classAnnotations,
+            methodAnnotations = methodAnnotations,
             testGraph = null,
         )
 

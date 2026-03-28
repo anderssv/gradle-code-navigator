@@ -4,6 +4,7 @@ import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
 import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
+import no.f12.codenavigator.navigation.AnnotationExtractor
 import no.f12.codenavigator.navigation.CallDirection
 import no.f12.codenavigator.navigation.CallGraphBuilder
 import no.f12.codenavigator.navigation.CallGraphConfig
@@ -75,10 +76,14 @@ class FindCalleesMojo : AbstractMojo() {
         val interfaceImplementors = interfaceRegistry.implementorMap()
         val classToInterfaces = interfaceRegistry.classToInterfacesMap()
 
+        val (classAnnotations, methodAnnotations) = AnnotationExtractor.scanAll(listOf(classesDir))
+
         val trees = CallTreeBuilder.build(
             graph, methods, config.maxDepth, CallDirection.CALLEES, config.buildFilter(graph),
             interfaceImplementors = interfaceImplementors,
             classToInterfaces = classToInterfaces,
+            classAnnotations = classAnnotations,
+            methodAnnotations = methodAnnotations,
         )
         val output = when (config.format) {
             OutputFormat.JSON -> JsonFormatter.renderCallTrees(trees)

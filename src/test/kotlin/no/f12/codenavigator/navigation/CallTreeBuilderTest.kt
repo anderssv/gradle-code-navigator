@@ -383,4 +383,74 @@ class CallTreeBuilderTest {
 
         assertTrue(result[0].children.isEmpty(), "Without interface dispatch, impl has no callers")
     }
+
+    // === Annotation tag tests ===
+
+    @Test
+    fun `node includes method annotations when annotation map provided`() {
+        val target = MethodRef(ClassName("com.example.Controller"), "getOwner")
+        val graph = CallGraph(
+            emptyMap(),
+            sourceFiles = mapOf(ClassName("com.example.Controller") to "Controller.kt"),
+        )
+        val methodAnnotations = mapOf(
+            target to setOf("GetMapping", "ResponseBody"),
+        )
+
+        val result = CallTreeBuilder.build(
+            graph, listOf(target), maxDepth = 3, CallDirection.CALLERS,
+            methodAnnotations = methodAnnotations,
+        )
+
+        assertEquals(listOf("GetMapping", "ResponseBody"), result[0].annotations.sorted())
+    }
+
+    @Test
+    fun `node includes class annotations when method has no annotations`() {
+        val target = MethodRef(ClassName("com.example.Controller"), "getOwner")
+        val graph = CallGraph(
+            emptyMap(),
+            sourceFiles = mapOf(ClassName("com.example.Controller") to "Controller.kt"),
+        )
+        val classAnnotations = mapOf(
+            ClassName("com.example.Controller") to setOf("RestController"),
+        )
+
+        val result = CallTreeBuilder.build(
+            graph, listOf(target), maxDepth = 3, CallDirection.CALLERS,
+            classAnnotations = classAnnotations,
+        )
+
+        assertEquals(listOf("RestController"), result[0].annotations)
+    }
+
+    @Test
+    fun `node has empty annotations when no annotation maps provided`() {
+        val target = MethodRef(ClassName("com.example.Service"), "doWork")
+        val graph = CallGraph(emptyMap())
+
+        val result = CallTreeBuilder.build(graph, listOf(target), maxDepth = 3, CallDirection.CALLERS)
+
+        assertEquals(emptyList<String>(), result[0].annotations)
+    }
+
+    @Test
+    fun `child nodes also get annotations from maps`() {
+        val target = MethodRef(ClassName("com.example.Service"), "doWork")
+        val caller = MethodRef(ClassName("com.example.Controller"), "handle")
+        val graph = CallGraph(
+            mapOf(caller to setOf(target)),
+            sourceFiles = mapOf(ClassName("com.example.Controller") to "Controller.kt"),
+        )
+        val methodAnnotations = mapOf(
+            caller to setOf("GetMapping"),
+        )
+
+        val result = CallTreeBuilder.build(
+            graph, listOf(target), maxDepth = 3, CallDirection.CALLERS,
+            methodAnnotations = methodAnnotations,
+        )
+
+        assertEquals(listOf("GetMapping"), result[0].children[0].annotations)
+    }
 }

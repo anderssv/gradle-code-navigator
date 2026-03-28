@@ -75,7 +75,7 @@ object LlmFormatter {
         trees.forEachIndexed { index, tree ->
             if (index > 0) appendLine()
             val lineRef = tree.lineNumber?.let { ":$it" } ?: ""
-            append("${tree.method.qualifiedName} ${tree.sourceFile ?: "<unknown>"}$lineRef")
+            append("${tree.method.qualifiedName} ${tree.sourceFile ?: "<unknown>"}$lineRef${formatAnnotationTags(tree.annotations)}")
             if (tree.children.isNotEmpty()) {
                 renderChildren(tree.children, direction, 1)
             }
@@ -234,12 +234,15 @@ object LlmFormatter {
         for (node in children) {
             val lineRef = node.lineNumber?.let { ":$it" } ?: ""
             appendLine()
-            append("$indent${direction.arrow} ${node.method.qualifiedName} ${node.sourceFile ?: "<unknown>"}$lineRef")
+            append("$indent${direction.arrow} ${node.method.qualifiedName} ${node.sourceFile ?: "<unknown>"}$lineRef${formatAnnotationTags(node.annotations)}")
             if (node.children.isNotEmpty()) {
                 renderChildren(node.children, direction, depth + 1)
             }
         }
     }
+
+    private fun formatAnnotationTags(annotations: List<String>): String =
+        if (annotations.isEmpty()) "" else " [${annotations.joinToString(", ") { "@$it" }}]"
 
     private fun formatAnnotation(annotation: AnnotationDetail): String = buildString {
         append("@${annotation.name}")

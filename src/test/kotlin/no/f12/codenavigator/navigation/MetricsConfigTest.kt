@@ -76,4 +76,37 @@ class MetricsConfigTest {
 
         assertEquals(PackageName(""), config.rootPackage)
     }
+
+    @Test
+    fun `parses exclude-annotated from property map`() {
+        val config = MetricsConfig.parse(mapOf("exclude-annotated" to "Scheduled,EventListener"))
+
+        assertEquals(listOf("Scheduled", "EventListener"), config.excludeAnnotated)
+    }
+
+    @Test
+    fun `parses framework and resolves to annotation preset`() {
+        val config = MetricsConfig.parse(mapOf("framework" to "jackson"))
+
+        assertTrue(config.excludeAnnotated.contains("JsonCreator"))
+        assertTrue(config.excludeAnnotated.contains("JsonProperty"))
+    }
+
+    @Test
+    fun `merges explicit annotations with framework preset`() {
+        val config = MetricsConfig.parse(mapOf(
+            "exclude-annotated" to "Custom",
+            "framework" to "jackson",
+        ))
+
+        assertTrue(config.excludeAnnotated.contains("Custom"))
+        assertTrue(config.excludeAnnotated.contains("JsonCreator"))
+    }
+
+    @Test
+    fun `defaults excludeAnnotated to empty list when neither param present`() {
+        val config = MetricsConfig.parse(emptyMap())
+
+        assertEquals(emptyList<String>(), config.excludeAnnotated)
+    }
 }

@@ -27,7 +27,7 @@ object CallTreeFormatter {
     ): String = buildString {
         trees.forEachIndexed { index, tree ->
             if (index > 0) appendLine()
-            appendLine(tree.method.qualifiedName)
+            appendLine("${tree.method.qualifiedName}${formatAnnotationTags(tree.annotations)}")
             if (tree.children.isEmpty()) {
                 append("  ${direction.emptyMessage}")
             } else {
@@ -35,6 +35,9 @@ object CallTreeFormatter {
             }
         }
     }.trimEnd()
+
+    private fun formatAnnotationTags(annotations: List<String>): String =
+        if (annotations.isEmpty()) "" else " [${annotations.joinToString(", ") { "@$it" }}]"
 
     private fun StringBuilder.renderChildren(
         children: List<CallTreeNode>,
@@ -45,7 +48,7 @@ object CallTreeFormatter {
         for (node in children) {
             val sourceFile = node.sourceFile ?: "<unknown>"
             val lineRef = node.lineNumber?.let { ":$it" } ?: ""
-            appendLine("$indent${direction.arrow} ${node.method.qualifiedName} ($sourceFile$lineRef)")
+            appendLine("$indent${direction.arrow} ${node.method.qualifiedName} ($sourceFile$lineRef)${formatAnnotationTags(node.annotations)}")
             if (node.children.isNotEmpty()) {
                 renderChildren(node.children, direction, depth + 1)
             }

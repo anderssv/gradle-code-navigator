@@ -614,4 +614,69 @@ class LlmFormatterTest {
     fun `formats empty annotation matches`() {
         assertEquals("(no matches)", LlmFormatter.formatAnnotations(emptyList()))
     }
+
+    // === Call tree annotation tags ===
+
+    @Test
+    fun `renders annotations on call tree child nodes`() {
+        val trees = listOf(
+            CallTreeNode(
+                method = MethodRef(ClassName("com.example.Service"), "doWork"),
+                sourceFile = "Service.kt",
+                lineNumber = null,
+                children = listOf(
+                    CallTreeNode(
+                        method = MethodRef(ClassName("com.example.Controller"), "getOwner"),
+                        sourceFile = "Controller.kt",
+                        lineNumber = 42,
+                        children = emptyList(),
+                        annotations = listOf("GetMapping"),
+                    ),
+                ),
+            ),
+        )
+
+        val result = LlmFormatter.renderCallTrees(trees, CallDirection.CALLERS)
+
+        assertEquals(
+            "com.example.Service.doWork Service.kt\n  ← com.example.Controller.getOwner Controller.kt:42 [@GetMapping]",
+            result,
+        )
+    }
+
+    @Test
+    fun `renders multiple annotations on call tree root node`() {
+        val trees = listOf(
+            CallTreeNode(
+                method = MethodRef(ClassName("com.example.Controller"), "getOwner"),
+                sourceFile = "Controller.kt",
+                lineNumber = null,
+                children = emptyList(),
+                annotations = listOf("GetMapping", "ResponseBody"),
+            ),
+        )
+
+        val result = LlmFormatter.renderCallTrees(trees, CallDirection.CALLERS)
+
+        assertEquals(
+            "com.example.Controller.getOwner Controller.kt [@GetMapping, @ResponseBody]",
+            result,
+        )
+    }
+
+    @Test
+    fun `renders call tree node without annotations normally`() {
+        val trees = listOf(
+            CallTreeNode(
+                method = MethodRef(ClassName("com.example.Service"), "doWork"),
+                sourceFile = "Service.kt",
+                lineNumber = null,
+                children = emptyList(),
+            ),
+        )
+
+        val result = LlmFormatter.renderCallTrees(trees, CallDirection.CALLERS)
+
+        assertEquals("com.example.Service.doWork Service.kt", result)
+    }
 }

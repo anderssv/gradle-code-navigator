@@ -6,6 +6,7 @@ import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.analysis.GitLogRunner
 import no.f12.codenavigator.analysis.HotspotBuilder
+import no.f12.codenavigator.navigation.AnnotationExtractor
 import no.f12.codenavigator.navigation.CallGraphBuilder
 import no.f12.codenavigator.navigation.ClassScanner
 import no.f12.codenavigator.navigation.CycleDetector
@@ -51,6 +52,12 @@ class MetricsMojo : AbstractMojo() {
     @Parameter(property = "no-follow")
     private var noFollow: Boolean = false
 
+    @Parameter(property = "exclude-annotated")
+    private var excludeAnnotated: String? = null
+
+    @Parameter(property = "framework")
+    private var framework: String? = null
+
     override fun execute() {
         val classesDir = File(project.build.outputDirectory)
         if (!classesDir.exists()) {
@@ -69,14 +76,18 @@ class MetricsMojo : AbstractMojo() {
         val classResult = ClassScanner.scan(classDirectories)
         val packages = PackageDependencyBuilder.build(graph).allPackages()
         val rankedTypes = TypeRanker.rank(graph, projectOnly = true, collapseLambdas = true)
+
+        val excludeAnnotatedSet = config.excludeAnnotated.toSet()
+        val (classAnnotations, methodAnnotations) = AnnotationExtractor.scanAll(classDirectories)
+
         val deadCode = DeadCodeFinder.find(
             graph = graph,
             filter = null,
             exclude = null,
             classesOnly = false,
-            excludeAnnotated = emptySet(),
-            classAnnotations = emptyMap(),
-            methodAnnotations = emptyMap(),
+            excludeAnnotated = excludeAnnotatedSet,
+            classAnnotations = classAnnotations,
+            methodAnnotations = methodAnnotations,
             testGraph = null,
         )
 
@@ -110,6 +121,8 @@ class MetricsMojo : AbstractMojo() {
         after?.let { put("after", it) }
         top?.let { put("top", it) }
         rootPackage?.let { put("root-package", it) }
+        excludeAnnotated?.let { put("exclude-annotated", it) }
+        framework?.let { put("framework", it) }
         if (noFollow) put("no-follow", null)
     }
 }

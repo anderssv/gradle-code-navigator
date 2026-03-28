@@ -214,6 +214,14 @@ The root `codenavigator` package serves as both "shared infrastructure" and "lib
 
 ## Framework awareness
 
+### ~~81. Framework annotation support in `cnavMetrics`~~ DONE
+
+`cnavMetrics` internally calls `DeadCodeFinder.find()` to compute dead code counts for the project health snapshot. Previously it hard-coded `excludeAnnotated = emptySet()`, producing inflated dead code numbers for framework-heavy projects. Now supports `-Pframework` and `-Pexclude-annotated` parameters, matching the `cnavDead` behavior.
+
+### ~~80. Annotation tags on call tree nodes~~ DONE
+
+`cnavCallers` and `cnavCallees` now display annotations on each node in the call tree, making framework entry points immediately visible. Method-level annotations take priority; falls back to class-level annotations.
+
 ### ~~75. Framework annotation presets for `cnavDead` — eliminate common false positives~~ DONE
 
 ### 76. Meta-annotation traversal for dead code filtering (High value, medium effort)

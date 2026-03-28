@@ -331,6 +331,7 @@ object JsonFormatter {
             "method" to node.method.qualifiedName,
             "sourceFile" to node.sourceFile,
             "lineNumber" to node.lineNumber,
+            "annotations" to if (node.annotations.isNotEmpty()) JsonRaw(jsonStringArray(node.annotations)) else null,
             "children" to JsonRaw(children),
         )
     }

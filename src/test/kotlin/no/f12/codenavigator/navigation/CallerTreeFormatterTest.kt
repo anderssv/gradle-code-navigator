@@ -325,4 +325,79 @@ class CallerTreeFormatterTest {
             result,
         )
     }
+
+    @Test
+    fun `renders annotations on child nodes`() {
+        val trees = listOf(
+            CallTreeNode(
+                method = MethodRef(ClassName("com.example.Service"), "doWork"),
+                sourceFile = "Service.kt",
+                lineNumber = null,
+                children = listOf(
+                    CallTreeNode(
+                        method = MethodRef(ClassName("com.example.Controller"), "getOwner"),
+                        sourceFile = "Controller.kt",
+                        lineNumber = 42,
+                        children = emptyList(),
+                        annotations = listOf("GetMapping"),
+                    ),
+                ),
+            ),
+        )
+
+        val result = CallTreeFormatter.renderTrees(trees, CallDirection.CALLERS)
+
+        assertEquals(
+            """
+            com.example.Service.doWork
+              ← com.example.Controller.getOwner (Controller.kt:42) [@GetMapping]
+            """.trimIndent(),
+            result,
+        )
+    }
+
+    @Test
+    fun `renders multiple annotations on a node`() {
+        val trees = listOf(
+            CallTreeNode(
+                method = MethodRef(ClassName("com.example.Controller"), "getOwner"),
+                sourceFile = "Controller.kt",
+                lineNumber = null,
+                children = emptyList(),
+                annotations = listOf("GetMapping", "ResponseBody"),
+            ),
+        )
+
+        val result = CallTreeFormatter.renderTrees(trees, CallDirection.CALLERS)
+
+        assertEquals(
+            """
+            com.example.Controller.getOwner [@GetMapping, @ResponseBody]
+              (no callers)
+            """.trimIndent(),
+            result,
+        )
+    }
+
+    @Test
+    fun `renders node without annotations normally`() {
+        val trees = listOf(
+            CallTreeNode(
+                method = MethodRef(ClassName("com.example.Service"), "doWork"),
+                sourceFile = "Service.kt",
+                lineNumber = null,
+                children = emptyList(),
+            ),
+        )
+
+        val result = CallTreeFormatter.renderTrees(trees, CallDirection.CALLERS)
+
+        assertEquals(
+            """
+            com.example.Service.doWork
+              (no callers)
+            """.trimIndent(),
+            result,
+        )
+    }
 }

@@ -225,3 +225,33 @@ New task to query classes and methods by annotation pattern. Parameters: `-Ppatt
 **Registered as**: `cnavAnnotations` (Gradle) / `cnav:annotations` (Maven). Added `METHODS` ParamDef and `ANNOTATIONS` TaskDef to `TaskRegistry` (26 goals total). Updated `BuildTool`, `HelpText`, `AgentHelpText`.
 
 **Tested on Spring Petclinic**: `cnav:annotations -Dpattern=Controller`, `-Dpattern=Mapping -Dmethods=true`, `-Dpattern=Entity -Dformat=json` all work correctly.
+
+## ~~81. Framework annotation support in `cnavMetrics`~~ DONE
+
+`cnavMetrics` internally calls `DeadCodeFinder.find()` to compute dead code counts for the project health snapshot. Previously it hard-coded `excludeAnnotated = emptySet()` and `classAnnotations = emptyMap()`, producing inflated dead code numbers for framework-heavy projects.
+
+**Changes**:
+- `MetricsConfig` — added `excludeAnnotated: List<String>` field, parses both `-Pexclude-annotated` and `-Pframework` parameters (same merge+dedup logic as `DeadCodeConfig`)
+- `TaskRegistry.METRICS` — added `EXCLUDE_ANNOTATED` and `FRAMEWORK` params
+- `MetricsTask` (Gradle) — reads new params, runs `AnnotationExtractor.scanAll()`, passes results to `DeadCodeFinder.find()`
+- `MetricsMojo` (Maven) — same wiring with `@Parameter` annotations
+- 4 new tests in `MetricsConfigTest`
+
+## ~~80. Annotation tags on call tree nodes~~ DONE
+
+`cnavCallers` and `cnavCallees` now display annotations on each node in the call tree, making framework entry points (e.g., `@GetMapping`, `@RestController`) immediately visible in call chains.
+
+**Resolution logic** (`CallTreeBuilder.resolveAnnotations()`):
+- Method-level annotations take priority (if a method has `@GetMapping`, show that)
+- Falls back to class-level annotations (if method has none, show class's `@RestController`)
+- Returns empty if neither exists
+
+**Changes**:
+- `CallTreeNode` — added `annotations: List<String>` field (defaults to `emptyList()`)
+- `CallTreeBuilder.build()`/`buildNode()` — accept `classAnnotations` and `methodAnnotations` maps, call `resolveAnnotations()`
+- `CallTreeFormatter` (TEXT) — renders `[@GetMapping]` after source file reference on each node
+- `LlmFormatter.renderCallTrees()` — same annotation tag rendering in compact LLM format
+- `JsonFormatter.renderCallNode()` — includes `"annotations"` array in JSON output (omitted when empty)
+- `FindCallersTask`/`FindCalleesTask` (Gradle) — wire `AnnotationExtractor.scanAll()` and pass maps to `CallTreeBuilder.build()`
+- `FindCallersMojo`/`FindCalleesMojo` (Maven) — same wiring
+- 10 new tests across `CallTreeBuilderTest`, `CallerTreeFormatterTest`, `LlmFormatterTest`, `JsonFormatterTest`
