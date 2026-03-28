@@ -477,7 +477,6 @@ class TaskRegistryTest {
             "classes-only" to ParamType.BOOLEAN,
             "exclude-annotated" to ParamType.LIST_STRING,
             "prod-only" to ParamType.BOOLEAN,
-            "classname" to ParamType.STRING,
             "detail" to ParamType.BOOLEAN,
             "min-shared-revs" to ParamType.INT,
             "min-coupling" to ParamType.INT,

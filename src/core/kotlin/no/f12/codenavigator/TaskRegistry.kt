@@ -134,7 +134,6 @@ object TaskRegistry {
     val EXCLUDE_ANNOTATED = ParamDef("exclude-annotated", "<ann1>,<ann2>", "Exclude classes/methods bearing these annotations (simple names, comma-separated)", flag = false, defaultValue = null, enhancePattern = false, type = ParamType.LIST_STRING)
     val PROD_ONLY = ParamDef("prod-only", "true", "Show only items unreferenced in both production and test code", flag = false, defaultValue = null, enhancePattern = false, type = ParamType.BOOLEAN)
     val FRAMEWORK = ParamDef("framework", "<name>", "Framework annotation preset (e.g. spring) — auto-excludes known framework annotations", flag = false, defaultValue = null, enhancePattern = false, type = ParamType.LIST_STRING)
-    val CLASS = ParamDef("classname", "<pattern>", "Class name regex to analyze", flag = false, defaultValue = ".*", enhancePattern = false, type = ParamType.STRING)
     val DETAIL = ParamDef("detail", "true", "Show individual call details", flag = false, defaultValue = null, enhancePattern = false, type = ParamType.BOOLEAN)
     val COLLAPSE_LAMBDAS = ParamDef("collapse-lambdas", "false", "Set false to show lambda classes separately", flag = false, defaultValue = "true", enhancePattern = false, type = ParamType.BOOLEAN)
     val MIN_SHARED_REVS = ParamDef("min-shared-revs", "<N>", "Min shared commits", flag = false, defaultValue = "5", enhancePattern = false, type = ParamType.INT)
@@ -285,7 +284,7 @@ object TaskRegistry {
     val COMPLEXITY = TaskDef(
         goal = "complexity",
         description = "Show fan-in/fan-out complexity per class",
-        params = FORMAT_PARAMS + listOf(CLASS, PROJECTONLY_ON, DETAIL, COLLAPSE_LAMBDAS, TOP),
+        params = FORMAT_PARAMS + listOf(PATTERN, PROJECTONLY_ON, DETAIL, COLLAPSE_LAMBDAS, TOP),
         requiresCompilation = true,
     )
 

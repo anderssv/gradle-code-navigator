@@ -14,7 +14,7 @@ data class ComplexityConfig(
 ) {
     companion object {
         fun parse(properties: Map<String, String?>): ComplexityConfig = ComplexityConfig(
-            classPattern = properties["classname"] ?: TaskRegistry.CLASS.defaultValue!!,
+            classPattern = properties["pattern"] ?: ".*",
             projectOnly = TaskRegistry.PROJECTONLY_ON.parse(properties["projectonly"]),
             detail = TaskRegistry.DETAIL.parse(properties["detail"]),
             collapseLambdas = TaskRegistry.COLLAPSE_LAMBDAS.parse(properties["collapse-lambdas"]),

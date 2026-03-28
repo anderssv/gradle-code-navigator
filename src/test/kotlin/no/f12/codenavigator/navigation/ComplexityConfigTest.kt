@@ -11,7 +11,7 @@ class ComplexityConfigTest {
     @Test
     fun `parses all properties from map`() {
         val props = mapOf(
-            "classname" to "AdminRoutes",
+            "pattern" to "AdminRoutes",
             "projectonly" to "false",
             "detail" to "true",
             "format" to "json",
@@ -26,7 +26,7 @@ class ComplexityConfigTest {
     }
 
     @Test
-    fun `defaults classPattern to match-all when classname not provided`() {
+    fun `defaults classPattern to match-all when pattern not provided`() {
         val config = ComplexityConfig.parse(emptyMap())
 
         assertEquals(".*", config.classPattern)
@@ -34,56 +34,56 @@ class ComplexityConfigTest {
 
     @Test
     fun `defaults projectOnly to true when absent`() {
-        val config = ComplexityConfig.parse(mapOf("classname" to "Foo"))
+        val config = ComplexityConfig.parse(mapOf("pattern" to "Foo"))
 
         assertEquals(true, config.projectOnly)
     }
 
     @Test
     fun `defaults detail to false when absent`() {
-        val config = ComplexityConfig.parse(mapOf("classname" to "Foo"))
+        val config = ComplexityConfig.parse(mapOf("pattern" to "Foo"))
 
         assertEquals(false, config.detail)
     }
 
     @Test
     fun `defaults to TEXT format`() {
-        val config = ComplexityConfig.parse(mapOf("classname" to "Foo"))
+        val config = ComplexityConfig.parse(mapOf("pattern" to "Foo"))
 
         assertEquals(OutputFormat.TEXT, config.format)
     }
 
     @Test
     fun `parses LLM format`() {
-        val config = ComplexityConfig.parse(mapOf("classname" to "Foo", "llm" to "true"))
+        val config = ComplexityConfig.parse(mapOf("pattern" to "Foo", "llm" to "true"))
 
         assertEquals(OutputFormat.LLM, config.format)
     }
 
     @Test
     fun `defaults collapseLambdas to true when absent`() {
-        val config = ComplexityConfig.parse(mapOf("classname" to "Foo"))
+        val config = ComplexityConfig.parse(mapOf("pattern" to "Foo"))
 
         assertEquals(true, config.collapseLambdas)
     }
 
     @Test
     fun `parses collapse-lambdas false`() {
-        val config = ComplexityConfig.parse(mapOf("classname" to "Foo", "collapse-lambdas" to "false"))
+        val config = ComplexityConfig.parse(mapOf("pattern" to "Foo", "collapse-lambdas" to "false"))
 
         assertEquals(false, config.collapseLambdas)
     }
 
     @Test
     fun `defaults top to 50 when absent`() {
-        val config = ComplexityConfig.parse(mapOf("classname" to "Foo"))
+        val config = ComplexityConfig.parse(mapOf("pattern" to "Foo"))
 
         assertEquals(50, config.top)
     }
 
     @Test
     fun `parses top from properties`() {
-        val config = ComplexityConfig.parse(mapOf("classname" to "Foo", "top" to "10"))
+        val config = ComplexityConfig.parse(mapOf("pattern" to "Foo", "top" to "10"))
 
         assertEquals(10, config.top)
     }
