@@ -191,11 +191,19 @@ Based on external feedback (60% false positive rate in real-world triage). Three
 
 ## ~~75. Framework annotation presets for `cnavDead`~~ DONE
 
-Added `-Dframework=spring` (also: `jpa`, `jackson`) parameter to `cnavDead` that auto-excludes known framework annotations from dead code results. Eliminates most false positives in framework-heavy projects without requiring manual `-Dexclude-annotated` lists.
+Added `-Dframework=spring` (also: `jpa`, `jackson`, `jakarta`, `validation`, `junit`) parameter to `cnavDead` that auto-excludes known framework annotations from dead code results. Eliminates most false positives in framework-heavy projects without requiring manual `-Dexclude-annotated` lists.
 
-**Spring preset** includes: `Controller`, `RestController`, `Service`, `Component`, `Repository`, `Configuration`, `Bean`, `Scheduled`, `EventListener`, `PostConstruct`, `PreDestroy`, `ExceptionHandler`, `ControllerAdvice`, `Endpoint`, `SpringBootApplication`, `EnableAutoConfiguration`, `ComponentScan`, plus JPA annotations (`Entity`, `MappedSuperclass`, `Embeddable`, `Converter`, `EntityListeners`).
+**Spring preset** includes: `Controller`, `RestController`, `Service`, `Component`, `Repository`, `Configuration`, `Bean`, `Scheduled`, `EventListener`, `ExceptionHandler`, `ControllerAdvice`, `Endpoint`, `SpringBootApplication`, `EnableAutoConfiguration`, `ComponentScan`, plus all JPA, Jakarta, and Validation annotations (via set composition).
+
+**Jakarta preset**: `PostConstruct`, `PreDestroy`, `Inject`, `Named`, `Singleton`, `Qualifier`.
+
+**Validation preset**: All `jakarta.validation.constraints.*` (NotNull, NotBlank, NotEmpty, Size, Min, Max, Pattern, Email, Positive, Negative, Past, Future, Digits, DecimalMin, DecimalMax, AssertTrue, AssertFalse, Null, and their OrZero/OrPresent variants), plus `jakarta.validation.Valid` and Hibernate Validator annotations (Length, Range, URL, CreditCardNumber).
+
+**JUnit preset**: `Test`, `BeforeEach`, `AfterEach`, `BeforeAll`, `AfterAll`, `ParameterizedTest`, `RepeatedTest`, `TestFactory`, `Disabled`, `ExtendWith`, `Tag`, `Nested`, `DisplayName`.
 
 **Multiple presets** can be combined: `-Dframework=spring,jackson`. Framework annotations are merged with any explicit `-Dexclude-annotated` values.
+
+**Type-safe AnnotationName**: All annotation storage refactored from raw `String` to `AnnotationName` inline value class (in `DomainTypes.kt`), following the existing `ClassName` and `PackageName` patterns. `AnnotationName` stores the full FQN and provides `.simpleName()`, `.packageName()`, `.matches(Regex)` methods. TEXT/LLM formatters use `.simpleName()` for display; JSON formatter uses `.value` for full FQN output.
 
 **Tested on Spring Petclinic**: reduced dead code results from 22 items (18 false positives) to 8 items (5 `package-info` files + 3 legitimate edge cases). Implementation: `FrameworkPresets.kt` lookup object, wired through `DeadCodeConfig.parse()`, `TaskRegistry.FRAMEWORK` param, Gradle `DeadCodeTask`, and Maven `DeadCodeMojo`.
 

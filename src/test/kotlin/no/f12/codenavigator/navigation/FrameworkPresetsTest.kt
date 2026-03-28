@@ -80,6 +80,7 @@ class FrameworkPresetsTest {
 
         assertTrue(annotations.contains(AnnotationName("jakarta.persistence.Entity")))
         assertTrue(annotations.contains(AnnotationName("jakarta.persistence.MappedSuperclass")))
+        assertTrue(annotations.contains(AnnotationName("jakarta.persistence.Table")))
     }
 
     @Test
