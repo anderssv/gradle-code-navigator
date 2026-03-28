@@ -21,7 +21,7 @@ import no.f12.codenavigator.navigation.ClassComplexity
 import no.f12.codenavigator.navigation.CycleDetail
 import no.f12.codenavigator.navigation.DeadCode
 import no.f12.codenavigator.navigation.MetricsResult
-import no.f12.codenavigator.navigation.StringConstantMatch
+import no.f12.codenavigator.navigation.stringconstant.StringConstantMatch
 import no.f12.codenavigator.navigation.SupertypeInfo
 import no.f12.codenavigator.navigation.TypeHierarchyResult
 import no.f12.codenavigator.navigation.UsageSite

@@ -2,7 +2,6 @@ package no.f12.codenavigator.gradle
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.analysis.ChurnBuilder
@@ -31,11 +30,10 @@ abstract class ChurnTask : DefaultTask() {
             return
         }
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatChurn(churn)
-            OutputFormat.LLM -> LlmFormatter.formatChurn(churn)
-            OutputFormat.TEXT -> ChurnFormatter.format(churn)
-        }
-        logger.lifecycle(OutputWrapper.wrap(output, config.format))
+        logger.lifecycle(OutputWrapper.formatAndWrap(config.format,
+            text = { ChurnFormatter.format(churn) },
+            json = { JsonFormatter.formatChurn(churn) },
+            llm = { LlmFormatter.formatChurn(churn) },
+        ))
     }
 }

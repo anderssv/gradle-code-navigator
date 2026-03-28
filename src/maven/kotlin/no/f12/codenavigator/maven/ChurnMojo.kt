@@ -2,7 +2,6 @@ package no.f12.codenavigator.maven
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.analysis.ChurnBuilder
 import no.f12.codenavigator.analysis.ChurnConfig
@@ -45,12 +44,11 @@ class ChurnMojo : AbstractMojo() {
             return
         }
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatChurn(churn)
-            OutputFormat.LLM -> LlmFormatter.formatChurn(churn)
-            OutputFormat.TEXT -> ChurnFormatter.format(churn)
-        }
-        println(OutputWrapper.wrap(output, config.format))
+        println(OutputWrapper.formatAndWrap(config.format,
+            text = { ChurnFormatter.format(churn) },
+            json = { JsonFormatter.formatChurn(churn) },
+            llm = { LlmFormatter.formatChurn(churn) },
+        ))
     }
 
     private fun buildPropertyMap(): Map<String, String?> = buildMap {

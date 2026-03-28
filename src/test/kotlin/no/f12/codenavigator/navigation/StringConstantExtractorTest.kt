@@ -1,5 +1,6 @@
 package no.f12.codenavigator.navigation
 
+import no.f12.codenavigator.navigation.stringconstant.StringConstantExtractor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
 import org.junit.jupiter.api.io.TempDir

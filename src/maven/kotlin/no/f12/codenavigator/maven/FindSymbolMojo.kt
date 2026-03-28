@@ -2,7 +2,6 @@ package no.f12.codenavigator.maven
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.navigation.FindSymbolConfig
@@ -54,12 +53,11 @@ class FindSymbolMojo : AbstractMojo() {
         val allSymbols = result.data
         val matches = SymbolFilter.filter(allSymbols, config.pattern)
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatSymbols(matches)
-            OutputFormat.LLM -> LlmFormatter.formatSymbols(matches)
-            OutputFormat.TEXT -> SymbolTableFormatter.format(matches)
-        }
-        println(OutputWrapper.wrap(output, config.format))
+        println(OutputWrapper.formatAndWrap(config.format,
+            text = { SymbolTableFormatter.format(matches) },
+            json = { JsonFormatter.formatSymbols(matches) },
+            llm = { LlmFormatter.formatSymbols(matches) },
+        ))
     }
 
     private fun buildPropertyMap(): Map<String, String?> = buildMap {

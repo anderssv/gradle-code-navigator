@@ -2,7 +2,6 @@ package no.f12.codenavigator.gradle
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.navigation.FindInterfaceImplsConfig
@@ -57,11 +56,10 @@ abstract class FindInterfaceImplsTask : DefaultTask() {
             return
         }
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatInterfaces(registry, matchingInterfaces)
-            OutputFormat.LLM -> LlmFormatter.formatInterfaces(registry, matchingInterfaces)
-            OutputFormat.TEXT -> InterfaceFormatter.format(registry, matchingInterfaces)
-        }
-        logger.lifecycle(OutputWrapper.wrap(output, config.format))
+        logger.lifecycle(OutputWrapper.formatAndWrap(config.format,
+            text = { InterfaceFormatter.format(registry, matchingInterfaces) },
+            json = { JsonFormatter.formatInterfaces(registry, matchingInterfaces) },
+            llm = { LlmFormatter.formatInterfaces(registry, matchingInterfaces) },
+        ))
     }
 }

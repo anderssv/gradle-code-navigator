@@ -2,7 +2,6 @@ package no.f12.codenavigator.maven
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.analysis.GitLogRunner
 import no.f12.codenavigator.analysis.HotspotBuilder
@@ -48,12 +47,11 @@ class HotspotsMojo : AbstractMojo() {
             return
         }
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatHotspots(hotspots)
-            OutputFormat.LLM -> LlmFormatter.formatHotspots(hotspots)
-            OutputFormat.TEXT -> HotspotFormatter.format(hotspots)
-        }
-        println(OutputWrapper.wrap(output, config.format))
+        println(OutputWrapper.formatAndWrap(config.format,
+            text = { HotspotFormatter.format(hotspots) },
+            json = { JsonFormatter.formatHotspots(hotspots) },
+            llm = { LlmFormatter.formatHotspots(hotspots) },
+        ))
     }
 
     private fun buildPropertyMap(): Map<String, String?> = buildMap {

@@ -31,7 +31,7 @@ import no.f12.codenavigator.navigation.DeadCode
 import no.f12.codenavigator.navigation.DeadCodeConfidence
 import no.f12.codenavigator.navigation.DeadCodeKind
 import no.f12.codenavigator.navigation.DeadCodeReason
-import no.f12.codenavigator.navigation.StringConstantMatch
+import no.f12.codenavigator.navigation.stringconstant.StringConstantMatch
 import no.f12.codenavigator.navigation.MetricsResult
 import no.f12.codenavigator.navigation.AnnotationMatch
 import no.f12.codenavigator.navigation.MethodAnnotationMatch

@@ -2,7 +2,6 @@ package no.f12.codenavigator.gradle
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.navigation.CallGraphCache
@@ -50,11 +49,10 @@ abstract class ComplexityTask : DefaultTask() {
             return
         }
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatComplexity(truncated)
-            OutputFormat.LLM -> LlmFormatter.formatComplexity(truncated)
-            OutputFormat.TEXT -> ComplexityFormatter.format(truncated)
-        }
-        logger.lifecycle(OutputWrapper.wrap(output, config.format))
+        logger.lifecycle(OutputWrapper.formatAndWrap(config.format,
+            text = { ComplexityFormatter.format(truncated) },
+            json = { JsonFormatter.formatComplexity(truncated) },
+            llm = { LlmFormatter.formatComplexity(truncated) },
+        ))
     }
 }

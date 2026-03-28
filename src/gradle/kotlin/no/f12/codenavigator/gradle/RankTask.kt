@@ -2,7 +2,6 @@ package no.f12.codenavigator.gradle
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.navigation.CallGraphCache
@@ -43,11 +42,10 @@ abstract class RankTask : DefaultTask() {
             return
         }
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatRank(ranked)
-            OutputFormat.LLM -> LlmFormatter.formatRank(ranked)
-            OutputFormat.TEXT -> RankFormatter.format(ranked)
-        }
-        logger.lifecycle(OutputWrapper.wrap(output, config.format))
+        logger.lifecycle(OutputWrapper.formatAndWrap(config.format,
+            text = { RankFormatter.format(ranked) },
+            json = { JsonFormatter.formatRank(ranked) },
+            llm = { LlmFormatter.formatRank(ranked) },
+        ))
     }
 }

@@ -2,7 +2,6 @@ package no.f12.codenavigator.maven
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.navigation.CallGraphBuilder
 import no.f12.codenavigator.navigation.MethodRef
@@ -70,12 +69,11 @@ class PackageDepsMojo : AbstractMojo() {
             deps.allPackages()
         }
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatPackageDeps(deps, packages, config.reverse)
-            OutputFormat.LLM -> LlmFormatter.formatPackageDeps(deps, packages, config.reverse)
-            OutputFormat.TEXT -> PackageDependencyFormatter.format(deps, packages, config.reverse)
-        }
-        println(OutputWrapper.wrap(output, config.format))
+        println(OutputWrapper.formatAndWrap(config.format,
+            text = { PackageDependencyFormatter.format(deps, packages, config.reverse) },
+            json = { JsonFormatter.formatPackageDeps(deps, packages, config.reverse) },
+            llm = { LlmFormatter.formatPackageDeps(deps, packages, config.reverse) },
+        ))
     }
 
     private fun buildPropertyMap(): Map<String, String?> = buildMap {

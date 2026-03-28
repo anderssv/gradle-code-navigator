@@ -3,12 +3,11 @@ package no.f12.codenavigator.maven
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
 import no.f12.codenavigator.TaskRegistry
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.navigation.SkippedFileReporter
-import no.f12.codenavigator.navigation.StringConstantConfig
-import no.f12.codenavigator.navigation.StringConstantFormatter
-import no.f12.codenavigator.navigation.StringConstantScanner
+import no.f12.codenavigator.navigation.stringconstant.StringConstantConfig
+import no.f12.codenavigator.navigation.stringconstant.StringConstantFormatter
+import no.f12.codenavigator.navigation.stringconstant.StringConstantScanner
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugins.annotations.Execute
 import org.apache.maven.plugins.annotations.LifecyclePhase
@@ -54,12 +53,11 @@ class StringConstantMojo : AbstractMojo() {
             return
         }
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatStringConstants(matches)
-            OutputFormat.LLM -> LlmFormatter.formatStringConstants(matches)
-            OutputFormat.TEXT -> StringConstantFormatter.format(matches)
-        }
-        println(OutputWrapper.wrap(output, config.format))
+        println(OutputWrapper.formatAndWrap(config.format,
+            text = { StringConstantFormatter.format(matches) },
+            json = { JsonFormatter.formatStringConstants(matches) },
+            llm = { LlmFormatter.formatStringConstants(matches) },
+        ))
     }
 
     private fun buildPropertyMap(): Map<String, String?> = buildMap {

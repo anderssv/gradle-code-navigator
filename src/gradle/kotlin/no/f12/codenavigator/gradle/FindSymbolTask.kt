@@ -2,7 +2,6 @@ package no.f12.codenavigator.gradle
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.navigation.FindSymbolConfig
@@ -43,12 +42,10 @@ abstract class FindSymbolTask : DefaultTask() {
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { logger.warn(it) }
         val allSymbols = result.data
         val matches = SymbolFilter.filter(allSymbols, config.pattern)
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatSymbols(matches)
-            OutputFormat.LLM -> LlmFormatter.formatSymbols(matches)
-            OutputFormat.TEXT -> SymbolTableFormatter.format(matches)
-        }
-
-        logger.lifecycle(OutputWrapper.wrap(output, config.format))
+        logger.lifecycle(OutputWrapper.formatAndWrap(config.format,
+            text = { SymbolTableFormatter.format(matches) },
+            json = { JsonFormatter.formatSymbols(matches) },
+            llm = { LlmFormatter.formatSymbols(matches) },
+        ))
     }
 }

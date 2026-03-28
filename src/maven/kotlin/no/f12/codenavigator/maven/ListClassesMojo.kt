@@ -2,7 +2,6 @@ package no.f12.codenavigator.maven
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TableFormatter
 import no.f12.codenavigator.navigation.ClassScanner
@@ -43,13 +42,11 @@ class ListClassesMojo : AbstractMojo() {
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { log.warn(it) }
         val classes = result.data
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatClasses(classes)
-            OutputFormat.LLM -> LlmFormatter.formatClasses(classes)
-            OutputFormat.TEXT -> TableFormatter.format(classes)
-        }
-
-        println(OutputWrapper.wrap(output, config.format))
+        println(OutputWrapper.formatAndWrap(config.format,
+            text = { TableFormatter.format(classes) },
+            json = { JsonFormatter.formatClasses(classes) },
+            llm = { LlmFormatter.formatClasses(classes) },
+        ))
     }
 
     private fun buildPropertyMap(): Map<String, String?> = buildMap {

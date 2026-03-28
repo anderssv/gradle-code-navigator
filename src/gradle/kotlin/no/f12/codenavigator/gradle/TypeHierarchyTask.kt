@@ -2,7 +2,6 @@ package no.f12.codenavigator.gradle
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.navigation.SkippedFileReporter
@@ -46,11 +45,10 @@ abstract class TypeHierarchyTask : DefaultTask() {
             return
         }
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatTypeHierarchy(results)
-            OutputFormat.LLM -> LlmFormatter.formatTypeHierarchy(results)
-            OutputFormat.TEXT -> TypeHierarchyFormatter.format(results)
-        }
-        logger.lifecycle(OutputWrapper.wrap(output, config.format))
+        logger.lifecycle(OutputWrapper.formatAndWrap(config.format,
+            text = { TypeHierarchyFormatter.format(results) },
+            json = { JsonFormatter.formatTypeHierarchy(results) },
+            llm = { LlmFormatter.formatTypeHierarchy(results) },
+        ))
     }
 }

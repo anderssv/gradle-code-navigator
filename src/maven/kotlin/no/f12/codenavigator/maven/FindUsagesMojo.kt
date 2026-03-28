@@ -2,7 +2,6 @@ package no.f12.codenavigator.maven
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.navigation.FindUsagesConfig
@@ -73,12 +72,11 @@ class FindUsagesMojo : AbstractMojo() {
             return
         }
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatUsages(usages)
-            OutputFormat.LLM -> LlmFormatter.formatUsages(usages)
-            OutputFormat.TEXT -> UsageFormatter.format(usages)
-        }
-        println(OutputWrapper.wrap(output, config.format))
+        println(OutputWrapper.formatAndWrap(config.format,
+            text = { UsageFormatter.format(usages) },
+            json = { JsonFormatter.formatUsages(usages) },
+            llm = { LlmFormatter.formatUsages(usages) },
+        ))
     }
 
     private fun buildPropertyMap(): Map<String, String?> = buildMap {

@@ -2,7 +2,6 @@ package no.f12.codenavigator.maven
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.navigation.AnnotationExtractor
@@ -86,12 +85,11 @@ class FindCallersMojo : AbstractMojo() {
             classAnnotations = classAnnotations,
             methodAnnotations = methodAnnotations,
         )
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.renderCallTrees(trees)
-            OutputFormat.LLM -> LlmFormatter.renderCallTrees(trees, CallDirection.CALLERS)
-            OutputFormat.TEXT -> CallTreeFormatter.renderTrees(trees, CallDirection.CALLERS)
-        }
-        println(OutputWrapper.wrap(output, config.format))
+        println(OutputWrapper.formatAndWrap(config.format,
+            text = { CallTreeFormatter.renderTrees(trees, CallDirection.CALLERS) },
+            json = { JsonFormatter.renderCallTrees(trees) },
+            llm = { LlmFormatter.renderCallTrees(trees, CallDirection.CALLERS) },
+        ))
     }
 
     private fun buildPropertyMap(): Map<String, String?> = buildMap {

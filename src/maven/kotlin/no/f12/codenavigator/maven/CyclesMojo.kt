@@ -2,7 +2,6 @@ package no.f12.codenavigator.maven
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.navigation.CycleDetector
 import no.f12.codenavigator.navigation.CyclesConfig
@@ -56,12 +55,11 @@ class CyclesMojo : AbstractMojo() {
         val cycles = CycleDetector.findCycles(adjacency)
         val details = CycleDetector.enrich(cycles, matrix)
 
-        val output = when (config.format) {
-            OutputFormat.TEXT -> CyclesFormatter.format(details)
-            OutputFormat.JSON -> JsonFormatter.formatCycles(details)
-            OutputFormat.LLM -> LlmFormatter.formatCycles(details)
-        }
-        println(OutputWrapper.wrap(output, config.format))
+        println(OutputWrapper.formatAndWrap(config.format,
+            text = { CyclesFormatter.format(details) },
+            json = { JsonFormatter.formatCycles(details) },
+            llm = { LlmFormatter.formatCycles(details) },
+        ))
     }
 
     private fun buildPropertyMap(): Map<String, String?> = buildMap {

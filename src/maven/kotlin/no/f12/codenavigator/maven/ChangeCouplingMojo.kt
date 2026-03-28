@@ -2,7 +2,6 @@ package no.f12.codenavigator.maven
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.analysis.ChangeCouplingBuilder
 import no.f12.codenavigator.analysis.ChangeCouplingConfig
@@ -54,12 +53,11 @@ class ChangeCouplingMojo : AbstractMojo() {
             return
         }
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatCoupling(pairs)
-            OutputFormat.LLM -> LlmFormatter.formatCoupling(pairs)
-            OutputFormat.TEXT -> ChangeCouplingFormatter.format(pairs)
-        }
-        println(OutputWrapper.wrap(output, config.format))
+        println(OutputWrapper.formatAndWrap(config.format,
+            text = { ChangeCouplingFormatter.format(pairs) },
+            json = { JsonFormatter.formatCoupling(pairs) },
+            llm = { LlmFormatter.formatCoupling(pairs) },
+        ))
     }
 
     private fun buildPropertyMap(): Map<String, String?> = buildMap {

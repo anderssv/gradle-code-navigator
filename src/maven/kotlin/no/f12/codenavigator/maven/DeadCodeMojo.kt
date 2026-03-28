@@ -2,7 +2,6 @@ package no.f12.codenavigator.maven
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.navigation.AnnotationExtractor
 import no.f12.codenavigator.navigation.CallGraphBuilder
@@ -110,12 +109,11 @@ class DeadCodeMojo : AbstractMojo() {
             return
         }
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatDead(dead)
-            OutputFormat.LLM -> LlmFormatter.formatDead(dead)
-            OutputFormat.TEXT -> DeadCodeFormatter.format(dead)
-        }
-        println(OutputWrapper.wrap(output, config.format))
+        println(OutputWrapper.formatAndWrap(config.format,
+            text = { DeadCodeFormatter.format(dead) },
+            json = { JsonFormatter.formatDead(dead) },
+            llm = { LlmFormatter.formatDead(dead) },
+        ))
     }
 
     private fun buildPropertyMap(): Map<String, String?> = buildMap {

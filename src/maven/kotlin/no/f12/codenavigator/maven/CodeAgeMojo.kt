@@ -2,7 +2,6 @@ package no.f12.codenavigator.maven
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.analysis.CodeAgeBuilder
 import no.f12.codenavigator.analysis.CodeAgeConfig
@@ -46,12 +45,11 @@ class CodeAgeMojo : AbstractMojo() {
             return
         }
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatAge(ages)
-            OutputFormat.LLM -> LlmFormatter.formatAge(ages)
-            OutputFormat.TEXT -> CodeAgeFormatter.format(ages)
-        }
-        println(OutputWrapper.wrap(output, config.format))
+        println(OutputWrapper.formatAndWrap(config.format,
+            text = { CodeAgeFormatter.format(ages) },
+            json = { JsonFormatter.formatAge(ages) },
+            llm = { LlmFormatter.formatAge(ages) },
+        ))
     }
 
     private fun buildPropertyMap(): Map<String, String?> = buildMap {

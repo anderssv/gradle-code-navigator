@@ -2,7 +2,6 @@ package no.f12.codenavigator.maven
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.analysis.AuthorAnalysisBuilder
 import no.f12.codenavigator.analysis.AuthorAnalysisConfig
@@ -48,12 +47,11 @@ class AuthorAnalysisMojo : AbstractMojo() {
             return
         }
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatAuthors(modules)
-            OutputFormat.LLM -> LlmFormatter.formatAuthors(modules)
-            OutputFormat.TEXT -> AuthorAnalysisFormatter.format(modules)
-        }
-        println(OutputWrapper.wrap(output, config.format))
+        println(OutputWrapper.formatAndWrap(config.format,
+            text = { AuthorAnalysisFormatter.format(modules) },
+            json = { JsonFormatter.formatAuthors(modules) },
+            llm = { LlmFormatter.formatAuthors(modules) },
+        ))
     }
 
     private fun buildPropertyMap(): Map<String, String?> = buildMap {

@@ -2,7 +2,6 @@ package no.f12.codenavigator.gradle
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.navigation.CallGraphCache
@@ -53,11 +52,10 @@ abstract class PackageDepsTask : DefaultTask() {
             deps.allPackages()
         }
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatPackageDeps(deps, packages, config.reverse)
-            OutputFormat.LLM -> LlmFormatter.formatPackageDeps(deps, packages, config.reverse)
-            OutputFormat.TEXT -> PackageDependencyFormatter.format(deps, packages, config.reverse)
-        }
-        logger.lifecycle(OutputWrapper.wrap(output, config.format))
+        logger.lifecycle(OutputWrapper.formatAndWrap(config.format,
+            text = { PackageDependencyFormatter.format(deps, packages, config.reverse) },
+            json = { JsonFormatter.formatPackageDeps(deps, packages, config.reverse) },
+            llm = { LlmFormatter.formatPackageDeps(deps, packages, config.reverse) },
+        ))
     }
 }

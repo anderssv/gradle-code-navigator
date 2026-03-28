@@ -2,7 +2,6 @@ package no.f12.codenavigator.gradle
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.navigation.CycleDetector
@@ -43,11 +42,10 @@ abstract class CyclesTask : DefaultTask() {
         val cycles = CycleDetector.findCycles(adjacency)
         val details = CycleDetector.enrich(cycles, matrix)
 
-        val output = when (config.format) {
-            OutputFormat.TEXT -> CyclesFormatter.format(details)
-            OutputFormat.JSON -> JsonFormatter.formatCycles(details)
-            OutputFormat.LLM -> LlmFormatter.formatCycles(details)
-        }
-        logger.lifecycle(OutputWrapper.wrap(output, config.format))
+        logger.lifecycle(OutputWrapper.formatAndWrap(config.format,
+            text = { CyclesFormatter.format(details) },
+            json = { JsonFormatter.formatCycles(details) },
+            llm = { LlmFormatter.formatCycles(details) },
+        ))
     }
 }

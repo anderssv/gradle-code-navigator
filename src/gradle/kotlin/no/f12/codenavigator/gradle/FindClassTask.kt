@@ -2,7 +2,6 @@ package no.f12.codenavigator.gradle
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TableFormatter
 import no.f12.codenavigator.TaskRegistry
@@ -43,12 +42,10 @@ abstract class FindClassTask : DefaultTask() {
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { logger.warn(it) }
         val allClasses = result.data
         val matches = ClassFilter.filter(allClasses, config.pattern)
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatClasses(matches)
-            OutputFormat.LLM -> LlmFormatter.formatClasses(matches)
-            OutputFormat.TEXT -> TableFormatter.format(matches)
-        }
-
-        logger.lifecycle(OutputWrapper.wrap(output, config.format))
+        logger.lifecycle(OutputWrapper.formatAndWrap(config.format,
+            text = { TableFormatter.format(matches) },
+            json = { JsonFormatter.formatClasses(matches) },
+            llm = { LlmFormatter.formatClasses(matches) },
+        ))
     }
 }

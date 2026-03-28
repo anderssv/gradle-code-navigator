@@ -2,7 +2,6 @@ package no.f12.codenavigator.gradle
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.navigation.AnnotationExtractor
@@ -68,11 +67,10 @@ abstract class FindCalleesTask : DefaultTask() {
             classAnnotations = classAnnotations,
             methodAnnotations = methodAnnotations,
         )
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.renderCallTrees(trees)
-            OutputFormat.LLM -> LlmFormatter.renderCallTrees(trees, CallDirection.CALLEES)
-            OutputFormat.TEXT -> CallTreeFormatter.renderTrees(trees, CallDirection.CALLEES)
-        }
-        logger.lifecycle(OutputWrapper.wrap(output, config.format))
+        logger.lifecycle(OutputWrapper.formatAndWrap(config.format,
+            text = { CallTreeFormatter.renderTrees(trees, CallDirection.CALLEES) },
+            json = { JsonFormatter.renderCallTrees(trees) },
+            llm = { LlmFormatter.renderCallTrees(trees, CallDirection.CALLEES) },
+        ))
     }
 }

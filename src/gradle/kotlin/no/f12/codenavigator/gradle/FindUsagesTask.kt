@@ -2,7 +2,6 @@ package no.f12.codenavigator.gradle
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.navigation.FindUsagesConfig
@@ -48,11 +47,10 @@ abstract class FindUsagesTask : DefaultTask() {
             return
         }
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatUsages(usages)
-            OutputFormat.LLM -> LlmFormatter.formatUsages(usages)
-            OutputFormat.TEXT -> UsageFormatter.format(usages)
-        }
-        logger.lifecycle(OutputWrapper.wrap(output, config.format))
+        logger.lifecycle(OutputWrapper.formatAndWrap(config.format,
+            text = { UsageFormatter.format(usages) },
+            json = { JsonFormatter.formatUsages(usages) },
+            llm = { LlmFormatter.formatUsages(usages) },
+        ))
     }
 }

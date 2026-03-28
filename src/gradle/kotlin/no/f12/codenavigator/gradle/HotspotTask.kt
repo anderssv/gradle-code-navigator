@@ -2,7 +2,6 @@ package no.f12.codenavigator.gradle
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.analysis.GitLogRunner
@@ -31,11 +30,10 @@ abstract class HotspotTask : DefaultTask() {
             return
         }
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatHotspots(hotspots)
-            OutputFormat.LLM -> LlmFormatter.formatHotspots(hotspots)
-            OutputFormat.TEXT -> HotspotFormatter.format(hotspots)
-        }
-        logger.lifecycle(OutputWrapper.wrap(output, config.format))
+        logger.lifecycle(OutputWrapper.formatAndWrap(config.format,
+            text = { HotspotFormatter.format(hotspots) },
+            json = { JsonFormatter.formatHotspots(hotspots) },
+            llm = { LlmFormatter.formatHotspots(hotspots) },
+        ))
     }
 }

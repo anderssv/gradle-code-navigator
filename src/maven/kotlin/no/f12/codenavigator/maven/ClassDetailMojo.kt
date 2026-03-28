@@ -2,7 +2,6 @@ package no.f12.codenavigator.maven
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.navigation.ClassDetailFormatter
@@ -59,12 +58,11 @@ class ClassDetailMojo : AbstractMojo() {
             return
         }
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatClassDetails(matchingDetails)
-            OutputFormat.LLM -> LlmFormatter.formatClassDetails(matchingDetails)
-            OutputFormat.TEXT -> ClassDetailFormatter.format(matchingDetails)
-        }
-        println(OutputWrapper.wrap(output, config.format))
+        println(OutputWrapper.formatAndWrap(config.format,
+            text = { ClassDetailFormatter.format(matchingDetails) },
+            json = { JsonFormatter.formatClassDetails(matchingDetails) },
+            llm = { LlmFormatter.formatClassDetails(matchingDetails) },
+        ))
     }
 
     private fun buildPropertyMap(): Map<String, String?> = buildMap {

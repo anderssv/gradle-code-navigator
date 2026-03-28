@@ -2,7 +2,6 @@ package no.f12.codenavigator.maven
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.navigation.DsmConfig
 import no.f12.codenavigator.navigation.DsmDependencyExtractor
@@ -61,20 +60,11 @@ class DsmMojo : AbstractMojo() {
         val dependencies = result.data
         val matrix = DsmMatrixBuilder.build(dependencies, config.rootPackage, config.depth)
 
-        val output = if (config.cyclesOnly || config.cycleFilter != null) {
-            when (config.format) {
-                OutputFormat.TEXT -> DsmFormatter.formatCycles(matrix, config.cycleFilter)
-                OutputFormat.JSON -> JsonFormatter.formatDsmCycles(matrix, config.cycleFilter)
-                OutputFormat.LLM -> LlmFormatter.formatDsmCycles(matrix, config.cycleFilter)
-            }
-        } else {
-            when (config.format) {
-                OutputFormat.TEXT -> DsmFormatter.format(matrix)
-                OutputFormat.JSON -> JsonFormatter.formatDsm(matrix)
-                OutputFormat.LLM -> LlmFormatter.formatDsm(matrix)
-            }
-        }
-        println(OutputWrapper.wrap(output, config.format))
+        println(OutputWrapper.formatAndWrap(config.format,
+            text = { if (config.cyclesOnly || config.cycleFilter != null) DsmFormatter.formatCycles(matrix, config.cycleFilter) else DsmFormatter.format(matrix) },
+            json = { if (config.cyclesOnly || config.cycleFilter != null) JsonFormatter.formatDsmCycles(matrix, config.cycleFilter) else JsonFormatter.formatDsm(matrix) },
+            llm = { if (config.cyclesOnly || config.cycleFilter != null) LlmFormatter.formatDsmCycles(matrix, config.cycleFilter) else LlmFormatter.formatDsm(matrix) },
+        ))
 
         if (config.htmlPath != null) {
             val htmlFile = File(project.basedir, config.htmlPath)

@@ -3,12 +3,11 @@ package no.f12.codenavigator.gradle
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
 import no.f12.codenavigator.TaskRegistry
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.navigation.SkippedFileReporter
-import no.f12.codenavigator.navigation.StringConstantConfig
-import no.f12.codenavigator.navigation.StringConstantFormatter
-import no.f12.codenavigator.navigation.StringConstantScanner
+import no.f12.codenavigator.navigation.stringconstant.StringConstantConfig
+import no.f12.codenavigator.navigation.stringconstant.StringConstantFormatter
+import no.f12.codenavigator.navigation.stringconstant.StringConstantScanner
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.SourceSetContainer
@@ -39,11 +38,10 @@ abstract class StringConstantTask : DefaultTask() {
             return
         }
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatStringConstants(matches)
-            OutputFormat.LLM -> LlmFormatter.formatStringConstants(matches)
-            OutputFormat.TEXT -> StringConstantFormatter.format(matches)
-        }
-        logger.lifecycle(OutputWrapper.wrap(output, config.format))
+        logger.lifecycle(OutputWrapper.formatAndWrap(config.format,
+            text = { StringConstantFormatter.format(matches) },
+            json = { JsonFormatter.formatStringConstants(matches) },
+            llm = { LlmFormatter.formatStringConstants(matches) },
+        ))
     }
 }

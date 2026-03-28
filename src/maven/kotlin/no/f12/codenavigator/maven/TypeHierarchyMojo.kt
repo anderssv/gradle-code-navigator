@@ -2,7 +2,6 @@ package no.f12.codenavigator.maven
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.navigation.TypeHierarchyBuilder
@@ -60,12 +59,11 @@ class TypeHierarchyMojo : AbstractMojo() {
             return
         }
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatTypeHierarchy(results)
-            OutputFormat.LLM -> LlmFormatter.formatTypeHierarchy(results)
-            OutputFormat.TEXT -> TypeHierarchyFormatter.format(results)
-        }
-        println(OutputWrapper.wrap(output, config.format))
+        println(OutputWrapper.formatAndWrap(config.format,
+            text = { TypeHierarchyFormatter.format(results) },
+            json = { JsonFormatter.formatTypeHierarchy(results) },
+            llm = { LlmFormatter.formatTypeHierarchy(results) },
+        ))
     }
 
     private fun buildPropertyMap(): Map<String, String?> = buildMap {

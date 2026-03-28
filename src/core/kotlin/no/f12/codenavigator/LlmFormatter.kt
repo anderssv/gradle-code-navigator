@@ -22,7 +22,7 @@ import no.f12.codenavigator.navigation.SymbolInfo
 import no.f12.codenavigator.navigation.DsmMatrix
 import no.f12.codenavigator.navigation.RankedType
 import no.f12.codenavigator.navigation.DeadCode
-import no.f12.codenavigator.navigation.StringConstantMatch
+import no.f12.codenavigator.navigation.stringconstant.StringConstantMatch
 import no.f12.codenavigator.navigation.SupertypeInfo
 import no.f12.codenavigator.navigation.SupertypeKind
 import no.f12.codenavigator.navigation.MetricsResult

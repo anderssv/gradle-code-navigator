@@ -2,7 +2,6 @@ package no.f12.codenavigator.maven
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.navigation.CallGraphBuilder
 import no.f12.codenavigator.navigation.RankConfig
@@ -60,12 +59,11 @@ class RankMojo : AbstractMojo() {
             return
         }
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatRank(ranked)
-            OutputFormat.LLM -> LlmFormatter.formatRank(ranked)
-            OutputFormat.TEXT -> RankFormatter.format(ranked)
-        }
-        println(OutputWrapper.wrap(output, config.format))
+        println(OutputWrapper.formatAndWrap(config.format,
+            text = { RankFormatter.format(ranked) },
+            json = { JsonFormatter.formatRank(ranked) },
+            llm = { LlmFormatter.formatRank(ranked) },
+        ))
     }
 
     private fun buildPropertyMap(): Map<String, String?> = buildMap {

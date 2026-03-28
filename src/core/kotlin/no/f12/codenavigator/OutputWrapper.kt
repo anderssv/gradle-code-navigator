@@ -8,4 +8,18 @@ object OutputWrapper {
             OutputFormat.TEXT -> output
             OutputFormat.JSON, OutputFormat.LLM -> "---CNAV_BEGIN---\n$output\n---CNAV_END---"
         }
+
+    fun formatAndWrap(
+        format: OutputFormat,
+        text: () -> String,
+        json: () -> String,
+        llm: () -> String,
+    ): String {
+        val output = when (format) {
+            OutputFormat.TEXT -> text()
+            OutputFormat.JSON -> json()
+            OutputFormat.LLM -> llm()
+        }
+        return wrap(output, format)
+    }
 }

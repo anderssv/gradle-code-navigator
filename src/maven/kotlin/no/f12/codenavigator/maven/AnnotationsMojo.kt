@@ -2,7 +2,6 @@ package no.f12.codenavigator.maven
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.navigation.AnnotationQueryBuilder
@@ -53,12 +52,11 @@ class AnnotationsMojo : AbstractMojo() {
 
         val matches = AnnotationQueryBuilder.query(listOf(classesDir), config.pattern, config.methods)
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatAnnotations(matches)
-            OutputFormat.LLM -> LlmFormatter.formatAnnotations(matches)
-            OutputFormat.TEXT -> AnnotationQueryFormatter.format(matches)
-        }
-        println(OutputWrapper.wrap(output, config.format))
+        println(OutputWrapper.formatAndWrap(config.format,
+            text = { AnnotationQueryFormatter.format(matches) },
+            json = { JsonFormatter.formatAnnotations(matches) },
+            llm = { LlmFormatter.formatAnnotations(matches) },
+        ))
     }
 
     private fun buildPropertyMap(): Map<String, String?> = buildMap {

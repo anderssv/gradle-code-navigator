@@ -2,7 +2,6 @@ package no.f12.codenavigator.gradle
 
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.config.OutputFormat
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.analysis.CodeAgeBuilder
@@ -32,11 +31,10 @@ abstract class CodeAgeTask : DefaultTask() {
             return
         }
 
-        val output = when (config.format) {
-            OutputFormat.JSON -> JsonFormatter.formatAge(ages)
-            OutputFormat.LLM -> LlmFormatter.formatAge(ages)
-            OutputFormat.TEXT -> CodeAgeFormatter.format(ages)
-        }
-        logger.lifecycle(OutputWrapper.wrap(output, config.format))
+        logger.lifecycle(OutputWrapper.formatAndWrap(config.format,
+            text = { CodeAgeFormatter.format(ages) },
+            json = { JsonFormatter.formatAge(ages) },
+            llm = { LlmFormatter.formatAge(ages) },
+        ))
     }
 }
