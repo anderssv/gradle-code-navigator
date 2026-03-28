@@ -4,7 +4,7 @@ import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TableFormatter
-import no.f12.codenavigator.navigation.classinfo.ClassScanner
+import no.f12.codenavigator.navigation.classinfo.ClassIndexCache
 import no.f12.codenavigator.navigation.classinfo.ListClassesConfig
 import no.f12.codenavigator.navigation.SkippedFileReporter
 import org.apache.maven.plugin.AbstractMojo
@@ -37,7 +37,7 @@ class ListClassesMojo : AbstractMojo() {
             return
         }
 
-        val result = ClassScanner.scan(listOf(classesDir))
+        val result = ClassIndexCache.getOrBuild(File(project.build.directory, "cnav/class-index.cache"), listOf(classesDir))
         val reportFile = File(project.build.directory, "cnav/skipped-files.txt")
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { log.warn(it) }
         val classes = result.data

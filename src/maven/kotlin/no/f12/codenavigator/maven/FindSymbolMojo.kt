@@ -7,7 +7,7 @@ import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.navigation.symbol.FindSymbolConfig
 import no.f12.codenavigator.navigation.SkippedFileReporter
 import no.f12.codenavigator.navigation.symbol.SymbolFilter
-import no.f12.codenavigator.navigation.symbol.SymbolScanner
+import no.f12.codenavigator.navigation.symbol.SymbolIndexCache
 import no.f12.codenavigator.navigation.symbol.SymbolTableFormatter
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoFailureException
@@ -47,7 +47,7 @@ class FindSymbolMojo : AbstractMojo() {
             return
         }
 
-        val result = SymbolScanner.scan(listOf(classesDir))
+        val result = SymbolIndexCache.getOrBuild(File(project.build.directory, "cnav/symbol-index.cache"), listOf(classesDir))
         val reportFile = File(project.build.directory, "cnav/skipped-files.txt")
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { log.warn(it) }
         val allSymbols = result.data

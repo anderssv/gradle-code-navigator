@@ -3,7 +3,7 @@ package no.f12.codenavigator.maven
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
 import no.f12.codenavigator.OutputWrapper
-import no.f12.codenavigator.navigation.callgraph.CallGraphBuilder
+import no.f12.codenavigator.navigation.callgraph.CallGraphCache
 import no.f12.codenavigator.navigation.callgraph.MethodRef
 import no.f12.codenavigator.navigation.dsm.PackageDependencyBuilder
 import no.f12.codenavigator.navigation.dsm.PackageDependencyFormatter
@@ -48,7 +48,7 @@ class PackageDepsMojo : AbstractMojo() {
             return
         }
 
-        val result = CallGraphBuilder.build(listOf(classesDir))
+        val result = CallGraphCache.getOrBuild(File(project.build.directory, "cnav/call-graph.cache"), listOf(classesDir))
         val reportFile = File(project.build.directory, "cnav/skipped-files.txt")
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { log.warn(it) }
         val graph = result.data

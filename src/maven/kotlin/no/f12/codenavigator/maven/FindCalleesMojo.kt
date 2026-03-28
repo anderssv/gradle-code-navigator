@@ -6,11 +6,11 @@ import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.navigation.annotation.AnnotationExtractor
 import no.f12.codenavigator.navigation.callgraph.CallDirection
-import no.f12.codenavigator.navigation.callgraph.CallGraphBuilder
+import no.f12.codenavigator.navigation.callgraph.CallGraphCache
 import no.f12.codenavigator.navigation.callgraph.CallGraphConfig
 import no.f12.codenavigator.navigation.callgraph.CallTreeBuilder
 import no.f12.codenavigator.navigation.callgraph.CallTreeFormatter
-import no.f12.codenavigator.navigation.interfaces.InterfaceRegistry
+import no.f12.codenavigator.navigation.interfaces.InterfaceRegistryCache
 import no.f12.codenavigator.navigation.SkippedFileReporter
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoFailureException
@@ -61,7 +61,7 @@ class FindCalleesMojo : AbstractMojo() {
             return
         }
 
-        val result = CallGraphBuilder.build(listOf(classesDir))
+        val result = CallGraphCache.getOrBuild(File(project.build.directory, "cnav/call-graph.cache"), listOf(classesDir))
         val reportFile = File(project.build.directory, "cnav/skipped-files.txt")
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { log.warn(it) }
         val graph = result.data
@@ -72,7 +72,7 @@ class FindCalleesMojo : AbstractMojo() {
             return
         }
 
-        val interfaceRegistry = InterfaceRegistry.build(listOf(classesDir)).data
+        val interfaceRegistry = InterfaceRegistryCache.getOrBuild(File(project.build.directory, "cnav/interface-registry.cache"), listOf(classesDir)).data
         val interfaceImplementors = interfaceRegistry.implementorMap()
         val classToInterfaces = interfaceRegistry.classToInterfacesMap()
 

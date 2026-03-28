@@ -3,7 +3,7 @@ package no.f12.codenavigator.maven
 import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
 import no.f12.codenavigator.OutputWrapper
-import no.f12.codenavigator.navigation.callgraph.CallGraphBuilder
+import no.f12.codenavigator.navigation.callgraph.CallGraphCache
 import no.f12.codenavigator.navigation.SkippedFileReporter
 import no.f12.codenavigator.navigation.rank.RankConfig
 import no.f12.codenavigator.navigation.rank.RankFormatter
@@ -47,7 +47,7 @@ class RankMojo : AbstractMojo() {
 
         val config = RankConfig.parse(buildPropertyMap())
 
-        val result = CallGraphBuilder.build(listOf(classesDir))
+        val result = CallGraphCache.getOrBuild(File(project.build.directory, "cnav/call-graph.cache"), listOf(classesDir))
         val reportFile = File(project.build.directory, "cnav/skipped-files.txt")
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { log.warn(it) }
         val graph = result.data

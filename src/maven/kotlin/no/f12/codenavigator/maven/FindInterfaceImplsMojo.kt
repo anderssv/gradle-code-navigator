@@ -6,7 +6,7 @@ import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.navigation.interfaces.FindInterfaceImplsConfig
 import no.f12.codenavigator.navigation.interfaces.InterfaceFormatter
-import no.f12.codenavigator.navigation.interfaces.InterfaceRegistry
+import no.f12.codenavigator.navigation.interfaces.InterfaceRegistryCache
 import no.f12.codenavigator.navigation.SkippedFileReporter
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoFailureException
@@ -58,7 +58,8 @@ class FindInterfaceImplsMojo : AbstractMojo() {
             }
         }
 
-        val result = InterfaceRegistry.build(classDirectories)
+        val cacheFileName = if (config.includeTest) "interface-registry-all.cache" else "interface-registry.cache"
+        val result = InterfaceRegistryCache.getOrBuild(File(project.build.directory, "cnav/$cacheFileName"), classDirectories)
         val reportFile = File(project.build.directory, "cnav/skipped-files.txt")
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { log.warn(it) }
         val registry = result.data

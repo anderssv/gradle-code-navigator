@@ -4,14 +4,14 @@ import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.navigation.annotation.AnnotationExtractor
-import no.f12.codenavigator.navigation.callgraph.CallGraphBuilder
+import no.f12.codenavigator.navigation.callgraph.CallGraphCache
 import no.f12.codenavigator.navigation.ClassName
 import no.f12.codenavigator.navigation.deadcode.DeadCodeConfig
 import no.f12.codenavigator.navigation.deadcode.DeadCodeFinder
 import no.f12.codenavigator.navigation.deadcode.DeadCodeFormatter
 import no.f12.codenavigator.navigation.deadcode.FieldExtractor
 import no.f12.codenavigator.navigation.deadcode.InlineMethodDetector
-import no.f12.codenavigator.navigation.interfaces.InterfaceRegistry
+import no.f12.codenavigator.navigation.interfaces.InterfaceRegistryCache
 import no.f12.codenavigator.navigation.SkippedFileReporter
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugins.annotations.Execute
@@ -61,7 +61,7 @@ class DeadCodeMojo : AbstractMojo() {
 
         val config = DeadCodeConfig.parse(buildPropertyMap())
 
-        val result = CallGraphBuilder.build(listOf(classesDir))
+        val result = CallGraphCache.getOrBuild(File(project.build.directory, "cnav/call-graph.cache"), listOf(classesDir))
         val reportFile = File(project.build.directory, "cnav/skipped-files.txt")
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { log.warn(it) }
         val graph = result.data
@@ -71,12 +71,12 @@ class DeadCodeMojo : AbstractMojo() {
 
         val testClassesDir = File(project.build.testOutputDirectory)
         val testGraph = if (testClassesDir.exists()) {
-            CallGraphBuilder.build(listOf(testClassesDir)).data
+            CallGraphCache.getOrBuild(File(project.build.directory, "cnav/test-call-graph.cache"), listOf(testClassesDir)).data
         } else {
             null
         }
 
-        val interfaceRegistry = InterfaceRegistry.build(listOf(classesDir)).data
+        val interfaceRegistry = InterfaceRegistryCache.getOrBuild(File(project.build.directory, "cnav/interface-registry.cache"), listOf(classesDir)).data
         val interfaceImplementors = mutableMapOf<ClassName, MutableSet<ClassName>>()
         interfaceRegistry.forEachEntry { interfaceName, implementors ->
             interfaceImplementors[interfaceName] = implementors.map { it.className }.toMutableSet()

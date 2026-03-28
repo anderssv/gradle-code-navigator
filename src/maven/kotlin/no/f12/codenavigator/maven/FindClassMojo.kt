@@ -6,7 +6,7 @@ import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TableFormatter
 import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.navigation.classinfo.ClassFilter
-import no.f12.codenavigator.navigation.classinfo.ClassScanner
+import no.f12.codenavigator.navigation.classinfo.ClassIndexCache
 import no.f12.codenavigator.navigation.classinfo.FindClassConfig
 import no.f12.codenavigator.navigation.SkippedFileReporter
 import org.apache.maven.plugin.AbstractMojo
@@ -49,7 +49,7 @@ class FindClassMojo : AbstractMojo() {
             return
         }
 
-        val result = ClassScanner.scan(listOf(classesDir))
+        val result = ClassIndexCache.getOrBuild(File(project.build.directory, "cnav/class-index.cache"), listOf(classesDir))
         val reportFile = File(project.build.directory, "cnav/skipped-files.txt")
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { log.warn(it) }
         val allClasses = result.data

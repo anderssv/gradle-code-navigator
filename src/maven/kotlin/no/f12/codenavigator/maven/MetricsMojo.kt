@@ -6,7 +6,7 @@ import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.analysis.GitLogRunner
 import no.f12.codenavigator.analysis.HotspotBuilder
 import no.f12.codenavigator.navigation.annotation.AnnotationExtractor
-import no.f12.codenavigator.navigation.callgraph.CallGraphBuilder
+import no.f12.codenavigator.navigation.callgraph.CallGraphCache
 import no.f12.codenavigator.navigation.classinfo.ClassScanner
 import no.f12.codenavigator.navigation.dsm.CycleDetector
 import no.f12.codenavigator.navigation.deadcode.DeadCodeFinder
@@ -67,7 +67,7 @@ class MetricsMojo : AbstractMojo() {
         val config = MetricsConfig.parse(buildPropertyMap())
         val classDirectories = listOf(classesDir)
 
-        val graphResult = CallGraphBuilder.build(classDirectories)
+        val graphResult = CallGraphCache.getOrBuild(File(project.build.directory, "cnav/call-graph.cache"), classDirectories)
         val reportFile = File(project.build.directory, "cnav/skipped-files.txt")
         SkippedFileReporter.report(graphResult.skippedFiles, reportFile)?.let { log.warn(it) }
         val graph = graphResult.data
