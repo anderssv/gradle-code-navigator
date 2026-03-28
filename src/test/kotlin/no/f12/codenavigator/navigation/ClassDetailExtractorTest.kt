@@ -254,7 +254,7 @@ class ClassDetailExtractorTest {
         val detail = ClassDetailExtractor.extract(classFile)
 
         val annotation = detail.methods.first().annotations.first()
-        assertEquals("CircuitBreaker", annotation.name)
+        assertEquals("io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker", annotation.name)
         assertEquals(mapOf("name" to "backend", "fallbackMethod" to "fallback"), annotation.parameters)
     }
 
@@ -270,7 +270,7 @@ class ClassDetailExtractorTest {
         val detail = ClassDetailExtractor.extract(classFile)
 
         val annotation = detail.methods.first().annotations.first()
-        assertEquals("Cacheable", annotation.name)
+        assertEquals("org.springframework.cache.annotation.Cacheable", annotation.name)
         assertEquals(mapOf("value" to "users"), annotation.parameters)
     }
 
@@ -285,7 +285,7 @@ class ClassDetailExtractorTest {
 
         assertEquals(1, detail.fields.size)
         assertEquals(1, detail.fields.first().annotations.size)
-        assertEquals("Inject", detail.fields.first().annotations.first().name)
+        assertEquals("jakarta.inject.Inject", detail.fields.first().annotations.first().name)
     }
 
     @Test
@@ -298,7 +298,13 @@ class ClassDetailExtractorTest {
         val detail = ClassDetailExtractor.extract(classFile)
 
         assertEquals(2, detail.annotations.size)
-        assertEquals(listOf("Service", "Transactional"), detail.annotations.map { it.name })
+        assertEquals(
+            listOf(
+                "org.springframework.stereotype.Service",
+                "org.springframework.transaction.annotation.Transactional",
+            ),
+            detail.annotations.map { it.name },
+        )
     }
 
     @Test
@@ -312,7 +318,10 @@ class ClassDetailExtractorTest {
 
         assertEquals(1, detail.methods.size)
         assertEquals(1, detail.methods.first().annotations.size)
-        assertEquals("CircuitBreaker", detail.methods.first().annotations.first().name)
+        assertEquals(
+            "io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker",
+            detail.methods.first().annotations.first().name,
+        )
     }
 
     @Test
@@ -324,7 +333,7 @@ class ClassDetailExtractorTest {
         val detail = ClassDetailExtractor.extract(classFile)
 
         assertEquals(1, detail.annotations.size)
-        assertEquals("Component", detail.annotations.first().name)
+        assertEquals("org.springframework.stereotype.Component", detail.annotations.first().name)
     }
 
     @Test
@@ -357,7 +366,7 @@ class ClassDetailExtractorTest {
         val detail = ClassDetailExtractor.extract(classFile)
 
         val annotation = detail.methods.first().annotations.first()
-        assertEquals("Operation", annotation.name)
+        assertEquals("io.swagger.v3.oas.annotations.Operation", annotation.name)
         assertEquals(mapOf("summary" to "@ApiResponse(responseCode=200, description=OK)"), annotation.parameters)
     }
 
@@ -376,7 +385,7 @@ class ClassDetailExtractorTest {
         val detail = ClassDetailExtractor.extract(classFile)
 
         val annotation = detail.methods.first().annotations.first()
-        assertEquals("RequestMapping", annotation.name)
+        assertEquals("org.springframework.web.bind.annotation.RequestMapping", annotation.name)
         assertEquals(mapOf("value" to "[/api/users, /api/v2/users]"), annotation.parameters)
     }
 
@@ -443,7 +452,7 @@ class ClassDetailExtractorTest {
         val detail = ClassDetailExtractor.extract(classFile)
 
         val annotation = detail.methods.first().annotations.first()
-        assertEquals("RequestMapping", annotation.name)
+        assertEquals("org.springframework.web.bind.annotation.RequestMapping", annotation.name)
         assertEquals(mapOf("method" to "RequestMethod.GET"), annotation.parameters)
     }
 

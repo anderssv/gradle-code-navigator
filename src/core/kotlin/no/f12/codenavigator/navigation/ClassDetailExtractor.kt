@@ -158,7 +158,10 @@ object ClassDetailExtractor {
         else -> type.className
     }
 
-    private fun annotationName(descriptor: String): String =
+    private fun annotationFqn(descriptor: String): String =
+        Type.getType(descriptor).className
+
+    private fun typeSimpleName(descriptor: String): String =
         Type.getType(descriptor).className.substringAfterLast('.')
 
     private fun collectAnnotation(
@@ -166,7 +169,7 @@ object ClassDetailExtractor {
         annotations: MutableList<AnnotationDetail>,
     ): AnnotationVisitor? {
         if (descriptor == null) return null
-        val name = annotationName(descriptor)
+        val name = annotationFqn(descriptor)
         val parameters = mutableMapOf<String, String>()
 
         return object : AnnotationVisitor(Opcodes.ASM9) {
@@ -178,7 +181,7 @@ object ClassDetailExtractor {
 
             override fun visitEnum(paramName: String?, descriptor: String, value: String) {
                 if (paramName != null) {
-                    val enumClass = annotationName(descriptor)
+                    val enumClass = typeSimpleName(descriptor)
                     parameters[paramName] = "$enumClass.$value"
                 }
             }
@@ -194,7 +197,7 @@ object ClassDetailExtractor {
                     }
 
                     override fun visitEnum(name: String?, descriptor: String, value: String) {
-                        val enumClass = annotationName(descriptor)
+                        val enumClass = typeSimpleName(descriptor)
                         elements.add("$enumClass.$value")
                     }
 
@@ -210,7 +213,7 @@ object ClassDetailExtractor {
 
             override fun visitAnnotation(paramName: String?, descriptor: String): AnnotationVisitor? {
                 if (paramName == null) return null
-                val nestedName = annotationName(descriptor)
+                val nestedName = typeSimpleName(descriptor)
                 val nestedParams = mutableMapOf<String, String>()
                 return object : AnnotationVisitor(Opcodes.ASM9) {
                     override fun visit(name: String?, value: Any?) {
