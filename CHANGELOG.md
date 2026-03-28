@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.40
+
+- **Improved:** `cnavCallers`/`cnavCallees` — annotation parameters now appear in call tree output. Annotations show their parameters (e.g. `@GetMapping(value="/users") [spring]`) in all three output formats (TEXT, LLM, JSON). Previously only the annotation name and framework were shown.
+- **Improved:** Introduced `AggregatedAnnotations` as the return type from `AnnotationExtractor.scanAll()`, carrying parameter maps alongside annotation name sets.
+- **Refactoring:** Extracted shared `annotationParameterVisitor()` utility from duplicated ASM visitor logic in `AnnotationExtractor` and `ClassDetailExtractor`.
+
 ## 0.1.39
 
 - **Improved:** Split `navigation/` package into 12 feature sub-packages (`annotation/`, `callgraph/`, `classinfo/`, `complexity/`, `deadcode/`, `dsm/`, `hierarchy/`, `interfaces/`, `metrics/`, `rank/`, `stringconstant/`, `symbol/`) for better code organization. Shared utilities remain at the `navigation/` root.
