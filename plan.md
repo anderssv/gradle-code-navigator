@@ -2,6 +2,34 @@
 
 ## Bytecode analysis improvements
 
+### 73. `cnavDead` framework entry point hints — reduce false positives (High value, medium effort)
+
+From external feedback: 60% of cnavDead candidates were false positives, mainly framework callbacks (Ktor route handlers, Jackson `@JsonCreator`, Exposed DSL). These are called reflectively or by the framework, not from project code directly.
+
+- **Approach**: Support a `.cnav-entry-points` configuration file (or Gradle/Maven DSL) that declares framework entry point patterns:
+  ```
+  # Annotations that mark entry points (simple names)
+  @JsonCreator
+  @Route
+  @Scheduled
+  @EventListener
+  @Bean
+
+  # Class patterns that are always entry points
+  class:**Routes
+  class:**Module
+  ```
+- **Behavior**: Classes/methods matching these patterns are excluded from dead code results (or forced to LOW confidence).
+- **Why**: Cuts false positives significantly for framework-heavy projects without requiring `-Pexclude-annotated` on every invocation.
+- **Alternative**: Ship a built-in set of common framework annotations (Spring, Ktor, Jackson, JUnit) that are always treated as LOW confidence, with opt-out.
+
+### 74. `cnavDead` diff-friendly output — confirm cleanup was complete (Medium value, low effort)
+
+From external feedback: after triaging dead code and removing items, it would be useful to re-run `cnavDead` and see "these 10 are now gone."
+
+- **Approach**: `-Pbaseline=<path>` parameter pointing to a saved JSON output from a previous run. On re-run, show a diff: items removed since baseline, items still present, new items.
+- **Alternative**: Simpler approach — just saving JSON and using `jq` to diff. But built-in support would be more ergonomic.
+
 ### 38. Full classpath scanning option (High value, medium effort)
 
 Most tasks only scan the project's compiled output directories. When checking what is available on the classpath — e.g., verifying a library class's method signatures or finding all implementations of a framework interface — scanning only project code is insufficient.
@@ -183,6 +211,60 @@ Run all analysis tasks (both bytecode and git history) and produce a consolidate
 ### S6. Split root package to clarify dependency direction (Medium value, medium effort)
 
 The root `codenavigator` package serves as both "shared infrastructure" and "library API." Splitting into `codenavigator.format` (formatters + OutputFormat) and `codenavigator.registry` (TaskRegistry, BuildTool) would make the dependency direction explicit.
+
+## Framework awareness
+
+### 75. Framework annotation presets for `cnavDead` — eliminate common false positives (High value, low effort)
+
+Tested on Spring Petclinic: 18 of 30 classes flagged as dead, nearly all false positives because Spring discovers them via annotations/reflection. The existing `-Pexclude-annotated` requires manually listing every annotation.
+
+- **Parameter**: `-Dframework=spring` (also: `ktor`, `micronaut`, `quarkus` — start with Spring)
+- **Behavior**: Automatically adds a curated set of framework annotations to the exclude list:
+  - Spring: `Controller`, `RestController`, `Service`, `Component`, `Repository`, `Configuration`, `Bean`, `Scheduled`, `EventListener`, `PostConstruct`, `PreDestroy`, `ExceptionHandler`, `ControllerAdvice`, `Endpoint`
+  - Multiple frameworks can be combined: `-Dframework=spring,jackson`
+- **Implementation**: A `FrameworkPresets` object mapping framework names to annotation sets. Merged with any explicit `-Dexclude-annotated` values before filtering.
+- **Why low effort**: The filtering infrastructure already exists. This is just a lookup table.
+- **Relationship to item 73**: Item 73 proposes a `.cnav-entry-points` config file for project-specific patterns. Framework presets complement that — presets cover common cases, the config file covers project-specific ones.
+
+### 76. Meta-annotation traversal for dead code filtering (High value, medium effort)
+
+`@RestController` is meta-annotated with `@Controller` which is meta-annotated with `@Component`. Currently, excluding `Component` does NOT exclude `@RestController` — the tool checks simple annotation names literally, not the annotation hierarchy.
+
+- **Approach**: When building the annotation map in `AnnotationExtractor`, also scan the annotations themselves (from classpath JARs) and resolve meta-annotations transitively. If `@Component` is excluded, anything bearing an annotation that is itself (directly or transitively) annotated with `@Component` is also excluded.
+- **Scope**: Only needed for dead code filtering. The `AnnotationExtractor` already scans class files — extend it to also scan annotation class files for their annotations.
+- **Requires**: Reading annotation `.class` files from the classpath (not just project classes). Could reuse infrastructure from item 38 (classpath scanning), or scan only `java.lang.annotation`-retained annotations which are a small set.
+- **Why high value**: Covers custom stereotype annotations automatically. A project defining `@DomainService` (meta-annotated with `@Component`) would be handled without any configuration.
+
+### 77. Interface dispatch resolution in `cnavCallers`/`cnavCallees` (High value, medium effort)
+
+In Spring (and DI-heavy code generally), code is written against interfaces: `ownerRepository.findById()` calls `OwnerRepository` (an interface). Searching for callers of the concrete implementation finds nothing, because bytecode records the interface call.
+
+- **Current state**: `DeadCodeFinder` already resolves interface dispatch internally (marks implementing methods as alive when the interface method is called). But `cnavCallers`/`cnavCallees` use the raw `CallGraphBuilder` output without this resolution.
+- **Approach**: Add an optional interface dispatch resolution pass to `CallTreeBuilder`. When tracing callers of `Impl.method()`, also include callers of `Interface.method()` if `Impl` implements `Interface`. When tracing callees from a call to `Interface.method()`, show the concrete implementations that could be dispatched to.
+- **Parameter**: `-Dresolve-interfaces=true` (default: false, to preserve current behavior)
+- **Why high value for Spring**: Nearly all Spring service calls go through interfaces. Without this, caller/callee tracing misses the actual call chains.
+
+### 78. Spring Data repository awareness in dead code (Medium value, low effort)
+
+Spring Data repositories (e.g., `OwnerRepository extends JpaRepository`) are interfaces with no implementing class in project bytecode — Spring generates proxy implementations at runtime. These are always flagged as dead.
+
+- **Approach**: In `DeadCodeFinder`, if a class is an interface that extends an external interface matching known Spring Data base types (`JpaRepository`, `CrudRepository`, `PagingAndSortingRepository`, `ReactiveCrudRepository`, `MongoRepository`, etc.), treat it as alive (or LOW confidence).
+- **Alternative**: Subsumable by item 76 (meta-annotation traversal) if `@Repository` is on the interface. But many Spring Data repos don't have `@Repository` — the `extends JpaRepository` is sufficient for Spring to pick them up.
+- **Relationship to item 75**: Framework presets would handle `@Repository`-annotated repos, but this item catches the common pattern where `@Repository` is omitted.
+
+### 79. `cnavAnnotations` — query by annotation (Medium value, low effort)
+
+No task currently answers "find all `@Transactional` methods" or "find all `@GetMapping` endpoints." The annotation extraction infrastructure exists (`AnnotationExtractor`, `ClassDetailExtractor`) but no task exposes it as a query.
+
+```bash
+./gradlew cnavAnnotations -Ppattern=GetMapping
+./gradlew cnavAnnotations -Ppattern=Transactional -Pmethods=true
+```
+
+- **Parameters**: `-Ppattern=<annotation-name-regex>` (required), `-Pmethods=true` (show method-level matches, not just class-level)
+- **Output**: Classes/methods bearing the matching annotation, with annotation parameter values where present.
+- **Implementation**: `AnnotationExtractor.scanAll()` already builds the annotation maps. This task just queries and formats them.
+- **Why useful for Spring**: Endpoint discovery (`@GetMapping`, `@PostMapping`), transaction boundary analysis (`@Transactional`), async method inventory (`@Async`), event handler listing (`@EventListener`), cache configuration (`@Cacheable`).
 
 ## Future ideas (not yet planned)
 

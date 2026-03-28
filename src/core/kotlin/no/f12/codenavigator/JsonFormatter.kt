@@ -241,6 +241,7 @@ object JsonFormatter {
                 "kind" to d.kind.name.lowercase(),
                 "sourceFile" to d.sourceFile,
                 "confidence" to d.confidence.name.lowercase(),
+                "reason" to d.reason.name.lowercase(),
             )
         }
 

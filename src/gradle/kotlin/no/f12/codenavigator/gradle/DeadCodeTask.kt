@@ -28,7 +28,7 @@ abstract class DeadCodeTask : DefaultTask() {
     fun showDeadCode() {
         val config = DeadCodeConfig.parse(
             project.buildPropertyMap(
-                propertyNames = listOf("filter", "exclude", "classes-only", "exclude-annotated", "format", "llm"),
+                propertyNames = listOf("filter", "exclude", "classes-only", "exclude-annotated", "prod-only", "format", "llm"),
                 flagNames = emptyList(),
             ),
         )
@@ -44,11 +44,7 @@ abstract class DeadCodeTask : DefaultTask() {
         val graph = result.data
 
         val excludeAnnotated = config.excludeAnnotated.toSet()
-        val (classAnnotations, methodAnnotations) = if (excludeAnnotated.isNotEmpty()) {
-            AnnotationExtractor.scanAll(classDirectories)
-        } else {
-            Pair(emptyMap(), emptyMap())
-        }
+        val (classAnnotations, methodAnnotations) = AnnotationExtractor.scanAll(classDirectories)
 
         val testSourceSet = sourceSets.findByName("test")
         val testClassDirectories = testSourceSet?.output?.classesDirs?.files?.filter { it.exists() }?.toList() ?: emptyList()
@@ -89,6 +85,7 @@ abstract class DeadCodeTask : DefaultTask() {
             classFields = classFields,
             inlineMethods = inlineMethods,
             classExternalInterfaces = classExternalInterfaces,
+            prodOnly = config.prodOnly,
         )
 
         if (dead.isEmpty()) {

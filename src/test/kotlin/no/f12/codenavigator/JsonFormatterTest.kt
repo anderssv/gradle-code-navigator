@@ -27,6 +27,7 @@ import no.f12.codenavigator.navigation.CycleEdge
 import no.f12.codenavigator.navigation.DeadCode
 import no.f12.codenavigator.navigation.DeadCodeConfidence
 import no.f12.codenavigator.navigation.DeadCodeKind
+import no.f12.codenavigator.navigation.DeadCodeReason
 import no.f12.codenavigator.navigation.StringConstantMatch
 import no.f12.codenavigator.navigation.MetricsResult
 import kotlin.test.Test
@@ -624,8 +625,8 @@ class JsonFormatterTest {
     @Test
     fun `formats dead code as JSON array with all fields`() {
         val dead = listOf(
-            DeadCode(ClassName("com.example.Orphan"), null, DeadCodeKind.CLASS, "Orphan.kt", DeadCodeConfidence.HIGH),
-            DeadCode(ClassName("com.example.Service"), "unused", DeadCodeKind.METHOD, "Service.kt", DeadCodeConfidence.MEDIUM),
+            DeadCode(ClassName("com.example.Orphan"), null, DeadCodeKind.CLASS, "Orphan.kt", DeadCodeConfidence.HIGH, DeadCodeReason.NO_REFERENCES),
+            DeadCode(ClassName("com.example.Service"), "unused", DeadCodeKind.METHOD, "Service.kt", DeadCodeConfidence.MEDIUM, DeadCodeReason.TEST_ONLY),
         )
 
         val result = JsonFormatter.formatDead(dead)
@@ -634,10 +635,12 @@ class JsonFormatterTest {
         assertTrue(result.contains("\"kind\":\"class\""))
         assertTrue(result.contains("\"sourceFile\":\"Orphan.kt\""))
         assertTrue(result.contains("\"confidence\":\"high\""))
+        assertTrue(result.contains("\"reason\":\"no_references\""))
         assertTrue(result.contains("\"className\":\"com.example.Service\""))
         assertTrue(result.contains("\"memberName\":\"unused\""))
         assertTrue(result.contains("\"kind\":\"method\""))
         assertTrue(result.contains("\"confidence\":\"medium\""))
+        assertTrue(result.contains("\"reason\":\"test_only\""))
     }
 
     // === String constant formatting ===

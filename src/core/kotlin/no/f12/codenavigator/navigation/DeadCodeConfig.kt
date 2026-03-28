@@ -9,6 +9,7 @@ data class DeadCodeConfig(
     val exclude: Regex?,
     val classesOnly: Boolean,
     val excludeAnnotated: List<String>,
+    val prodOnly: Boolean,
     val format: OutputFormat,
 ) {
     companion object {
@@ -17,6 +18,7 @@ data class DeadCodeConfig(
             exclude = properties["exclude"]?.let { Regex(it, RegexOption.IGNORE_CASE) },
             classesOnly = TaskRegistry.CLASSES_ONLY.parse(properties["classes-only"]),
             excludeAnnotated = TaskRegistry.EXCLUDE_ANNOTATED.parse(properties["exclude-annotated"]),
+            prodOnly = TaskRegistry.PROD_ONLY.parse(properties["prod-only"]),
             format = ParamDef.parseFormat(properties),
         )
     }

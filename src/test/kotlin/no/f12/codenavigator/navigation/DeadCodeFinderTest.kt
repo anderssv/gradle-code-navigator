@@ -19,6 +19,7 @@ class DeadCodeFinderTest {
         classFields: Map<ClassName, Set<String>> = emptyMap(),
         inlineMethods: Set<MethodRef> = emptySet(),
         classExternalInterfaces: Map<ClassName, Set<ClassName>> = emptyMap(),
+        prodOnly: Boolean = false,
     ): List<DeadCode> = DeadCodeFinder.find(
         graph = graph,
         filter = filter,
@@ -32,6 +33,7 @@ class DeadCodeFinderTest {
         classFields = classFields,
         inlineMethods = inlineMethods,
         classExternalInterfaces = classExternalInterfaces,
+        prodOnly = prodOnly,
     )
 
     @Test
@@ -784,5 +786,139 @@ class DeadCodeFinderTest {
 
         val unmarshalDead = dead.first { it.memberName == "unmarshal" }
         assertEquals(DeadCodeConfidence.LOW, unmarshalDead.confidence, "External interface LOW should take priority over test-graph MEDIUM")
+    }
+
+    // === Dead code reason tests ===
+
+    @Test
+    fun `class unreferenced in both prod and test has reason NO_REFERENCES`() {
+        val prodGraph = testCallGraph(
+            method("com.example.Orphan", "run") to method("com.example.External", "call"),
+            projectClasses = setOf("com.example.Orphan"),
+        )
+        val testGraph = testCallGraph()
+
+        val dead = findDead(graph = prodGraph, testGraph = testGraph)
+
+        assertEquals(1, dead.size)
+        assertEquals(DeadCodeReason.NO_REFERENCES, dead[0].reason)
+    }
+
+    @Test
+    fun `class unreferenced in prod but referenced in test has reason TEST_ONLY`() {
+        val prodGraph = testCallGraph(
+            method("com.example.Orphan", "run") to method("com.example.External", "call"),
+            projectClasses = setOf("com.example.Orphan"),
+        )
+        val testGraph = testCallGraph(
+            method("com.example.OrphanTest", "testRun") to method("com.example.Orphan", "run"),
+        )
+
+        val dead = findDead(graph = prodGraph, testGraph = testGraph)
+
+        assertEquals(1, dead.size)
+        assertEquals(DeadCodeReason.TEST_ONLY, dead[0].reason)
+    }
+
+    @Test
+    fun `dead class with no test graph has reason NO_REFERENCES`() {
+        val graph = testCallGraph(
+            method("com.example.Orphan", "run") to method("com.example.External", "call"),
+            projectClasses = setOf("com.example.Orphan"),
+        )
+
+        val dead = findDead(graph = graph, testGraph = null)
+
+        assertEquals(1, dead.size)
+        assertEquals(DeadCodeReason.NO_REFERENCES, dead[0].reason)
+    }
+
+    @Test
+    fun `dead method unreferenced in prod but referenced in test has reason TEST_ONLY`() {
+        val prodGraph = testCallGraph(
+            method("com.example.Caller", "main") to method("com.example.Service", "process"),
+            method("com.example.Service", "helper") to method("com.example.Repo", "save"),
+            projectClasses = setOf("com.example.Caller", "com.example.Service", "com.example.Repo"),
+        )
+        val testGraph = testCallGraph(
+            method("com.example.ServiceTest", "testHelper") to method("com.example.Service", "helper"),
+        )
+
+        val dead = findDead(graph = prodGraph, testGraph = testGraph)
+
+        val helperDead = dead.first { it.memberName == "helper" }
+        assertEquals(DeadCodeReason.TEST_ONLY, helperDead.reason)
+    }
+
+    @Test
+    fun `dead method unreferenced in both prod and test has reason NO_REFERENCES`() {
+        val prodGraph = testCallGraph(
+            method("com.example.Caller", "main") to method("com.example.Service", "process"),
+            method("com.example.Service", "helper") to method("com.example.Repo", "save"),
+            projectClasses = setOf("com.example.Caller", "com.example.Service", "com.example.Repo"),
+        )
+        val testGraph = testCallGraph()
+
+        val dead = findDead(graph = prodGraph, testGraph = testGraph)
+
+        val helperDead = dead.first { it.memberName == "helper" }
+        assertEquals(DeadCodeReason.NO_REFERENCES, helperDead.reason)
+    }
+
+    // === Extension function tests ===
+
+    @Test
+    fun `extension function on Kt file-facade class called from other class is not dead`() {
+        val graph = testCallGraph(
+            method("com.example.Controller", "handle") to method("com.example.PollExtKt", "withAdminPoll"),
+            method("com.example.PollExtKt", "withAdminPoll") to method("com.example.Poll", "copy"),
+            method("com.example.Service", "process") to method("com.example.PollExtKt", "withAdminPoll"),
+            projectClasses = setOf("com.example.Controller", "com.example.PollExtKt", "com.example.Poll", "com.example.Service"),
+        )
+
+        val dead = findDead(graph)
+
+        val deadMethods = dead.filter { it.kind == DeadCodeKind.METHOD }.map { "${it.className.value}.${it.memberName}" }
+        val deadClasses = dead.filter { it.kind == DeadCodeKind.CLASS }.map { it.className.value }
+        assertTrue("com.example.PollExtKt.withAdminPoll" !in deadMethods, "withAdminPoll is called from Controller and Service — should not be dead")
+        assertTrue("com.example.PollExtKt" !in deadClasses, "PollExtKt is called from Controller and Service — should not be dead")
+    }
+
+    // === prodOnly flag tests ===
+
+    @Test
+    fun `prodOnly filters out TEST_ONLY items and keeps NO_REFERENCES`() {
+        val prodGraph = testCallGraph(
+            method("com.example.Service", "process") to method("com.example.External", "call"),
+            method("com.example.Util", "help") to method("com.example.External", "call"),
+            projectClasses = setOf("com.example.Service", "com.example.Util"),
+        )
+        val testGraph = testCallGraph(
+            method("com.example.ServiceTest", "test") to method("com.example.Service", "process"),
+        )
+
+        val dead = findDead(graph = prodGraph, testGraph = testGraph, prodOnly = true)
+
+        val deadClassNames = dead.map { it.className.value }
+        assertTrue("com.example.Util" in deadClassNames, "Util has NO_REFERENCES and should appear with prodOnly")
+        assertTrue("com.example.Service" !in deadClassNames, "Service is TEST_ONLY and should be filtered with prodOnly")
+    }
+
+    @Test
+    fun `prodOnly false shows both NO_REFERENCES and TEST_ONLY items`() {
+        val prodGraph = testCallGraph(
+            method("com.example.Service", "process") to method("com.example.External", "call"),
+            method("com.example.Util", "help") to method("com.example.External", "call"),
+            projectClasses = setOf("com.example.Service", "com.example.Util"),
+        )
+        val testGraph = testCallGraph(
+            method("com.example.ServiceTest", "test") to method("com.example.Service", "process"),
+        )
+
+        val dead = findDead(graph = prodGraph, testGraph = testGraph, prodOnly = false)
+
+        val deadClassNames = dead.map { it.className.value }
+        assertTrue("com.example.Util" in deadClassNames, "Util should appear without prodOnly")
+        assertTrue("com.example.Service" in deadClassNames, "Service should appear without prodOnly")
     }
 }

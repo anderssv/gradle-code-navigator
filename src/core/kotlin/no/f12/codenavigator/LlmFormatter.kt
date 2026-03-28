@@ -114,7 +114,7 @@ object LlmFormatter {
     fun formatDead(dead: List<DeadCode>): String =
         dead.joinToString("\n") { d ->
             val name = if (d.memberName != null) "${d.className}.${d.memberName}" else d.className.toString()
-            "$name ${d.kind.name} ${d.sourceFile} confidence=${d.confidence.name}"
+            "$name ${d.kind.name} ${d.sourceFile} confidence=${d.confidence.name} reason=${d.reason.name}"
         }
 
     fun formatStringConstants(matches: List<StringConstantMatch>): String =

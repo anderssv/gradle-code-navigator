@@ -47,6 +47,9 @@ class DeadCodeMojo : AbstractMojo() {
     @Parameter(property = "exclude-annotated")
     private var excludeAnnotated: String? = null
 
+    @Parameter(property = "prod-only")
+    private var prodOnly: String? = null
+
     override fun execute() {
         val classesDir = File(project.build.outputDirectory)
         if (!classesDir.exists()) {
@@ -62,11 +65,7 @@ class DeadCodeMojo : AbstractMojo() {
         val graph = result.data
 
         val excludeAnnotatedSet = config.excludeAnnotated.toSet()
-        val (classAnnotations, methodAnnotations) = if (excludeAnnotatedSet.isNotEmpty()) {
-            AnnotationExtractor.scanAll(listOf(classesDir))
-        } else {
-            Pair(emptyMap(), emptyMap())
-        }
+        val (classAnnotations, methodAnnotations) = AnnotationExtractor.scanAll(listOf(classesDir))
 
         val testClassesDir = File(project.build.testOutputDirectory)
         val testGraph = if (testClassesDir.exists()) {
@@ -100,6 +99,7 @@ class DeadCodeMojo : AbstractMojo() {
             classFields = classFields,
             inlineMethods = inlineMethods,
             classExternalInterfaces = classExternalInterfaces,
+            prodOnly = config.prodOnly,
         )
 
         if (dead.isEmpty()) {
@@ -122,5 +122,6 @@ class DeadCodeMojo : AbstractMojo() {
         exclude?.let { put("exclude", it) }
         classesOnly?.let { put("classes-only", it) }
         excludeAnnotated?.let { put("exclude-annotated", it) }
+        prodOnly?.let { put("prod-only", it) }
     }
 }

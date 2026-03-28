@@ -11,12 +11,20 @@ enum class DeadCodeConfidence {
     LOW,
 }
 
+enum class DeadCodeReason {
+    /** Not referenced in production or test code — highest removal confidence. */
+    NO_REFERENCES,
+    /** Referenced in test code but not in production — needs human judgment. */
+    TEST_ONLY,
+}
+
 data class DeadCode(
     val className: ClassName,
     val memberName: String?,
     val kind: DeadCodeKind,
     val sourceFile: String,
     val confidence: DeadCodeConfidence,
+    val reason: DeadCodeReason,
 )
 
 object DeadCodeFinder {
@@ -34,6 +42,7 @@ object DeadCodeFinder {
         classFields: Map<ClassName, Set<String>> = emptyMap(),
         inlineMethods: Set<MethodRef> = emptySet(),
         classExternalInterfaces: Map<ClassName, Set<ClassName>> = emptyMap(),
+        prodOnly: Boolean = false,
     ): List<DeadCode> {
         val projectClasses = graph.projectClasses()
         if (projectClasses.isEmpty()) return emptyList()
@@ -102,13 +111,16 @@ object DeadCodeFinder {
 
         for (cls in projectClasses) {
             if (cls !in calledTypes && !cls.isGenerated()) {
+                val referencedInTests = cls in testCalledTypes
+                val reason = if (testGraph != null && referencedInTests) DeadCodeReason.TEST_ONLY else DeadCodeReason.NO_REFERENCES
                 results.add(
                     DeadCode(
                         className = cls,
                         memberName = null,
                         kind = DeadCodeKind.CLASS,
                         sourceFile = graph.sourceFileOf(cls),
-                        confidence = classConfidence(cls, null, testGraph, cls in testCalledTypes, classAnnotations, methodAnnotations, classExternalInterfaces),
+                        confidence = classConfidence(cls, null, testGraph, referencedInTests, classAnnotations, methodAnnotations, classExternalInterfaces),
+                        reason = reason,
                     )
                 )
             }
@@ -123,13 +135,16 @@ object DeadCodeFinder {
                     !isPropertyAccessor(method, classFields) &&
                     method !in inlineMethods
                 ) {
+                    val referencedInTests = method in testCalledMethods
+                    val reason = if (testGraph != null && referencedInTests) DeadCodeReason.TEST_ONLY else DeadCodeReason.NO_REFERENCES
                     results.add(
                         DeadCode(
                             className = method.className,
                             memberName = method.methodName,
                             kind = DeadCodeKind.METHOD,
                             sourceFile = graph.sourceFileOf(method.className),
-                            confidence = classConfidence(method.className, method, testGraph, method in testCalledMethods, classAnnotations, methodAnnotations, classExternalInterfaces),
+                            confidence = classConfidence(method.className, method, testGraph, referencedInTests, classAnnotations, methodAnnotations, classExternalInterfaces),
+                            reason = reason,
                         )
                     )
                 }
@@ -140,6 +155,7 @@ object DeadCodeFinder {
             .filter { item -> filter == null || item.className.matches(filter) }
             .filter { item -> exclude == null || !item.className.matches(exclude) }
             .filter { item -> !isExcludedByAnnotation(item, excludeAnnotated, classAnnotations, methodAnnotations) }
+            .filter { item -> !prodOnly || item.reason == DeadCodeReason.NO_REFERENCES }
             .sortedWith(compareBy({ it.kind }, { it.className }, { it.memberName ?: "" }))
     }
 

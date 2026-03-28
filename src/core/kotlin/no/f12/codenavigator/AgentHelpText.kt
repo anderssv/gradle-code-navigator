@@ -203,6 +203,7 @@ object AgentHelpText {
         appendLine("   ${u("dead", p("exclude", "\"Main|Test\""))}    # exclude entry points")
         appendLine("   ${u("dead", p("classes-only", "true"))}         # only unreferenced classes")
         appendLine("   ${u("dead", p("exclude-annotated", "\"RestController,Scheduled\""))}  # skip framework-annotated")
+        appendLine("   ${u("dead", p("prod-only", "true"))}              # only items with zero references (production + test)")
         appendLine()
         appendLine("10. COMPLEXITY: Measure class coupling (fan-in/fan-out)")
         appendLine("   ${u("complexity")}                        # all classes sorted by fan-out")
@@ -222,6 +223,7 @@ object AgentHelpText {
 
     private fun generateInterpretation(tool: BuildTool): String = buildString {
         val t = { goal: String -> tool.taskName(goal) }
+        val p = { name: String, value: String -> tool.param(name, value) }
 
         appendLine("=== code-navigator: Result Interpretation ===")
         appendLine()
@@ -243,6 +245,10 @@ object AgentHelpText {
         appendLine("  HIGH = unreferenced in both production and test code.")
         appendLine("  MEDIUM = unreferenced in production but referenced in test code.")
         appendLine("  LOW = has framework annotations (likely invoked via reflection).")
+        appendLine("- Each result includes a reason: NO_REFERENCES or TEST_ONLY.")
+        appendLine("  NO_REFERENCES = no incoming references at all.")
+        appendLine("  TEST_ONLY = referenced only in test code, not production.")
+        appendLine("- Use ${p("prod-only", "true")} to hide TEST_ONLY items and focus on truly unreferenced code.")
         appendLine("- Use -Pexclude-annotated to suppress known framework entry points entirely.")
         appendLine("- Companion object members and data class copy()/componentN() are auto-filtered.")
         appendLine()
@@ -303,8 +309,8 @@ object AgentHelpText {
         appendLine("  [{\"className\": \"com.example.Core\", \"rank\": 0.42, \"inDegree\": 5, \"outDegree\": 2}]")
         appendLine()
         appendLine("${t("dead")}:")
-        appendLine("  [{\"className\": \"com.example.Orphan\", \"kind\": \"class\", \"sourceFile\": \"Orphan.kt\", \"confidence\": \"high\"},")
-        appendLine("   {\"className\": \"com.example.Service\", \"memberName\": \"unused\", \"kind\": \"method\", \"sourceFile\": \"Service.kt\", \"confidence\": \"medium\"}]")
+        appendLine("  [{\"className\": \"com.example.Orphan\", \"kind\": \"class\", \"sourceFile\": \"Orphan.kt\", \"confidence\": \"high\", \"reason\": \"NO_REFERENCES\"},")
+        appendLine("   {\"className\": \"com.example.Service\", \"memberName\": \"unused\", \"kind\": \"method\", \"sourceFile\": \"Service.kt\", \"confidence\": \"medium\", \"reason\": \"TEST_ONLY\"}]")
         appendLine()
         appendLine("${t("complexity")}:")
         appendLine("  [{\"className\": \"com.example.Service\", \"sourceFile\": \"Service.kt\",")

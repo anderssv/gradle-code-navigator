@@ -178,3 +178,13 @@ New task to search string literals embedded in bytecode via ASM's `visitLdcInsn(
 ## ~~57. `cnavTypeHierarchy` — inheritance tree traversal (Medium value, low effort)~~ DONE
 
 New task to show the full type hierarchy for classes matching a pattern. Walks supertypes recursively upward (superclass chain + interfaces) and shows implementors downward via `InterfaceRegistry`. Three-layer architecture: `TypeHierarchyBuilder` (scans all classes into `ClassIndexEntry` map, then walks upward recursively), `TypeHierarchyFormatter` (TEXT) + `JsonFormatter.formatTypeHierarchy()` + `LlmFormatter.formatTypeHierarchy()` (formatting). Domain types: `TypeHierarchyResult`, `SupertypeInfo`, `SupertypeKind`, `ClassIndexEntry`. Parameters: `-Ppattern=<regex>` (required), `-Pprojectonly=true|false` (optional). Filters `java.lang.Object` from supertype chain. Registered as `cnavTypeHierarchy` (Gradle) / `cnav:type-hierarchy` (Maven). Added to `BuildTool.kt` GRADLE_TASK_NAMES map, `TaskRegistry` (25 goals total), `HelpText.kt`, and `AgentHelpText.kt`.
+
+## ~~72. `cnavDead` improvements — test-awareness, reason tagging, prod-only filter~~ DONE
+
+Based on external feedback (60% false positive rate in real-world triage). Three improvements:
+
+**Reason tagging:** Added `DeadCodeReason` enum (`NO_REFERENCES`, `TEST_ONLY`) and `reason` field to `DeadCode` data class. `NO_REFERENCES` means unreferenced in both production and test code (highest removal confidence). `TEST_ONLY` means referenced in test code but not in production (needs human judgment). All formatters updated: TEXT "Reason" column, JSON `"reason"` field, LLM `reason=`.
+
+**`-Pprod-only=true` filter:** New parameter that filters dead code results to only show items with `reason=NO_REFERENCES`, hiding `TEST_ONLY` items. This directly answers the feedback request to distinguish "only used in tests" from "never referenced anywhere."
+
+**Always scan annotations:** `AnnotationExtractor.scanAll()` now always runs (not just when `-Pexclude-annotated` is set), so confidence scoring always benefits from annotation awareness. Previously, classes with `@JsonCreator` or framework annotations would get `HIGH` confidence unless the user explicitly passed `-Pexclude-annotated`.

@@ -107,4 +107,25 @@ class DeadCodeConfigTest {
 
         assertEquals(listOf("RestController", "Scheduled"), config.excludeAnnotated)
     }
+
+    @Test
+    fun `defaults prodOnly to false when absent`() {
+        val config = DeadCodeConfig.parse(emptyMap())
+
+        assertFalse(config.prodOnly)
+    }
+
+    @Test
+    fun `parses prodOnly as true`() {
+        val config = DeadCodeConfig.parse(mapOf("prod-only" to "true"))
+
+        assertTrue(config.prodOnly)
+    }
+
+    @Test
+    fun `parses prodOnly as false`() {
+        val config = DeadCodeConfig.parse(mapOf("prod-only" to "false"))
+
+        assertFalse(config.prodOnly)
+    }
 }
