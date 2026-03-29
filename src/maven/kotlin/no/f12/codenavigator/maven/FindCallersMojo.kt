@@ -1,25 +1,13 @@
 package no.f12.codenavigator.maven
 
-import no.f12.codenavigator.JsonFormatter
-import no.f12.codenavigator.LlmFormatter
-import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
-import no.f12.codenavigator.navigation.annotation.AnnotationExtractor
 import no.f12.codenavigator.navigation.callgraph.CallDirection
-import no.f12.codenavigator.navigation.callgraph.CallGraphCache
-import no.f12.codenavigator.navigation.callgraph.CallGraphConfig
-import no.f12.codenavigator.navigation.callgraph.CallTreeBuilder
-import no.f12.codenavigator.navigation.callgraph.CallTreeFormatter
-import no.f12.codenavigator.navigation.interfaces.InterfaceRegistryCache
-import no.f12.codenavigator.navigation.SkippedFileReporter
 import org.apache.maven.plugin.AbstractMojo
-import org.apache.maven.plugin.MojoFailureException
 import org.apache.maven.plugins.annotations.Execute
 import org.apache.maven.plugins.annotations.LifecyclePhase
 import org.apache.maven.plugins.annotations.Mojo
 import org.apache.maven.plugins.annotations.Parameter
 import org.apache.maven.project.MavenProject
-import java.io.File
 
 @Mojo(name = "find-callers")
 @Execute(phase = LifecyclePhase.COMPILE)
@@ -47,51 +35,14 @@ class FindCallersMojo : AbstractMojo() {
     private var filterSynthetic: String? = null
 
     override fun execute() {
-        val config = try {
-            CallGraphConfig.parse(TaskRegistry.FIND_CALLERS.enhanceProperties(buildPropertyMap()))
-        } catch (e: IllegalArgumentException) {
-            throw MojoFailureException(
-                "Missing required property. Usage: mvn cnav:find-callers -Dpattern=<regex> -Dmaxdepth=3",
-            )
-        }
-
-        val classesDir = File(project.build.outputDirectory)
-        if (!classesDir.exists()) {
-            log.warn("Classes directory does not exist: $classesDir — run 'mvn compile' first.")
-            return
-        }
-
-        val result = CallGraphCache.getOrBuild(File(project.build.directory, "cnav/call-graph.cache"), listOf(classesDir))
-        val reportFile = File(project.build.directory, "cnav/skipped-files.txt")
-        SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { log.warn(it) }
-        val graph = result.data
-        val methods = graph.findMethods(config.method)
-
-        if (methods.isEmpty()) {
-            println("No methods found matching '${config.method}'")
-            return
-        }
-
-        val interfaceRegistry = InterfaceRegistryCache.getOrBuild(File(project.build.directory, "cnav/interface-registry.cache"), listOf(classesDir)).data
-        val interfaceImplementors = interfaceRegistry.implementorMap()
-        val classToInterfaces = interfaceRegistry.classToInterfacesMap()
-
-        val annotations = AnnotationExtractor.scanAll(listOf(classesDir))
-
-        val trees = CallTreeBuilder.build(
-            graph, methods, config.maxDepth, CallDirection.CALLERS, config.buildFilter(graph),
-            interfaceImplementors = interfaceImplementors,
-            classToInterfaces = classToInterfaces,
-            classAnnotations = annotations.classAnnotations,
-            methodAnnotations = annotations.methodAnnotations,
-            classAnnotationParameters = annotations.classAnnotationParameters,
-            methodAnnotationParameters = annotations.methodAnnotationParameters,
+        CallTreeMojoSupport.execute(
+            project = project,
+            log = log,
+            properties = buildPropertyMap(),
+            taskDef = TaskRegistry.FIND_CALLERS,
+            direction = CallDirection.CALLERS,
+            usageHint = "Missing required property. Usage: mvn cnav:find-callers -Dpattern=<regex> -Dmaxdepth=3",
         )
-        println(OutputWrapper.formatAndWrap(config.format,
-            text = { CallTreeFormatter.renderTrees(trees, CallDirection.CALLERS) },
-            json = { JsonFormatter.renderCallTrees(trees) },
-            llm = { LlmFormatter.renderCallTrees(trees, CallDirection.CALLERS) },
-        ))
     }
 
     private fun buildPropertyMap(): Map<String, String?> = buildMap {

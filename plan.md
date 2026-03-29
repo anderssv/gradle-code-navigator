@@ -220,6 +220,15 @@ Run all analysis tasks (both bytecode and git history) and produce a consolidate
 
 Gradle tasks currently re-scan all class files on every run. For large projects, supporting Gradle's incremental task API (`@InputFiles`, `@OutputFile`, `InputChanges`) would allow skipping unchanged files. Requires careful design — call graph analysis is inherently whole-program (a change in one class affects callers/callees). Incremental support is most beneficial for leaf tasks like `cnavListClasses`, `cnavFindSymbol`, and `cnavFindClass` that can update their index incrementally.
 
+### S10. Split JsonFormatter and LlmFormatter per-feature (Medium value, medium effort)
+
+Self-analysis found `JsonFormatter` (217 outgoing dependencies, 47 referenced types) and `LlmFormatter` (177 outgoing, 46 types) are god classes — they know about every feature's result types. They also change together 96% of the time, meaning every new feature forces edits to both files.
+
+- **Approach**: Split each formatter into per-feature formatters (e.g., `CallTreeJsonFormatter`, `DeadCodeJsonFormatter`, `DsmJsonFormatter`) that each handle one feature's output. The top-level `JsonFormatter`/`LlmFormatter` become thin dispatchers that delegate to the appropriate per-feature formatter.
+- **Benefits**: Each per-feature formatter depends only on its own result types. Adding a new feature means adding a new formatter file, not editing a shared god class. Reduces coupling from ~200 outgoing dependencies to ~10-20 per formatter.
+- **Risks**: More files to navigate. Mitigated by consistent naming convention (`<Feature><Format>Formatter`) and the dispatcher pattern keeping a single entry point.
+- **Ordering**: Do `LlmFormatter` first (it's the primary agent-facing format). Then `JsonFormatter`. `TableFormatter` is smaller and can follow later.
+
 ### S9. Split root package to clarify dependency direction (Low value, medium effort)
 
 The root `codenavigator` package serves as both "shared infrastructure" and "library API." Splitting into `codenavigator.format` (formatters + OutputFormat) and `codenavigator.registry` (TaskRegistry, BuildTool) would make the dependency direction explicit. Lower priority now that `navigation/` has been split into sub-packages.
