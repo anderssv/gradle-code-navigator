@@ -5,7 +5,7 @@ Value and effort are qualitative assessments to aid prioritization, not estimate
 
 ---
 
-## 2. `cnavContext` — smart context gathering for AI agents
+## 1. `cnavContext` — smart context gathering for AI agents
 
 **Value: high** | **Effort: medium**
 
@@ -21,7 +21,7 @@ Given a class or method, automatically gather "everything an agent needs": class
 
 ---
 
-## 3. Separate prod/test in output
+## 2. Separate prod/test in output
 
 **Value: high** | **Effort: medium**
 
@@ -34,7 +34,7 @@ All bytecode tasks mix production and test callers in a single list. For a class
 
 ---
 
-## 4. `cnavWhyDepends` — dependency edge explanation
+## 3. `cnavWhyDepends` — dependency edge explanation
 
 **Value: high** | **Effort: medium**
 
@@ -46,7 +46,7 @@ The DSM tells you package A depends on package B, but not *why*. To break a cycl
 
 ---
 
-## 5. `cnavTestHealth` — verify all test methods actually ran
+## 4. `cnavTestHealth` — verify all test methods actually ran
 
 **Value: high** | **Effort: medium**
 
@@ -62,7 +62,7 @@ From user feedback: a project had 19 silently skipped tests because test methods
 
 ---
 
-## 6. `cnavJar` — inspect library class signatures
+## 5. `cnavJar` — inspect library class signatures
 
 **Value: high** | **Effort: medium**
 
@@ -80,7 +80,7 @@ Inspect the methods and signatures of classes inside a JAR file, whether or not 
 
 ---
 
-## 7. `cnavDead` baseline diff — confirm cleanup was complete
+## 6. `cnavDead` baseline diff — confirm cleanup was complete
 
 **Value: medium** | **Effort: low**
 
@@ -91,18 +91,18 @@ After triaging dead code and removing items, re-run `cnavDead` and see what chan
 
 ---
 
-## 8. Cycle fix suggestions in DSM
+## 7. Cycle fix suggestions in DSM
 
 **Value: high** | **Effort: medium**
 
 The DSM tells you which cycles exist, but not how to fix them. When `-Pcycles=true`, also show which specific class-level edges would need to move to break the cycle, and suggest which direction the dependency should flow.
 
-- **Prerequisite**: Benefits from item 4 (`cnavWhyDepends`) infrastructure — same edge-explanation logic.
+- **Prerequisite**: Benefits from item 3 (`cnavWhyDepends`) infrastructure — same edge-explanation logic.
 - **Separate from DSM what-if**: What-if simulation (`-Pwhat-if=<class>:<target-package>`) is a distinct, higher-effort feature. Evaluate need after cycle fix suggestions ship.
 
 ---
 
-## 9. Extract ConfidenceScorer from DeadCodeFinder
+## 8. Extract ConfidenceScorer from DeadCodeFinder
 
 **Value: medium** | **Effort: low**
 
@@ -113,7 +113,7 @@ The DSM tells you which cycles exist, but not how to fix them. When `-Pcycles=tr
 
 ---
 
-## 10. Split JsonFormatter and LlmFormatter per-feature
+## 9. Split JsonFormatter and LlmFormatter per-feature
 
 **Value: medium** | **Effort: medium**
 
@@ -125,7 +125,7 @@ Self-analysis found `JsonFormatter` (217 outgoing dependencies, 47 referenced ty
 
 ---
 
-## 11. `cnavReport` — consolidated full analysis
+## 10. `cnavReport` — consolidated full analysis
 
 **Value: medium** | **Effort: low**
 
@@ -136,20 +136,20 @@ Run all analysis tasks and produce a single consolidated report. `cnavMetrics` a
 
 ---
 
-## 12. Full classpath scanning option
+## 11. Full classpath scanning option
 
 **Value: high** | **Effort: medium**
 
 Add `-Pclasspath=true` to scan the full runtime classpath (project classes + all dependency JARs).
 
 - **Applies to**: `cnavListClasses`, `cnavFindClass`, `cnavFindSymbol`, `cnavClass`, `cnavInterfaces`, `cnavUsages`
-- **Reuses**: Classpath resolution infrastructure from item 6 (`cnavJar`).
+- **Reuses**: Classpath resolution infrastructure from item 5 (`cnavJar`).
 - **Considerations**: Significantly slower (thousands of classes). Combine with existing `-Ppattern` / `-Powner` filters to narrow scope. Consider caching scanned JARs by checksum.
 - **Why**: AI agents frequently need to check library API signatures to write correct code.
 
 ---
 
-## 13. `cnavDiff` — structural diff between builds
+## 12. `cnavDiff` — structural diff between builds
 
 **Value: medium** | **Effort: medium**
 
@@ -161,19 +161,19 @@ Compare two compiled states and show structural changes: added/removed/changed c
 
 ---
 
-## 14. Meta-annotation traversal for dead code filtering
+## 13. Meta-annotation traversal for dead code filtering
 
 **Value: high** | **Effort: medium**
 
 `@RestController` is meta-annotated with `@Controller` which is meta-annotated with `@Component`. Currently, excluding `Component` does NOT exclude `@RestController`.
 
 - **Approach**: In `AnnotationExtractor`, also scan annotation `.class` files from classpath JARs and resolve meta-annotations transitively.
-- **Reuses**: Classpath resolution from item 6/12.
+- **Reuses**: Classpath resolution from item 5/11.
 - **Why**: Covers custom stereotype annotations automatically. A project defining `@DomainService` (meta-annotated with `@Component`) would be handled without configuration.
 
 ---
 
-## 15. `cnavLayerCheck` — architecture conformance
+## 14. `cnavLayerCheck` — architecture conformance
 
 **Value: high** | **Effort: ambitious**
 
@@ -189,11 +189,11 @@ codeNavigator {
 ```
 
 - Output: list of violations with the specific class-level edges that break the rule.
-- **Prerequisite**: Benefits from item 4 (`cnavWhyDepends`) for edge explanation.
+- **Prerequisite**: Benefits from item 3 (`cnavWhyDepends`) for edge explanation.
 
 ---
 
-## 16. `cnavUnused` — unused build dependencies
+## 15. `cnavUnused` — unused build dependencies
 
 **Value: medium** | **Effort: medium**
 
@@ -204,7 +204,7 @@ Find entire libraries that could be removed. For each declared dependency JAR, e
 
 ---
 
-## 17. Structured cache format
+## 16. Structured cache format
 
 **Value: medium** | **Effort: medium**
 
@@ -215,7 +215,7 @@ Find entire libraries that could be removed. For each declared dependency JAR, e
 
 ---
 
-## 18. Gradle incremental task support
+## 17. Gradle incremental task support
 
 **Value: medium** | **Effort: high**
 
@@ -223,7 +223,7 @@ Support Gradle's incremental task API (`@InputFiles`, `@OutputFile`, `InputChang
 
 ---
 
-## 19. DSM what-if simulation
+## 18. DSM what-if simulation
 
 **Value: medium** | **Effort: high**
 
