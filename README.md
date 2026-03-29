@@ -133,7 +133,7 @@ See [doc/tasks.md](doc/tasks.md) for detailed usage with examples.
 | `cnavCycles` / `cnav:cycles` | Detect dependency cycles (Tarjan's SCC) |
 | `cnavUsages` / `cnav:find-usages` | Find references to types, methods, fields |
 | `cnavRank` / `cnav:rank` | Rank types by importance (PageRank) |
-| `cnavDead` / `cnav:dead` | Detect dead code (unreferenced classes/methods) |
+| `cnavDead` / `cnav:dead` | Detect dead code with framework-aware filtering |
 | `cnavComplexity` / `cnav:complexity` | Fan-in/fan-out complexity per class |
 | `cnavMetrics` / `cnav:metrics` | Quick project health snapshot |
 | `cnavAnnotations` / `cnav:annotations` | Find classes/methods by annotation |
@@ -144,6 +144,12 @@ See [doc/tasks.md](doc/tasks.md) for detailed usage with examples.
 | `cnavAge` / `cnav:code-age` | Time since last change per file |
 | `cnavAuthors` / `cnav:authors` | Distinct contributors per file |
 | `cnavChurn` / `cnav:churn` | Lines added/deleted per file |
+
+### Dead code detection and framework awareness
+
+`cnavDead` finds unreferenced classes and methods in your project. It includes built-in awareness of common JVM frameworks — classes annotated with framework entry-point annotations (e.g. `@RestController`, `@Scheduled`, `@Entity`, `@Test`) are automatically excluded from results, since they are invoked by the framework rather than from project code.
+
+Supported framework presets (all active by default): **Spring**, **Quarkus**, **JPA**, **Jackson**, **JAX-RS**, **CDI**, **MicroProfile**, **gRPC**, **Jakarta**, **Bean Validation**, and **JUnit**. Use `-Pexclude-framework=<name>` to disable a specific preset, or `-Pexclude-framework=ALL` to disable all framework filtering.
 
 ## Agent setup
 

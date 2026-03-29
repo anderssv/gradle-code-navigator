@@ -27,4 +27,18 @@ abstract class FileCache<T> {
         write(cacheFile, result.data)
         return result
     }
+
+    protected fun writeLines(cacheFile: File, writeContent: (java.io.BufferedWriter) -> Unit) {
+        CacheFreshness.atomicWrite(cacheFile) { file ->
+            file.bufferedWriter().use(writeContent)
+        }
+    }
+
+    protected fun <R> readLines(cacheFile: File, parseLine: (List<String>) -> R): List<R> =
+        cacheFile.useLines { lines ->
+            lines
+                .filter { it.isNotBlank() }
+                .map { parseLine(it.split(FIELD_SEPARATOR)) }
+                .toList()
+        }
 }
