@@ -1,5 +1,9 @@
 # Plan — Completed
 
+## ~~cnavChangedSince — impact analysis for a branch/commit (Very high value)~~ DONE
+
+`cnavChangedSince -Pref=<git-ref>` shows the blast radius of changes since a git ref. Runs `git diff --name-only <ref>...HEAD` to find changed files, maps them to compiled class names via suffix matching against `ClassInfo.reconstructedSourcePath`, then finds all callers of each changed class via `CallGraph.callersOfClass()`. Outputs changed classes sorted by caller count descending, with unresolved files (non-class changes like build.gradle.kts) listed separately. Supports TEXT, JSON, and LLM output formats. Hybrid task: requires both git and compilation (`dependsOn("classes")`).
+
 ## ~~1. Include test source set in cnavInterfaces (High value)~~ DONE
 
 `cnavInterfaces` now supports `-Pincludetest=true` to also scan test class directories. This reveals test fakes (e.g., `FakeRepo`, `StubClient`) alongside production implementations. Uses a separate cache file (`interface-registry-all.cache`) when test classes are included to avoid mixing results.

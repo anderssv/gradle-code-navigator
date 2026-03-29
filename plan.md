@@ -5,26 +5,6 @@ Value and effort are qualitative assessments to aid prioritization, not estimate
 
 ---
 
-## 1. `cnavChangedSince` — impact analysis for a branch/commit
-
-**Value: very high** | **Effort: medium**
-
-The most common agent question is "what could this PR break?" Given a git ref, show which classes changed and their blast radius.
-
-```bash
-./gradlew cnavChangedSince -Pref=main
-```
-
-1. `git diff --name-only <ref>..HEAD` to find changed source files
-2. Map source files to class names via `ClassScanner` source file metadata
-3. For each changed class, find changed methods (diff bytecode signatures)
-4. Run `cnavCallers` on each changed method to show affected call sites
-
-- **Output**: Changed classes with their affected callers, grouped by change type (added/modified/removed)
-- **Why first**: Directly answers the most common code review question. Combines existing git + bytecode infrastructure. No new scanning infrastructure needed.
-
----
-
 ## 2. `cnavContext` — smart context gathering for AI agents
 
 **Value: high** | **Effort: medium**
