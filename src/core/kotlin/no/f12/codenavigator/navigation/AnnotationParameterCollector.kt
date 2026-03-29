@@ -62,35 +62,11 @@ fun unwrappingAnnotationVisitor(
                     elements.add("$enumClass.$value")
                 }
 
-                override fun visitAnnotation(name: String?, descriptor: String): AnnotationVisitor {
-                    val nestedName = typeSimpleName(descriptor)
-                    val nestedParams = mutableMapOf<String, String>()
-                    return object : AnnotationVisitor(Opcodes.ASM9) {
-                        override fun visit(n: String?, value: Any?) {
-                            if (n != null && value != null) {
-                                nestedParams[n] = formatValue(value)
-                            }
-                        }
-
-                        override fun visitEnum(n: String?, descriptor: String, value: String) {
-                            if (n != null) {
-                                val enumClass = typeSimpleName(descriptor)
-                                nestedParams[n] = "$enumClass.$value"
-                            }
-                        }
-
-                        override fun visitEnd() {
-                            val paramStr = if (nestedParams.isEmpty()) {
-                                "@$nestedName"
-                            } else {
-                                val entries = nestedParams.entries.joinToString(", ") { "${it.key}=${it.value}" }
-                                "@$nestedName($entries)"
-                            }
-                            elements.add(paramStr)
-                            structuredNested?.add(ResolvedAnnotation(descriptor, nestedParams.toMap()))
-                        }
+                override fun visitAnnotation(name: String?, descriptor: String): AnnotationVisitor =
+                    nestedAnnotationVisitor(descriptor) { formatted, desc, params ->
+                        elements.add(formatted)
+                        structuredNested?.add(ResolvedAnnotation(desc, params))
                     }
-                }
 
                 override fun visitEnd() {
                     parameters[paramName] = when (elements.size) {
@@ -108,24 +84,8 @@ fun unwrappingAnnotationVisitor(
         override fun visitAnnotation(paramName: String?, descriptor: String): AnnotationVisitor? {
             if (paramName == null) return null
             if (paramName != "value") hasNonValueParams = true
-            val nestedName = typeSimpleName(descriptor)
-            val nestedParams = mutableMapOf<String, String>()
-            return object : AnnotationVisitor(Opcodes.ASM9) {
-                override fun visit(name: String?, value: Any?) {
-                    if (name != null && value != null) {
-                        nestedParams[name] = formatValue(value)
-                    }
-                }
-
-                override fun visitEnd() {
-                    val paramStr = if (nestedParams.isEmpty()) {
-                        "@$nestedName"
-                    } else {
-                        val entries = nestedParams.entries.joinToString(", ") { "${it.key}=${it.value}" }
-                        "@$nestedName($entries)"
-                    }
-                    parameters[paramName] = paramStr
-                }
+            return nestedAnnotationVisitor(descriptor) { formatted, _, _ ->
+                parameters[paramName] = formatted
             }
         }
 
@@ -155,6 +115,37 @@ private fun isRepeatableContainer(outerDescriptor: String, nested: List<Resolved
     val outerSimple = typeSimpleName(outerDescriptor).lowercase()
     val nestedSimple = typeSimpleName(distinctDescriptors.single()).lowercase()
     return outerSimple.contains(nestedSimple)
+}
+
+private fun nestedAnnotationVisitor(
+    descriptor: String,
+    onResult: (formatted: String, descriptor: String, params: Map<String, String>) -> Unit,
+): AnnotationVisitor {
+    val nestedName = typeSimpleName(descriptor)
+    val nestedParams = mutableMapOf<String, String>()
+    return object : AnnotationVisitor(Opcodes.ASM9) {
+        override fun visit(name: String?, value: Any?) {
+            if (name != null && value != null) {
+                nestedParams[name] = formatValue(value)
+            }
+        }
+
+        override fun visitEnum(name: String?, desc: String, value: String) {
+            if (name != null) {
+                nestedParams[name] = "${typeSimpleName(desc)}.$value"
+            }
+        }
+
+        override fun visitEnd() {
+            val formatted = if (nestedParams.isEmpty()) {
+                "@$nestedName"
+            } else {
+                val entries = nestedParams.entries.joinToString(", ") { "${it.key}=${it.value}" }
+                "@$nestedName($entries)"
+            }
+            onResult(formatted, descriptor, nestedParams.toMap())
+        }
+    }
 }
 
 private fun typeSimpleName(descriptor: String): String =
