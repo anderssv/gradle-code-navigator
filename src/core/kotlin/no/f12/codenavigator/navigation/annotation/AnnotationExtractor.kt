@@ -3,7 +3,7 @@ package no.f12.codenavigator.navigation.annotation
 import no.f12.codenavigator.navigation.AnnotationName
 import no.f12.codenavigator.navigation.ClassName
 import no.f12.codenavigator.navigation.KotlinMethodFilter
-import no.f12.codenavigator.navigation.annotationParameterVisitor
+import no.f12.codenavigator.navigation.unwrappingAnnotationVisitor
 import no.f12.codenavigator.navigation.callgraph.MethodRef
 import no.f12.codenavigator.navigation.UnsupportedBytecodeVersionException
 import no.f12.codenavigator.navigation.createClassReader
@@ -66,9 +66,7 @@ object AnnotationExtractor {
 
                 override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor? {
                     if (descriptor == null) return null
-                    val name = annotationFqn(descriptor)
-                    classAnnotations.add(name)
-                    return collectParameters(name, classAnnotationParams)
+                    return collectAnnotation(descriptor, classAnnotations, classAnnotationParams)
                 }
 
                 override fun visitMethod(
@@ -88,9 +86,7 @@ object AnnotationExtractor {
                     return object : MethodVisitor(Opcodes.ASM9) {
                         override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor? {
                             if (descriptor == null) return null
-                            val annName = annotationFqn(descriptor)
-                            annotations.add(annName)
-                            return collectParameters(annName, paramMap)
+                            return collectAnnotation(descriptor, annotations, paramMap)
                         }
 
                         override fun visitEnd() {
@@ -155,10 +151,15 @@ object AnnotationExtractor {
     private fun annotationFqn(descriptor: String): AnnotationName =
         AnnotationName(Type.getType(descriptor).className)
 
-    private fun collectParameters(
-        name: AnnotationName,
-        target: MutableMap<AnnotationName, Map<String, String>>,
-    ): AnnotationVisitor = annotationParameterVisitor { parameters ->
-        target[name] = parameters
+    private fun collectAnnotation(
+        descriptor: String,
+        annotations: MutableSet<AnnotationName>,
+        paramTarget: MutableMap<AnnotationName, Map<String, String>>,
+    ): AnnotationVisitor = unwrappingAnnotationVisitor(descriptor) { resolved ->
+        for (ann in resolved) {
+            val name = annotationFqn(ann.descriptor)
+            annotations.add(name)
+            paramTarget[name] = ann.parameters
+        }
     }
 }

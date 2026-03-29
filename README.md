@@ -1,8 +1,8 @@
 # Code Navigator
 
-A Gradle and Maven plugin that provides bytecode-level code navigation and git history analysis for JVM projects. It analyzes compiled `.class` files for structural navigation (class listing, symbol search, call graph traversal, class detail inspection, interface implementation lookup, package dependency analysis) and git logs for behavioral analysis (hotspots, change coupling, code age, author distribution, churn).
+A Gradle and Maven plugin for **reliable code navigation** and **code smell analysis** in JVM projects. Provides structural navigation (class listing, symbol search, call graph traversal, class detail inspection, interface implementation lookup, package dependency analysis) and behavioral analysis from git history (hotspots, change coupling, code age, author distribution, churn).
 
-Built primarily for use by **coding agents** (AI assistants that write and refactor code), though it is equally useful for human developers. Works with any JVM language (Kotlin, Java, Scala, etc.) since it operates on compiled `.class` files using [ASM](https://asm.ow2.io/). The git history analysis is inspired by [Code Maat](https://github.com/adamtornhill/code-maat) and the ideas in Adam Tornhill's *Your Code as a Crime Scene*.
+Built primarily for use by **coding agents** (AI assistants that write and refactor code), though it is equally useful for human developers. Works with any JVM language (Kotlin, Java, Scala, etc.) since it analyzes compiled output rather than source text. The git history analysis is inspired by [Code Maat](https://github.com/adamtornhill/code-maat) and the ideas in Adam Tornhill's *Your Code as a Crime Scene*.
 
 ## Getting started
 
@@ -13,7 +13,7 @@ Copy-paste this to your agent:
 > Add the no.f12.code-navigator Gradle plugin to this project. After installing, run `./gradlew cnavAgentHelp` to get full usage instructions optimized for AI agents, and `./gradlew cnavHelp` to see all available tasks and their parameters.
 >
 > Then add a "Code Navigator (cnav)" section to AGENTS.md documenting the plugin. It should include:
-> - A short description of what it does (bytecode analysis + git history)
+ > - A short description of what it does (reliable code navigation + code smell/complexity analysis + git history)
 > - A nudge to prefer cnav over grep/ripgrep for finding callers, implementations, and dependencies
 > - A note to run cnavAgentHelp for full instructions
 > - A compact command list showing all available tasks with one-line comments (navigation tasks and git history tasks), grouped by whether they require compilation
@@ -23,7 +23,7 @@ Copy-paste this to your agent:
 > Add the no.f12 code-navigator-maven-plugin to this project. After installing, run `mvn cnav:agent-help` to get full usage instructions optimized for AI agents, and `mvn cnav:help` to see all available goals and their parameters.
 >
 > Then add a "Code Navigator (cnav)" section to AGENTS.md documenting the plugin. It should include:
-> - A short description of what it does (bytecode analysis + git history)
+> - A short description of what it does (reliable code navigation + code smell/complexity analysis + git history)
 > - A nudge to prefer cnav over grep/ripgrep for finding callers, implementations, and dependencies
 > - A note to run `mvn cnav:agent-help` for full instructions
 > - A compact command list showing all available goals with one-line comments (navigation goals and git history goals), grouped by whether they require compilation
@@ -34,7 +34,7 @@ The `cnavAgentHelp` task prints agent-optimized instructions covering workflow, 
 
 Text search (grep, ripgrep) requires iterative discovery. You search for `cache.get(`, find some results, then realize you missed the Kotlin safe-call `cache?.get(`, then extension functions, then delegation patterns. Each iteration requires you to know what syntactic variant you haven't tried yet — and you can't know what you've missed until you find it by accident.
 
-Bytecode analysis sidesteps this entirely. All syntax variants compile to the same invocation instruction. One `cnavCallers` query returns all call sites — complete, correct, no false positives, no missed calls.
+Code Navigator sidesteps this entirely. All syntax variants compile to the same call. One `cnavCallers` query returns all call sites — complete, correct, no false positives, no missed calls.
 
 For an agent, each grep iteration is a tool call round-trip. For a human, each is a context switch. Code Navigator eliminates the iterative discovery loop: you get the full call graph from one query.
 
@@ -110,7 +110,7 @@ These defaults are used when the corresponding `-D` flag is not provided. A `-D`
 
 ## Tasks
 
-Navigation tasks analyze compiled bytecode (compilation happens automatically). Analysis tasks analyze git history and do not require compilation. All tasks support `-Pformat=json` (Gradle) / `-Dformat=json` (Maven) and `-Pllm=true` / `-Dllm=true` for compact agent output.
+Navigation tasks analyze compiled code (compilation happens automatically). Analysis tasks analyze git history and do not require compilation. All tasks support `-Pformat=json` (Gradle) / `-Dformat=json` (Maven) and `-Pllm=true` / `-Dllm=true` for compact agent output.
 
 See [doc/tasks.md](doc/tasks.md) for detailed usage with examples.
 
@@ -119,7 +119,7 @@ See [doc/tasks.md](doc/tasks.md) for detailed usage with examples.
 | `cnavHelp` / `cnav:help` | Show help text for all tasks |
 | `cnavAgentHelp` / `cnav:agent-help` | Agent-optimized usage instructions |
 | `cnavHelpConfig` / `cnav:config-help` | List all configuration parameters |
-| **Bytecode navigation** | |
+| **Code navigation** | |
 | `cnavListClasses` / `cnav:list-classes` | List all classes with source files |
 | `cnavFindClass` / `cnav:find-class` | Find classes by regex pattern |
 | `cnavFindSymbol` / `cnav:find-symbol` | Find methods and fields by regex |
@@ -137,7 +137,7 @@ See [doc/tasks.md](doc/tasks.md) for detailed usage with examples.
 | `cnavComplexity` / `cnav:complexity` | Fan-in/fan-out complexity per class |
 | `cnavMetrics` / `cnav:metrics` | Quick project health snapshot |
 | `cnavAnnotations` / `cnav:annotations` | Find classes/methods by annotation |
-| `cnavFindStringConstant` / `cnav:find-string-constant` | Search string literals in bytecode |
+| `cnavFindStringConstant` / `cnav:find-string-constant` | Search string literals in compiled code |
 | **Git history analysis** | |
 | `cnavHotspots` / `cnav:hotspots` | Files ranked by change frequency |
 | `cnavCoupling` / `cnav:coupling` | Files that change together (temporal coupling) |
@@ -151,7 +151,7 @@ See [doc/agent-setup.md](doc/agent-setup.md) for Claude Code permission rules an
 
 ## How it works
 
-See [doc/how-it-works.md](doc/how-it-works.md) for details on bytecode scanning, call graph construction, git log parsing, caching, and filtering.
+See [doc/how-it-works.md](doc/how-it-works.md) for details on how the analysis works, including call graph construction, git log parsing, caching, and filtering.
 
 ## Building from source
 

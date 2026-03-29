@@ -311,7 +311,7 @@ object TaskRegistry {
 
     val FIND_STRING_CONSTANT = TaskDef(
         goal = "find-string-constant",
-        description = "Search string constants in bytecode matching a regex",
+        description = "Search string constants in compiled code matching a regex",
         params = FORMAT_PARAMS + STRING_PATTERN,
         requiresCompilation = true,
     )

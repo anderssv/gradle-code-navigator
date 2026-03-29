@@ -4,6 +4,7 @@ import no.f12.codenavigator.navigation.classinfo.AnnotationDetail
 import no.f12.codenavigator.navigation.classinfo.ClassDetailExtractor
 import no.f12.codenavigator.navigation.classinfo.FieldDetail
 import org.objectweb.asm.Opcodes
+import org.objectweb.asm.Type
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.nio.file.Path
@@ -457,6 +458,206 @@ class ClassDetailExtractorTest {
         val annotation = detail.methods.first().annotations.first()
         assertEquals(AnnotationName("org.springframework.web.bind.annotation.RequestMapping"), annotation.name)
         assertEquals(mapOf("method" to "RequestMethod.GET"), annotation.parameters)
+    }
+
+    @Test
+    fun `array of nested annotations is extracted with at-sign prefix`() {
+        val classFile = TestClassWriter.writeClassFile(tempDir.toFile(), "com/example/WithJoinTable", "WithJoinTable.kt") {
+            val fv = visitField(Opcodes.ACC_PUBLIC, "tags", "Ljava/util/Set;", null, null)
+            val av = fv.visitAnnotation("Ljakarta/persistence/JoinTable;", true)
+            av?.visit("name", "articles_tags")
+            val joinColArray = av?.visitArray("joinColumns")
+            val jc1 = joinColArray?.visitAnnotation(null, "Ljakarta/persistence/JoinColumn;")
+            jc1?.visit("name", "article_id")
+            jc1?.visitEnd()
+            joinColArray?.visitEnd()
+            val invArray = av?.visitArray("inverseJoinColumns")
+            val jc2 = invArray?.visitAnnotation(null, "Ljakarta/persistence/JoinColumn;")
+            jc2?.visit("name", "tag_id")
+            jc2?.visitEnd()
+            invArray?.visitEnd()
+            av?.visitEnd()
+        }
+
+        val detail = ClassDetailExtractor.extract(classFile)
+
+        val annotation = detail.fields.first().annotations.first()
+        assertEquals(AnnotationName("jakarta.persistence.JoinTable"), annotation.name)
+        assertEquals("articles_tags", annotation.parameters["name"])
+        assertEquals("@JoinColumn(name=article_id)", annotation.parameters["joinColumns"])
+        assertEquals("@JoinColumn(name=tag_id)", annotation.parameters["inverseJoinColumns"])
+    }
+
+    @Test
+    fun `array of multiple nested annotations renders all items`() {
+        val classFile = TestClassWriter.writeClassFile(tempDir.toFile(), "com/example/WithSpec", "WithSpec.kt") {
+            val av = visitAnnotation("Lnet/kaczmarzyk/spring/data/jpa/web/annotation/And;", true)
+            val specArray = av?.visitArray("value")
+            val spec1 = specArray?.visitAnnotation(null, "Lnet/kaczmarzyk/spring/data/jpa/web/annotation/Spec;")
+            spec1?.visit("path", "author.username")
+            spec1?.visit("params", "author")
+            spec1?.visitEnd()
+            val spec2 = specArray?.visitAnnotation(null, "Lnet/kaczmarzyk/spring/data/jpa/web/annotation/Spec;")
+            spec2?.visit("path", "tags.name")
+            spec2?.visit("params", "tag")
+            spec2?.visitEnd()
+            specArray?.visitEnd()
+            av?.visitEnd()
+        }
+
+        val detail = ClassDetailExtractor.extract(classFile)
+
+        val annotation = detail.annotations.first()
+        assertEquals(AnnotationName("net.kaczmarzyk.spring.data.jpa.web.annotation.And"), annotation.name)
+        assertEquals("[@Spec(path=author.username, params=author), @Spec(path=tags.name, params=tag)]", annotation.parameters["value"])
+    }
+
+    @Test
+    fun `class literal annotation parameter is rendered as simple name`() {
+        val classFile = TestClassWriter.writeClassFile(tempDir.toFile(), "com/example/WithClassLiteral", "WithClassLiteral.kt") {
+            val mv = visitMethod(Opcodes.ACC_PUBLIC, "handle", "()V", null, null)
+            val av = mv.visitAnnotation("Lorg/springframework/web/bind/annotation/ExceptionHandler;", true)
+            av?.visit("value", Type.getType("Lcom/example/NotFoundException;"))
+            av?.visitEnd()
+        }
+
+        val detail = ClassDetailExtractor.extract(classFile)
+
+        val annotation = detail.methods.first().annotations.first()
+        assertEquals(mapOf("value" to "NotFoundException"), annotation.parameters)
+    }
+
+    @Test
+    fun `class literal in annotation array is rendered as simple name`() {
+        val classFile = TestClassWriter.writeClassFile(tempDir.toFile(), "com/example/WithClassArray", "WithClassArray.kt") {
+            val mv = visitMethod(Opcodes.ACC_PUBLIC, "handle", "()V", null, null)
+            val av = mv.visitAnnotation("Lorg/springframework/web/bind/annotation/ExceptionHandler;", true)
+            val arrayVisitor = av?.visitArray("value")
+            arrayVisitor?.visit(null, Type.getType("Lcom/example/NotFoundException;"))
+            arrayVisitor?.visit(null, Type.getType("Lcom/example/BadRequestException;"))
+            arrayVisitor?.visitEnd()
+            av?.visitEnd()
+        }
+
+        val detail = ClassDetailExtractor.extract(classFile)
+
+        val annotation = detail.methods.first().annotations.first()
+        assertEquals(mapOf("value" to "[NotFoundException, BadRequestException]"), annotation.parameters)
+    }
+
+    @Test
+    fun `class literal inside nested annotation in array is rendered as simple name`() {
+        val classFile = TestClassWriter.writeClassFile(tempDir.toFile(), "com/example/WithSpecClass", "WithSpecClass.kt") {
+            val av = visitAnnotation("Lnet/kaczmarzyk/spring/data/jpa/web/annotation/And;", true)
+            val specArray = av?.visitArray("value")
+            val spec1 = specArray?.visitAnnotation(null, "Lnet/kaczmarzyk/spring/data/jpa/web/annotation/Spec;")
+            spec1?.visit("path", "author.username")
+            spec1?.visit("spec", Type.getType("Lnet/kaczmarzyk/spring/data/jpa/domain/Like;"))
+            spec1?.visitEnd()
+            specArray?.visitEnd()
+            av?.visitEnd()
+        }
+
+        val detail = ClassDetailExtractor.extract(classFile)
+
+        val annotation = detail.annotations.first()
+        assertEquals("@Spec(path=author.username, spec=Like)", annotation.parameters["value"])
+    }
+
+    @Test
+    fun `repeatable annotation container is unwrapped into individual annotations`() {
+        val classFile = TestClassWriter.writeClassFile(tempDir.toFile(), "com/example/WithJoins", "WithJoins.kt") {
+            val mv = visitMethod(Opcodes.ACC_PUBLIC, "findAll", "()V", null, null)
+            val container = mv.visitAnnotation("Lnet/kaczmarzyk/spring/data/jpa/web/annotation/RepeatedJoin;", true)
+            val valueArray = container?.visitArray("value")
+            val join1 = valueArray?.visitAnnotation(null, "Lnet/kaczmarzyk/spring/data/jpa/web/annotation/Join;")
+            join1?.visit("path", "author")
+            join1?.visit("alias", "a")
+            join1?.visitEnd()
+            val join2 = valueArray?.visitAnnotation(null, "Lnet/kaczmarzyk/spring/data/jpa/web/annotation/Join;")
+            join2?.visit("path", "tags")
+            join2?.visit("alias", "t")
+            join2?.visitEnd()
+            valueArray?.visitEnd()
+            container?.visitEnd()
+            mv.visitEnd()
+        }
+
+        val detail = ClassDetailExtractor.extract(classFile)
+
+        val method = detail.methods.first()
+        assertEquals(2, method.annotations.size)
+        assertEquals(AnnotationName("net.kaczmarzyk.spring.data.jpa.web.annotation.Join"), method.annotations[0].name)
+        assertEquals(mapOf("path" to "author", "alias" to "a"), method.annotations[0].parameters)
+        assertEquals(AnnotationName("net.kaczmarzyk.spring.data.jpa.web.annotation.Join"), method.annotations[1].name)
+        assertEquals(mapOf("path" to "tags", "alias" to "t"), method.annotations[1].parameters)
+    }
+
+    @Test
+    fun `repeatable annotation container on class is unwrapped`() {
+        val classFile = TestClassWriter.writeClassFile(tempDir.toFile(), "com/example/WithPropertySources", "WithPropertySources.kt") {
+            val container = visitAnnotation("Lorg/springframework/context/annotation/PropertySources;", true)
+            val valueArray = container?.visitArray("value")
+            val ps1 = valueArray?.visitAnnotation(null, "Lorg/springframework/context/annotation/PropertySource;")
+            ps1?.visit("value", "classpath:app.properties")
+            ps1?.visitEnd()
+            val ps2 = valueArray?.visitAnnotation(null, "Lorg/springframework/context/annotation/PropertySource;")
+            ps2?.visit("value", "classpath:db.properties")
+            ps2?.visitEnd()
+            valueArray?.visitEnd()
+            container?.visitEnd()
+        }
+
+        val detail = ClassDetailExtractor.extract(classFile)
+
+        assertEquals(2, detail.annotations.size)
+        assertEquals(AnnotationName("org.springframework.context.annotation.PropertySource"), detail.annotations[0].name)
+        assertEquals(mapOf("value" to "classpath:app.properties"), detail.annotations[0].parameters)
+        assertEquals(AnnotationName("org.springframework.context.annotation.PropertySource"), detail.annotations[1].name)
+        assertEquals(mapOf("value" to "classpath:db.properties"), detail.annotations[1].parameters)
+    }
+
+    @Test
+    fun `non-repeatable annotation with same-type nested value array is not unwrapped`() {
+        val classFile = TestClassWriter.writeClassFile(tempDir.toFile(), "com/example/WithAnd", "WithAnd.kt") {
+            val av = visitAnnotation("Lnet/kaczmarzyk/spring/data/jpa/web/annotation/And;", true)
+            val specArray = av?.visitArray("value")
+            val spec1 = specArray?.visitAnnotation(null, "Lnet/kaczmarzyk/spring/data/jpa/web/annotation/Spec;")
+            spec1?.visit("path", "name")
+            spec1?.visitEnd()
+            val spec2 = specArray?.visitAnnotation(null, "Lnet/kaczmarzyk/spring/data/jpa/web/annotation/Spec;")
+            spec2?.visit("path", "email")
+            spec2?.visitEnd()
+            specArray?.visitEnd()
+            av?.visitEnd()
+        }
+
+        val detail = ClassDetailExtractor.extract(classFile)
+
+        assertEquals(1, detail.annotations.size)
+        assertEquals(AnnotationName("net.kaczmarzyk.spring.data.jpa.web.annotation.And"), detail.annotations.first().name)
+    }
+
+    @Test
+    fun `single repeatable annotation in container is unwrapped`() {
+        val classFile = TestClassWriter.writeClassFile(tempDir.toFile(), "com/example/WithSingleJoin", "WithSingleJoin.kt") {
+            val mv = visitMethod(Opcodes.ACC_PUBLIC, "find", "()V", null, null)
+            val container = mv.visitAnnotation("Lnet/kaczmarzyk/spring/data/jpa/web/annotation/RepeatedJoin;", true)
+            val valueArray = container?.visitArray("value")
+            val join = valueArray?.visitAnnotation(null, "Lnet/kaczmarzyk/spring/data/jpa/web/annotation/Join;")
+            join?.visit("path", "author")
+            join?.visitEnd()
+            valueArray?.visitEnd()
+            container?.visitEnd()
+            mv.visitEnd()
+        }
+
+        val detail = ClassDetailExtractor.extract(classFile)
+
+        val method = detail.methods.first()
+        assertEquals(1, method.annotations.size)
+        assertEquals(AnnotationName("net.kaczmarzyk.spring.data.jpa.web.annotation.Join"), method.annotations[0].name)
+        assertEquals(mapOf("path" to "author"), method.annotations[0].parameters)
     }
 
     @Test

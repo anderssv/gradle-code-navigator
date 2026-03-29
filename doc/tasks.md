@@ -2,7 +2,7 @@
 
 The plugin provides two categories of tasks:
 
-- **Navigation tasks** analyze compiled bytecode and depend on the `classes` task (bytecode is compiled automatically before analysis).
+- **Navigation tasks** analyze compiled code and depend on the `classes` task (compilation happens automatically before analysis).
 - **Analysis tasks** analyze git history and do **not** require compilation.
 
 ## Navigation Tasks

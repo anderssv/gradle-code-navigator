@@ -16,11 +16,11 @@ gradlePlugin {
     plugins {
         create("code-navigator") {
             id = "no.f12.code-navigator"
-            displayName = "Code Navigator - Bytecode-level code exploration for Gradle"
-            description = "Analyzes compiled JVM bytecode to provide class listing, symbol search, " +
-                "call graph traversal, class detail inspection, interface implementation lookup, " +
-                "and package dependency analysis. Designed for coding agents and human developers."
-            tags.set(listOf("code-navigation", "bytecode", "call-graph", "analysis", "architecture"))
+            displayName = "Code Navigator - Reliable code navigation and analysis for Gradle"
+            description = "Provides reliable code navigation, code smell detection, and complexity analysis " +
+                "for JVM projects. Includes call graph traversal, dependency analysis, dead code detection, " +
+                "and git-history-based metrics. Designed for coding agents and human developers."
+            tags.set(listOf("code-navigation", "call-graph", "analysis", "architecture", "code-smells"))
             implementationClass = "no.f12.codenavigator.gradle.CodeNavigatorPlugin"
             compatibility {
                 features {

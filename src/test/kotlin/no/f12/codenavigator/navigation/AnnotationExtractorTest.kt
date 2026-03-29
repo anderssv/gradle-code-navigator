@@ -188,4 +188,59 @@ class AnnotationExtractorTest {
             result.methodAnnotations[handleRef],
         )
     }
+
+    @Test
+    fun `repeatable annotation container on method is unwrapped`() {
+        val classFile = TestClassWriter.writeClassFile(
+            tempDir.toFile(), "com/example/WithJoins", "WithJoins.kt",
+        ) {
+            val mv = visitMethod(Opcodes.ACC_PUBLIC, "findAll", "()V", null, null)
+            val container = mv.visitAnnotation("Lnet/kaczmarzyk/spring/data/jpa/web/annotation/RepeatedJoin;", true)
+            val valueArray = container?.visitArray("value")
+            val join1 = valueArray?.visitAnnotation(null, "Lnet/kaczmarzyk/spring/data/jpa/web/annotation/Join;")
+            join1?.visit("path", "author")
+            join1?.visitEnd()
+            val join2 = valueArray?.visitAnnotation(null, "Lnet/kaczmarzyk/spring/data/jpa/web/annotation/Join;")
+            join2?.visit("path", "tags")
+            join2?.visitEnd()
+            valueArray?.visitEnd()
+            container?.visitEnd()
+            mv.visitEnd()
+        }
+
+        val result = AnnotationExtractor.extract(classFile)
+
+        val methodRef = MethodRef(ClassName("com.example.WithJoins"), "findAll")
+        val joinName = AnnotationName("net.kaczmarzyk.spring.data.jpa.web.annotation.Join")
+        assertTrue(result.methodAnnotations[methodRef]!!.contains(joinName))
+        assertTrue(!result.methodAnnotations[methodRef]!!.contains(AnnotationName("net.kaczmarzyk.spring.data.jpa.web.annotation.RepeatedJoin")))
+        // Map can only hold one set of params per name; the last @Join's params win
+        assertEquals(mapOf("path" to "tags"), result.methodAnnotationParameters[methodRef]?.get(joinName))
+    }
+
+    @Test
+    fun `repeatable annotation container on class is unwrapped`() {
+        val classFile = TestClassWriter.writeClassFile(
+            tempDir.toFile(), "com/example/WithSources", "WithSources.kt",
+        ) {
+            val container = visitAnnotation("Lorg/springframework/context/annotation/PropertySources;", true)
+            val valueArray = container?.visitArray("value")
+            val ps1 = valueArray?.visitAnnotation(null, "Lorg/springframework/context/annotation/PropertySource;")
+            ps1?.visit("value", "classpath:app.properties")
+            ps1?.visitEnd()
+            val ps2 = valueArray?.visitAnnotation(null, "Lorg/springframework/context/annotation/PropertySource;")
+            ps2?.visit("value", "classpath:db.properties")
+            ps2?.visitEnd()
+            valueArray?.visitEnd()
+            container?.visitEnd()
+        }
+
+        val result = AnnotationExtractor.extract(classFile)
+
+        val sourceName = AnnotationName("org.springframework.context.annotation.PropertySource")
+        assertTrue(result.classAnnotations.contains(sourceName))
+        assertTrue(!result.classAnnotations.contains(AnnotationName("org.springframework.context.annotation.PropertySources")))
+        // Map can only hold one set of params per name; the last @PropertySource's params win
+        assertEquals(mapOf("value" to "classpath:db.properties"), result.classAnnotationParameters[sourceName])
+    }
 }

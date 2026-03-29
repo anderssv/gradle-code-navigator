@@ -3,7 +3,8 @@ package no.f12.codenavigator.navigation.classinfo
 import no.f12.codenavigator.navigation.AnnotationName
 import no.f12.codenavigator.navigation.ClassName
 import no.f12.codenavigator.navigation.KotlinMethodFilter
-import no.f12.codenavigator.navigation.annotationParameterVisitor
+import no.f12.codenavigator.navigation.ResolvedAnnotation
+import no.f12.codenavigator.navigation.unwrappingAnnotationVisitor
 import no.f12.codenavigator.navigation.createClassReader
 import org.objectweb.asm.AnnotationVisitor
 import org.objectweb.asm.ClassReader
@@ -171,9 +172,10 @@ object ClassDetailExtractor {
         annotations: MutableList<AnnotationDetail>,
     ): AnnotationVisitor? {
         if (descriptor == null) return null
-        val name = annotationFqn(descriptor)
-        return annotationParameterVisitor { parameters ->
-            annotations.add(AnnotationDetail(name, parameters))
+        return unwrappingAnnotationVisitor(descriptor) { resolved ->
+            for (ann in resolved) {
+                annotations.add(AnnotationDetail(annotationFqn(ann.descriptor), ann.parameters))
+            }
         }
     }
 }
