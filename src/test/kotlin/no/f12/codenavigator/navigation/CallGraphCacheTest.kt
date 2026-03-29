@@ -5,6 +5,7 @@ import no.f12.codenavigator.navigation.callgraph.CallGraphCache
 import no.f12.codenavigator.navigation.callgraph.CallDirection
 import no.f12.codenavigator.navigation.callgraph.CallTreeFormatter
 import no.f12.codenavigator.navigation.callgraph.MethodRef
+import no.f12.codenavigator.navigation.SourceSet
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.io.TempDir
 import org.objectweb.asm.ClassWriter
@@ -234,6 +235,71 @@ class CallGraphCacheTest {
         val result = CallGraphCache.read(cacheFile)
 
         assertEquals(null, result.lineNumberOf(MethodRef(ClassName("com.example.Missing"), "method")))
+    }
+
+    @Test
+    fun `writes and reads back source set mappings`() {
+        val sourceFiles = mapOf(
+            ClassName("com.example.Service") to "Service.kt",
+            ClassName("com.example.ServiceTest") to "ServiceTest.kt",
+        )
+        val sourceSetsMap = mapOf(
+            ClassName("com.example.Service") to SourceSet.MAIN,
+            ClassName("com.example.ServiceTest") to SourceSet.TEST,
+        )
+        val graph = CallGraph(emptyMap(), sourceFiles, emptyMap(), sourceSetsMap)
+
+        CallGraphCache.write(cacheFile, graph)
+        val result = CallGraphCache.read(cacheFile)
+
+        assertEquals(SourceSet.MAIN, result.sourceSetOf(ClassName("com.example.Service")))
+        assertEquals(SourceSet.TEST, result.sourceSetOf(ClassName("com.example.ServiceTest")))
+        assertEquals(null, result.sourceSetOf(ClassName("com.example.Missing")))
+    }
+
+    @Test
+    fun `reads cache without source sets section for backward compatibility`() {
+        val graph = CallGraph(emptyMap(), mapOf(ClassName("com.example.Service") to "Service.kt"))
+
+        CallGraphCache.write(cacheFile, graph)
+        val result = CallGraphCache.read(cacheFile)
+
+        assertEquals(null, result.sourceSetOf(ClassName("com.example.Service")))
+    }
+
+    @Test
+    fun `getOrBuildTagged builds graph with source set tags when cache is stale`() {
+        val mainDir = tempDir.resolve("main-classes").toFile()
+        mainDir.mkdirs()
+        writeClassFile("com/example/Service", mainDir)
+        val testDir = tempDir.resolve("test-classes").toFile()
+        testDir.mkdirs()
+        writeClassFile("com/example/ServiceTest", testDir)
+
+        val taggedDirs = listOf(mainDir to SourceSet.MAIN, testDir to SourceSet.TEST)
+        val result = CallGraphCache.getOrBuildTagged(cacheFile, taggedDirs)
+
+        assertEquals(SourceSet.MAIN, result.data.sourceSetOf(ClassName("com.example.Service")))
+        assertEquals(SourceSet.TEST, result.data.sourceSetOf(ClassName("com.example.ServiceTest")))
+    }
+
+    @Test
+    fun `getOrBuildTagged reads source sets from cache when fresh`() {
+        val mainDir = tempDir.resolve("main-classes").toFile()
+        mainDir.mkdirs()
+        writeClassFile("com/example/Service", mainDir)
+        val testDir = tempDir.resolve("test-classes").toFile()
+        testDir.mkdirs()
+        writeClassFile("com/example/ServiceTest", testDir)
+
+        val taggedDirs = listOf(mainDir to SourceSet.MAIN, testDir to SourceSet.TEST)
+        CallGraphCache.getOrBuildTagged(cacheFile, taggedDirs)
+        Thread.sleep(50)
+        cacheFile.setLastModified(System.currentTimeMillis())
+        val result = CallGraphCache.getOrBuildTagged(cacheFile, taggedDirs)
+
+        assertEquals(SourceSet.MAIN, result.data.sourceSetOf(ClassName("com.example.Service")))
+        assertEquals(SourceSet.TEST, result.data.sourceSetOf(ClassName("com.example.ServiceTest")))
     }
 
     private fun writeClassFile(className: String, targetDir: File = classesDir) {

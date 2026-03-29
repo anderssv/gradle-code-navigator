@@ -3,6 +3,7 @@ package no.f12.codenavigator.navigation.callgraph
 import no.f12.codenavigator.navigation.ClassName
 import no.f12.codenavigator.navigation.PackageName
 import no.f12.codenavigator.navigation.ScanResult
+import no.f12.codenavigator.navigation.SourceSet
 import no.f12.codenavigator.navigation.UnsupportedBytecodeVersionException
 import no.f12.codenavigator.navigation.createClassReader
 
@@ -22,6 +23,7 @@ data class UsageSite(
     val targetName: String,
     val targetDescriptor: String,
     val kind: UsageKind,
+    val sourceSet: SourceSet?,
 )
 
 enum class UsageKind {
@@ -43,20 +45,35 @@ object UsageScanner {
         method: String? = null,
         field: String? = null,
         type: String? = null,
+    ): ScanResult<List<UsageSite>> =
+        scanTagged(
+            taggedDirectories = classDirectories.map { it to null },
+            ownerClass = ownerClass,
+            method = method,
+            field = field,
+            type = type,
+        )
+
+    fun scanTagged(
+        taggedDirectories: List<Pair<File, SourceSet?>>,
+        ownerClass: String? = null,
+        method: String? = null,
+        field: String? = null,
+        type: String? = null,
     ): ScanResult<List<UsageSite>> {
         val usages = mutableSetOf<UsageSite>()
         val skipped = mutableListOf<UnsupportedBytecodeVersionException>()
         val ownerRegex = ownerClass?.let { Regex(it, RegexOption.IGNORE_CASE) }
         val typeRegex = type?.let { Regex(it, RegexOption.IGNORE_CASE) }
 
-        classDirectories
-            .filter { it.exists() }
-            .forEach { dir ->
+        taggedDirectories
+            .filter { it.first.exists() }
+            .forEach { (dir, sourceSet) ->
                 dir.walkTopDown()
                     .filter { it.isFile && it.extension == "class" }
                     .forEach { classFile ->
                         try {
-                            extractUsages(classFile, ownerRegex, method, field, type, typeRegex, usages)
+                            extractUsages(classFile, ownerRegex, method, field, type, typeRegex, usages, sourceSet)
                         } catch (e: UnsupportedBytecodeVersionException) {
                             skipped.add(e)
                         }
@@ -74,6 +91,7 @@ object UsageScanner {
         type: String?,
         typeRegex: Regex?,
         usages: MutableCollection<UsageSite>,
+        sourceSet: SourceSet?,
     ) {
         val reader = createClassReader(classFile)
         var callerClass = ClassName("")
@@ -108,6 +126,7 @@ object UsageScanner {
                                     targetName = name,
                                     targetDescriptor = descriptor,
                                     kind = UsageKind.TYPE_REFERENCE,
+                                    sourceSet = sourceSet,
                                 )
                             )
                         }
@@ -133,6 +152,7 @@ object UsageScanner {
                                     targetName = callerMethod,
                                     targetDescriptor = descriptor,
                                     kind = UsageKind.TYPE_REFERENCE,
+                                    sourceSet = sourceSet,
                                 )
                             )
                         }
@@ -157,6 +177,7 @@ object UsageScanner {
                                         targetName = instrName,
                                         targetDescriptor = instrDescriptor,
                                         kind = UsageKind.METHOD_CALL,
+                                        sourceSet = sourceSet,
                                     )
                                 )
                             }
@@ -180,6 +201,7 @@ object UsageScanner {
                                         targetName = instrName,
                                         targetDescriptor = instrDescriptor,
                                         kind = UsageKind.FIELD_ACCESS,
+                                        sourceSet = sourceSet,
                                     )
                                 )
                             }
@@ -197,6 +219,7 @@ object UsageScanner {
                                         targetName = typeInsnName(opcode),
                                         targetDescriptor = "",
                                         kind = UsageKind.TYPE_REFERENCE,
+                                        sourceSet = sourceSet,
                                     )
                                 )
                             }

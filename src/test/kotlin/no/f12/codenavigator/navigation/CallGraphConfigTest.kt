@@ -4,6 +4,7 @@ import no.f12.codenavigator.navigation.callgraph.CallGraph
 import no.f12.codenavigator.navigation.callgraph.CallGraphConfig
 import no.f12.codenavigator.navigation.callgraph.MethodRef
 import no.f12.codenavigator.config.OutputFormat
+import no.f12.codenavigator.navigation.SourceSet
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -103,12 +104,14 @@ class CallGraphConfigTest {
         sourceFiles = mapOf(projectClass to "MyClass.kt"),
     )
 
-    private fun config(projectOnly: Boolean = false, filterSynthetic: Boolean = false) =
+    private fun config(projectOnly: Boolean = false, filterSynthetic: Boolean = false, prodOnly: Boolean = false, testOnly: Boolean = false) =
         CallGraphConfig(
             method = ".*",
             maxDepth = 3,
             projectOnly = projectOnly,
             filterSynthetic = filterSynthetic,
+            prodOnly = prodOnly,
+            testOnly = testOnly,
             format = OutputFormat.TEXT,
         )
 
@@ -143,5 +146,91 @@ class CallGraphConfigTest {
         assertTrue(filter(MethodRef(projectClass, "doWork")))
         assertTrue(!filter(MethodRef(externalClass, "helper")))
         assertTrue(!filter(MethodRef(projectClass, "access\$doWork")))
+    }
+
+    @Test
+    fun `parses prod-only from properties`() {
+        val config = CallGraphConfig.parse(
+            mapOf("pattern" to "MyClass.doWork", "prod-only" to "true"),
+        )
+
+        assertEquals(true, config.prodOnly)
+    }
+
+    @Test
+    fun `parses test-only from properties`() {
+        val config = CallGraphConfig.parse(
+            mapOf("pattern" to "MyClass.doWork", "test-only" to "true"),
+        )
+
+        assertEquals(true, config.testOnly)
+    }
+
+    @Test
+    fun `defaults prodOnly to false when not provided`() {
+        val config = CallGraphConfig.parse(
+            mapOf("pattern" to "MyClass.doWork"),
+        )
+
+        assertEquals(false, config.prodOnly)
+    }
+
+    @Test
+    fun `defaults testOnly to false when not provided`() {
+        val config = CallGraphConfig.parse(
+            mapOf("pattern" to "MyClass.doWork"),
+        )
+
+        assertEquals(false, config.testOnly)
+    }
+
+    @Test
+    fun `buildFilter with prodOnly filters out test source set classes`() {
+        val prodClass = ClassName("com.example.Service")
+        val testClass = ClassName("com.example.ServiceTest")
+        val graphWithSets = CallGraph(
+            callerToCallees = mapOf(
+                MethodRef(prodClass, "doWork") to setOf(MethodRef(testClass, "testDoWork")),
+            ),
+            sourceFiles = mapOf(
+                prodClass to "Service.kt",
+                testClass to "ServiceTest.kt",
+            ),
+            sourceSets = mapOf(
+                prodClass to SourceSet.MAIN,
+                testClass to SourceSet.TEST,
+            ),
+        )
+
+        val filter = config(prodOnly = true).buildFilter(graphWithSets)
+
+        assertNotNull(filter)
+        assertTrue(filter(MethodRef(prodClass, "doWork")))
+        assertTrue(!filter(MethodRef(testClass, "testDoWork")))
+    }
+
+    @Test
+    fun `buildFilter with testOnly filters out prod source set classes`() {
+        val prodClass = ClassName("com.example.Service")
+        val testClass = ClassName("com.example.ServiceTest")
+        val graphWithSets = CallGraph(
+            callerToCallees = mapOf(
+                MethodRef(prodClass, "doWork") to setOf(MethodRef(testClass, "testDoWork")),
+            ),
+            sourceFiles = mapOf(
+                prodClass to "Service.kt",
+                testClass to "ServiceTest.kt",
+            ),
+            sourceSets = mapOf(
+                prodClass to SourceSet.MAIN,
+                testClass to SourceSet.TEST,
+            ),
+        )
+
+        val filter = config(testOnly = true).buildFilter(graphWithSets)
+
+        assertNotNull(filter)
+        assertTrue(!filter(MethodRef(prodClass, "doWork")))
+        assertTrue(filter(MethodRef(testClass, "testDoWork")))
     }
 }

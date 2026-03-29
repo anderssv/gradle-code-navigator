@@ -1,5 +1,10 @@
 package no.f12.codenavigator.navigation
 
+enum class SourceSet(val label: String) {
+    MAIN("prod"),
+    TEST("test"),
+}
+
 @JvmInline
 value class ClassName(val value: String) : Comparable<ClassName> {
     fun packageName(): PackageName =

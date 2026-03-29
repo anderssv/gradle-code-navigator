@@ -4,6 +4,7 @@ import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
+import no.f12.codenavigator.navigation.SourceSet
 import no.f12.codenavigator.navigation.callgraph.CallGraphCache
 import no.f12.codenavigator.navigation.complexity.ClassComplexityAnalyzer
 import no.f12.codenavigator.navigation.complexity.ComplexityConfig
@@ -47,10 +48,16 @@ class ComplexityMojo : AbstractMojo() {
     @Parameter(property = "collapse-lambdas")
     private var collapseLambdas: String? = null
 
+    @Parameter(property = "prod-only")
+    private var prodOnly: String? = null
+
+    @Parameter(property = "test-only")
+    private var testOnly: String? = null
+
     override fun execute() {
-        val classesDir = File(project.build.outputDirectory)
-        if (!classesDir.exists()) {
-            log.warn("Classes directory does not exist: $classesDir — run 'mvn compile' first.")
+        val taggedDirs = project.taggedClassDirectories()
+        if (taggedDirs.isEmpty()) {
+            log.warn("Classes directory does not exist: ${File(project.build.outputDirectory)} — run 'mvn compile' first.")
             return
         }
 
@@ -60,7 +67,7 @@ class ComplexityMojo : AbstractMojo() {
             throw MojoFailureException(e.message)
         }
 
-        val result = CallGraphCache.getOrBuild(File(project.build.directory, "cnav/call-graph.cache"), listOf(classesDir))
+        val result = CallGraphCache.getOrBuildTagged(File(project.build.directory, "cnav/call-graph.cache"), taggedDirs)
         val reportFile = File(project.build.directory, "cnav/skipped-files.txt")
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { log.warn(it) }
         val graph = result.data
@@ -70,8 +77,13 @@ class ComplexityMojo : AbstractMojo() {
             classPattern = config.classPattern,
             projectOnly = config.projectOnly,
         )
-        val results = if (config.collapseLambdas) LambdaCollapser.collapseComplexity(rawResults) else rawResults
-        val truncated = results.take(config.top)
+        val collapsed = if (config.collapseLambdas) LambdaCollapser.collapseComplexity(rawResults) else rawResults
+        val filtered = when {
+            config.prodOnly -> collapsed.filter { graph.sourceSetOf(it.className) == SourceSet.MAIN }
+            config.testOnly -> collapsed.filter { graph.sourceSetOf(it.className) == SourceSet.TEST }
+            else -> collapsed
+        }
+        val truncated = filtered.take(config.top)
 
         if (truncated.isEmpty()) {
             println("No matching classes found.")
@@ -93,5 +105,7 @@ class ComplexityMojo : AbstractMojo() {
         collapseLambdas?.let { put("collapse-lambdas", it) }
         format?.let { put("format", it) }
         llm?.let { put("llm", it) }
+        prodOnly?.let { put("prod-only", it) }
+        testOnly?.let { put("test-only", it) }
     }
 }

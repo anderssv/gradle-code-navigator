@@ -7,7 +7,8 @@ object UsageFormatter {
         return usages
             .sortedWith(compareBy({ it.callerClass }, { it.callerMethod }))
             .joinToString("\n") { u ->
-                "${u.callerClass}.${u.callerMethod} → ${u.targetOwner}.${u.targetName} (${u.sourceFile}) [${u.kind.name.lowercase()}]"
+                val sourceSetTag = u.sourceSet?.let { " [${it.label}]" } ?: ""
+                "${u.callerClass}.${u.callerMethod} → ${u.targetOwner}.${u.targetName} (${u.sourceFile}) [${u.kind.name.lowercase()}]$sourceSetTag"
             }
     }
 

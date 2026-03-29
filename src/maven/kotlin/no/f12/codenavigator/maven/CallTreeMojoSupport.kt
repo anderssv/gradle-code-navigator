@@ -33,13 +33,14 @@ object CallTreeMojoSupport {
             throw MojoFailureException(usageHint)
         }
 
-        val classesDir = File(project.build.outputDirectory)
-        if (!classesDir.exists()) {
-            log.warn("Classes directory does not exist: $classesDir — run 'mvn compile' first.")
+        val taggedDirs = project.taggedClassDirectories()
+        if (taggedDirs.isEmpty()) {
+            log.warn("Classes directory does not exist: ${File(project.build.outputDirectory)} — run 'mvn compile' first.")
             return
         }
+        val classDirectories = taggedDirs.map { it.first }
 
-        val result = CallGraphCache.getOrBuild(File(project.build.directory, "cnav/call-graph.cache"), listOf(classesDir))
+        val result = CallGraphCache.getOrBuildTagged(File(project.build.directory, "cnav/call-graph.cache"), taggedDirs)
         val reportFile = File(project.build.directory, "cnav/skipped-files.txt")
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { log.warn(it) }
         val graph = result.data
@@ -52,12 +53,12 @@ object CallTreeMojoSupport {
 
         val interfaceRegistry = InterfaceRegistryCache.getOrBuild(
             File(project.build.directory, "cnav/interface-registry.cache"),
-            listOf(classesDir),
+            classDirectories,
         ).data
         val interfaceImplementors = interfaceRegistry.implementorMap()
         val classToInterfaces = interfaceRegistry.classToInterfacesMap()
 
-        val annotations = AnnotationExtractor.scanAll(listOf(classesDir))
+        val annotations = AnnotationExtractor.scanAll(classDirectories)
 
         val trees = CallTreeBuilder.build(
             graph, methods, config.maxDepth, direction, config.buildFilter(graph),

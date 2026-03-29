@@ -11,6 +11,7 @@ import java.nio.file.Path
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.test.assertNull
 
 class UsageScannerTest {
 
@@ -695,5 +696,54 @@ class UsageScannerTest {
 
         assertEquals(1, filtered.size)
         assertEquals(ClassName("com.example.rabbit.SimilarCaller"), filtered[0].callerClass)
+    }
+
+    // --- Source set tagging ---
+
+    @Test
+    fun `scanTagged assigns source set to usages from each directory`() {
+        val mainDir = tempDir.resolve("main-classes").toFile()
+        mainDir.mkdirs()
+        val testDir = tempDir.resolve("test-classes").toFile()
+        testDir.mkdirs()
+
+        TestClassWriter.writeClassWithCalls(
+            mainDir, "com/example/Service", "Service.kt",
+            "handle", listOf(Call("com/example/Repository", "save", "()V")),
+        )
+        TestClassWriter.writeClassWithCalls(
+            testDir, "com/example/ServiceTest", "ServiceTest.kt",
+            "testHandle", listOf(Call("com/example/Repository", "save", "()V")),
+        )
+
+        val taggedDirs = listOf(mainDir to SourceSet.MAIN, testDir to SourceSet.TEST)
+        val usages = UsageScanner.scanTagged(
+            taggedDirs,
+            ownerClass = "com.example.Repository",
+            method = "save",
+        ).data
+
+        assertEquals(2, usages.size)
+        val mainUsage = usages.first { it.callerClass == ClassName("com.example.Service") }
+        val testUsage = usages.first { it.callerClass == ClassName("com.example.ServiceTest") }
+        assertEquals(SourceSet.MAIN, mainUsage.sourceSet)
+        assertEquals(SourceSet.TEST, testUsage.sourceSet)
+    }
+
+    @Test
+    fun `scan without tags produces null source set`() {
+        TestClassWriter.writeClassWithCalls(
+            classesDir, "com/example/Caller", "Caller.kt",
+            "doWork", listOf(Call("com/example/Target", "process", "()V")),
+        )
+
+        val usages = UsageScanner.scan(
+            listOf(classesDir),
+            ownerClass = "com.example.Target",
+            method = "process",
+        ).data
+
+        assertEquals(1, usages.size)
+        assertNull(usages[0].sourceSet)
     }
 }

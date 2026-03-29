@@ -59,7 +59,8 @@ object CallTreeFormatter {
         for (node in children) {
             val sourceFile = node.sourceFile ?: "<unknown>"
             val lineRef = node.lineNumber?.let { ":$it" } ?: ""
-            appendLine("$indent${direction.arrow} ${node.method.qualifiedName} ($sourceFile$lineRef)${formatAnnotationTags(node.annotations)}")
+            val sourceSetTag = node.sourceSet?.let { " [${it.label}]" } ?: ""
+            appendLine("$indent${direction.arrow} ${node.method.qualifiedName} ($sourceFile$lineRef)${formatAnnotationTags(node.annotations)}$sourceSetTag")
             if (node.children.isNotEmpty()) {
                 renderChildren(node.children, direction, depth + 1)
             }

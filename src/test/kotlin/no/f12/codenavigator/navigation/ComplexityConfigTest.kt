@@ -88,4 +88,32 @@ class ComplexityConfigTest {
 
         assertEquals(10, config.top)
     }
+
+    @Test
+    fun `parses prod-only from properties`() {
+        val config = ComplexityConfig.parse(mapOf("pattern" to "Foo", "prod-only" to "true"))
+
+        assertEquals(true, config.prodOnly)
+    }
+
+    @Test
+    fun `parses test-only from properties`() {
+        val config = ComplexityConfig.parse(mapOf("pattern" to "Foo", "test-only" to "true"))
+
+        assertEquals(true, config.testOnly)
+    }
+
+    @Test
+    fun `defaults prodOnly to false when absent`() {
+        val config = ComplexityConfig.parse(mapOf("pattern" to "Foo"))
+
+        assertEquals(false, config.prodOnly)
+    }
+
+    @Test
+    fun `defaults testOnly to false when absent`() {
+        val config = ComplexityConfig.parse(mapOf("pattern" to "Foo"))
+
+        assertEquals(false, config.testOnly)
+    }
 }

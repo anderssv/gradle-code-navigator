@@ -133,7 +133,8 @@ object TaskRegistry {
     val EXCLUDE = ParamDef("exclude", "<regex>", "Exclude results matching this regex", flag = false, defaultValue = null, enhancePattern = false, type = ParamType.STRING)
     val CLASSES_ONLY = ParamDef("classes-only", "true", "Show only unreferenced classes, skip dead methods", flag = false, defaultValue = null, enhancePattern = false, type = ParamType.BOOLEAN)
     val EXCLUDE_ANNOTATED = ParamDef("exclude-annotated", "<ann1>,<ann2>", "Exclude classes/methods bearing these annotations (simple names, comma-separated)", flag = false, defaultValue = null, enhancePattern = false, type = ParamType.LIST_STRING)
-    val PROD_ONLY = ParamDef("prod-only", "true", "Show only items unreferenced in both production and test code", flag = false, defaultValue = null, enhancePattern = false, type = ParamType.BOOLEAN)
+    val PROD_ONLY = ParamDef("prod-only", "true", "Show only items from production source set", flag = false, defaultValue = null, enhancePattern = false, type = ParamType.BOOLEAN)
+    val TEST_ONLY = ParamDef("test-only", "true", "Show only items from test source set", flag = false, defaultValue = null, enhancePattern = false, type = ParamType.BOOLEAN)
     val EXCLUDE_FRAMEWORK = ParamDef("exclude-framework", "<name>", "Disable framework preset (all active by default). Available: ${FrameworkPresets.availablePresets().sorted().joinToString(", ")}. Use ALL to disable all.", flag = false, defaultValue = null, enhancePattern = false, type = ParamType.LIST_STRING)
     val DETAIL = ParamDef("detail", "true", "Show individual call details", flag = false, defaultValue = null, enhancePattern = false, type = ParamType.BOOLEAN)
     val COLLAPSE_LAMBDAS = ParamDef("collapse-lambdas", "false", "Set false to show lambda classes separately", flag = false, defaultValue = "true", enhancePattern = false, type = ParamType.BOOLEAN)
@@ -181,14 +182,14 @@ object TaskRegistry {
     val FIND_CALLERS = TaskDef(
         goal = "find-callers",
         description = "Find callers of a method (call tree)",
-        params = FORMAT_PARAMS + listOf(CALL_PATTERN, MAXDEPTH, PROJECTONLY, FILTER_SYNTHETIC),
+        params = FORMAT_PARAMS + listOf(CALL_PATTERN, MAXDEPTH, PROJECTONLY, FILTER_SYNTHETIC, PROD_ONLY, TEST_ONLY),
         requiresCompilation = true,
     )
 
     val FIND_CALLEES = TaskDef(
         goal = "find-callees",
         description = "Find methods called by a method (call tree)",
-        params = FORMAT_PARAMS + listOf(CALL_PATTERN, MAXDEPTH, PROJECTONLY, FILTER_SYNTHETIC),
+        params = FORMAT_PARAMS + listOf(CALL_PATTERN, MAXDEPTH, PROJECTONLY, FILTER_SYNTHETIC, PROD_ONLY, TEST_ONLY),
         requiresCompilation = true,
     )
 
@@ -230,21 +231,21 @@ object TaskRegistry {
     val FIND_USAGES = TaskDef(
         goal = "find-usages",
         description = "Find project references to types, methods, and fields/properties",
-        params = FORMAT_PARAMS + listOf(OWNER_CLASS, METHOD, FIELD, TYPE, OUTSIDE_PACKAGE),
+        params = FORMAT_PARAMS + listOf(OWNER_CLASS, METHOD, FIELD, TYPE, OUTSIDE_PACKAGE, PROD_ONLY, TEST_ONLY),
         requiresCompilation = true,
     )
 
     val RANK = TaskDef(
         goal = "rank",
         description = "Rank types by importance (PageRank on call graph)",
-        params = FORMAT_PARAMS + listOf(TOP, PROJECTONLY_ON, COLLAPSE_LAMBDAS),
+        params = FORMAT_PARAMS + listOf(TOP, PROJECTONLY_ON, COLLAPSE_LAMBDAS, PROD_ONLY, TEST_ONLY),
         requiresCompilation = true,
     )
 
     val DEAD = TaskDef(
         goal = "dead",
         description = "Detect dead code (unreferenced classes and methods)",
-        params = FORMAT_PARAMS + listOf(FILTER, EXCLUDE, CLASSES_ONLY, EXCLUDE_ANNOTATED, PROD_ONLY, EXCLUDE_FRAMEWORK),
+        params = FORMAT_PARAMS + listOf(FILTER, EXCLUDE, CLASSES_ONLY, EXCLUDE_ANNOTATED, PROD_ONLY, TEST_ONLY, EXCLUDE_FRAMEWORK),
         requiresCompilation = true,
     )
 
@@ -286,7 +287,7 @@ object TaskRegistry {
     val COMPLEXITY = TaskDef(
         goal = "complexity",
         description = "Show fan-in/fan-out complexity per class",
-        params = FORMAT_PARAMS + listOf(PATTERN, PROJECTONLY_ON, DETAIL, COLLAPSE_LAMBDAS, TOP),
+        params = FORMAT_PARAMS + listOf(PATTERN, PROJECTONLY_ON, DETAIL, COLLAPSE_LAMBDAS, TOP, PROD_ONLY, TEST_ONLY),
         requiresCompilation = true,
     )
 

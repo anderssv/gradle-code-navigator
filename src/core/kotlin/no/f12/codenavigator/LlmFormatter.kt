@@ -109,7 +109,10 @@ object LlmFormatter {
 
     fun formatUsages(usages: List<UsageSite>): String =
         usages.sortedWith(compareBy({ it.callerClass }, { it.callerMethod }))
-            .joinToString("\n") { "${it.callerClass}.${it.callerMethod} -> ${it.targetOwner}.${it.targetName}${it.targetDescriptor} ${it.kind.name.lowercase()} ${it.sourceFile}" }
+            .joinToString("\n") {
+                val sourceSetTag = it.sourceSet?.let { ss -> " [${ss.label}]" } ?: ""
+                "${it.callerClass}.${it.callerMethod} -> ${it.targetOwner}.${it.targetName}${it.targetDescriptor} ${it.kind.name.lowercase()} ${it.sourceFile}$sourceSetTag"
+            }
 
     fun formatRank(ranked: List<RankedType>): String =
         ranked.joinToString("\n") { "%.4f".format(it.rank).let { rank -> "${it.className} rank=$rank in=${it.inDegree} out=${it.outDegree}" } }
@@ -258,8 +261,9 @@ object LlmFormatter {
         val indent = "  ".repeat(depth)
         for (node in children) {
             val lineRef = node.lineNumber?.let { ":$it" } ?: ""
+            val sourceSetTag = node.sourceSet?.let { " [${it.label}]" } ?: ""
             appendLine()
-            append("$indent${direction.arrow} ${node.method.qualifiedName} ${node.sourceFile ?: "<unknown>"}$lineRef${formatAnnotationTags(node.annotations)}")
+            append("$indent${direction.arrow} ${node.method.qualifiedName} ${node.sourceFile ?: "<unknown>"}$lineRef${formatAnnotationTags(node.annotations)}$sourceSetTag")
             if (node.children.isNotEmpty()) {
                 renderChildren(node.children, direction, depth + 1)
             }

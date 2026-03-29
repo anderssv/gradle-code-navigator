@@ -63,4 +63,32 @@ class RankConfigTest {
 
         assertEquals(false, config.collapseLambdas)
     }
+
+    @Test
+    fun `parses prod-only from properties`() {
+        val config = RankConfig.parse(mapOf("prod-only" to "true"))
+
+        assertEquals(true, config.prodOnly)
+    }
+
+    @Test
+    fun `parses test-only from properties`() {
+        val config = RankConfig.parse(mapOf("test-only" to "true"))
+
+        assertEquals(true, config.testOnly)
+    }
+
+    @Test
+    fun `defaults prodOnly to false when absent`() {
+        val config = RankConfig.parse(emptyMap())
+
+        assertEquals(false, config.prodOnly)
+    }
+
+    @Test
+    fun `defaults testOnly to false when absent`() {
+        val config = RankConfig.parse(emptyMap())
+
+        assertEquals(false, config.testOnly)
+    }
 }

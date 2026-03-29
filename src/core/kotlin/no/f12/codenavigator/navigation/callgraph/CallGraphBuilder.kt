@@ -3,6 +3,7 @@ package no.f12.codenavigator.navigation.callgraph
 import no.f12.codenavigator.navigation.ClassName
 import no.f12.codenavigator.navigation.KotlinMethodFilter
 import no.f12.codenavigator.navigation.ScanResult
+import no.f12.codenavigator.navigation.SourceSet
 import no.f12.codenavigator.navigation.UnsupportedBytecodeVersionException
 import no.f12.codenavigator.navigation.createClassReader
 
@@ -25,6 +26,7 @@ class CallGraph(
     private val callerToCallees: Map<MethodRef, Set<MethodRef>>,
     private val sourceFiles: Map<ClassName, String> = emptyMap(),
     private val lineNumbers: Map<MethodRef, Int> = emptyMap(),
+    private val sourceSets: Map<ClassName, SourceSet> = emptyMap(),
 ) {
     private val calleeToCallers: Map<MethodRef, Set<MethodRef>> by lazy {
         val inverted = mutableMapOf<MethodRef, MutableSet<MethodRef>>()
@@ -98,6 +100,8 @@ class CallGraph(
 
     fun lineNumberOf(method: MethodRef): Int? = lineNumbers[method]
 
+    fun sourceSetOf(className: ClassName): SourceSet? = sourceSets[className]
+
     fun projectClassFilter(): (MethodRef) -> Boolean {
         val classes = projectClasses()
         return { it.className in classes }
@@ -116,23 +120,32 @@ class CallGraph(
     fun forEachLineNumber(action: (method: MethodRef, lineNumber: Int) -> Unit) {
         lineNumbers.forEach { (method, lineNumber) -> action(method, lineNumber) }
     }
+
+    fun forEachSourceSet(action: (className: ClassName, sourceSet: SourceSet) -> Unit) {
+        sourceSets.forEach { (className, sourceSet) -> action(className, sourceSet) }
+    }
 }
 
 object CallGraphBuilder {
-    fun build(classDirectories: List<File>): ScanResult<CallGraph> {
+    fun build(classDirectories: List<File>): ScanResult<CallGraph> =
+        buildTagged(classDirectories.map { it to SourceSet.MAIN })
+
+    fun buildTagged(taggedDirectories: List<Pair<File, SourceSet>>): ScanResult<CallGraph> {
         val callerToCallees = mutableMapOf<MethodRef, MutableSet<MethodRef>>()
         val sourceFiles = mutableMapOf<ClassName, String>()
         val lineNumbers = mutableMapOf<MethodRef, Int>()
+        val sourceSets = mutableMapOf<ClassName, SourceSet>()
         val skipped = mutableListOf<UnsupportedBytecodeVersionException>()
 
-        classDirectories
-            .filter { it.exists() }
-            .forEach { dir ->
+        taggedDirectories
+            .filter { it.first.exists() }
+            .forEach { (dir, sourceSet) ->
                 dir.walkTopDown()
                     .filter { it.isFile && it.extension == "class" }
                     .forEach { classFile ->
                         try {
-                            extractCalls(classFile, callerToCallees, sourceFiles, lineNumbers)
+                            val classNames = extractCalls(classFile, callerToCallees, sourceFiles, lineNumbers)
+                            classNames.forEach { className -> sourceSets[className] = sourceSet }
                         } catch (e: UnsupportedBytecodeVersionException) {
                             skipped.add(e)
                         }
@@ -140,7 +153,7 @@ object CallGraphBuilder {
             }
 
         return ScanResult(
-            data = CallGraph(callerToCallees, sourceFiles, lineNumbers),
+            data = CallGraph(callerToCallees, sourceFiles, lineNumbers, sourceSets),
             skippedFiles = skipped,
         )
     }
@@ -150,9 +163,10 @@ object CallGraphBuilder {
         graph: MutableMap<MethodRef, MutableSet<MethodRef>>,
         sourceFiles: MutableMap<ClassName, String>,
         lineNumbers: MutableMap<MethodRef, Int>,
-    ) {
+    ): List<ClassName> {
         val reader = createClassReader(classFile)
         var ownerClassName = ClassName("")
+        val discoveredClasses = mutableListOf<ClassName>()
 
         reader.accept(
             object : ClassVisitor(Opcodes.ASM9) {
@@ -165,6 +179,7 @@ object CallGraphBuilder {
                     interfaces: Array<out String>?,
                 ) {
                     ownerClassName = ClassName.fromInternal(name)
+                    discoveredClasses.add(ownerClassName)
                 }
 
                 override fun visitSource(source: String?, debug: String?) {
@@ -210,5 +225,6 @@ object CallGraphBuilder {
             },
             ClassReader.SKIP_FRAMES,
         )
+        return discoveredClasses
     }
 }

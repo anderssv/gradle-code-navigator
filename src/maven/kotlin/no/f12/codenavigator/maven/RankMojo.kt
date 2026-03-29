@@ -4,6 +4,7 @@ import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
+import no.f12.codenavigator.navigation.SourceSet
 import no.f12.codenavigator.navigation.callgraph.CallGraphCache
 import no.f12.codenavigator.navigation.SkippedFileReporter
 import no.f12.codenavigator.navigation.rank.RankConfig
@@ -39,31 +40,42 @@ class RankMojo : AbstractMojo() {
     @Parameter(property = "collapse-lambdas")
     private var collapseLambdas: String? = null
 
+    @Parameter(property = "prod-only")
+    private var prodOnly: String? = null
+
+    @Parameter(property = "test-only")
+    private var testOnly: String? = null
+
     override fun execute() {
-        val classesDir = File(project.build.outputDirectory)
-        if (!classesDir.exists()) {
-            log.warn("Classes directory does not exist: $classesDir — run 'mvn compile' first.")
+        val taggedDirs = project.taggedClassDirectories()
+        if (taggedDirs.isEmpty()) {
+            log.warn("Classes directory does not exist: ${File(project.build.outputDirectory)} — run 'mvn compile' first.")
             return
         }
 
         val config = RankConfig.parse(TaskRegistry.RANK.enhanceProperties(buildPropertyMap()))
 
-        val result = CallGraphCache.getOrBuild(File(project.build.directory, "cnav/call-graph.cache"), listOf(classesDir))
+        val result = CallGraphCache.getOrBuildTagged(File(project.build.directory, "cnav/call-graph.cache"), taggedDirs)
         val reportFile = File(project.build.directory, "cnav/skipped-files.txt")
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { log.warn(it) }
         val graph = result.data
 
         val ranked = TypeRanker.rank(graph, top = config.top, projectOnly = config.projectOnly, collapseLambdas = config.collapseLambdas)
+        val filtered = when {
+            config.prodOnly -> ranked.filter { graph.sourceSetOf(it.className) == SourceSet.MAIN }
+            config.testOnly -> ranked.filter { graph.sourceSetOf(it.className) == SourceSet.TEST }
+            else -> ranked
+        }
 
-        if (ranked.isEmpty()) {
+        if (filtered.isEmpty()) {
             println("No ranked types found.")
             return
         }
 
         println(OutputWrapper.formatAndWrap(config.format,
-            text = { RankFormatter.format(ranked) },
-            json = { JsonFormatter.formatRank(ranked) },
-            llm = { LlmFormatter.formatRank(ranked) },
+            text = { RankFormatter.format(filtered) },
+            json = { JsonFormatter.formatRank(filtered) },
+            llm = { LlmFormatter.formatRank(filtered) },
         ))
     }
 
@@ -73,5 +85,7 @@ class RankMojo : AbstractMojo() {
         top?.let { put("top", it) }
         projectOnly?.let { put("project-only", it) }
         collapseLambdas?.let { put("collapse-lambdas", it) }
+        prodOnly?.let { put("prod-only", it) }
+        testOnly?.let { put("test-only", it) }
     }
 }

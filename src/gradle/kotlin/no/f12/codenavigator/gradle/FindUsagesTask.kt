@@ -11,7 +11,6 @@ import no.f12.codenavigator.navigation.callgraph.UsageScanner
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
-import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
 import java.io.File
@@ -33,14 +32,13 @@ abstract class FindUsagesTask : DefaultTask() {
             )
         }
 
-        val sourceSets = project.extensions.getByType(SourceSetContainer::class.java)
-        val mainSourceSet = sourceSets.getByName("main")
-        val classDirectories = mainSourceSet.output.classesDirs.files.toList()
+        val taggedDirs = project.taggedClassDirectories()
 
-        val result = UsageScanner.scan(classDirectories, ownerClass = config.ownerClass, method = config.method, field = config.field, type = config.type)
+        val result = UsageScanner.scanTagged(taggedDirs, ownerClass = config.ownerClass, method = config.method, field = config.field, type = config.type)
         val reportFile = File(project.layout.buildDirectory.asFile.get(), "cnav/skipped-files.txt")
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { logger.warn(it) }
-        val usages = UsageScanner.filterOutsidePackage(result.data, config.outsidePackage)
+        val afterPackageFilter = UsageScanner.filterOutsidePackage(result.data, config.outsidePackage)
+        val usages = config.filterBySourceSet(afterPackageFilter)
 
         if (usages.isEmpty()) {
             logger.lifecycle(UsageFormatter.noResultsGuidance(config.ownerClass, config.method, config.field, config.type))

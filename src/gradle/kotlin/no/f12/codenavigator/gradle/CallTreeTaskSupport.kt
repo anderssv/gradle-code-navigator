@@ -5,6 +5,7 @@ import no.f12.codenavigator.LlmFormatter
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskDef
 import no.f12.codenavigator.navigation.SkippedFileReporter
+import no.f12.codenavigator.navigation.SourceSet
 import no.f12.codenavigator.navigation.annotation.AnnotationExtractor
 import no.f12.codenavigator.navigation.callgraph.CallDirection
 import no.f12.codenavigator.navigation.callgraph.CallGraphCache
@@ -33,12 +34,11 @@ object CallTreeTaskSupport {
             throw GradleException(usageHint)
         }
 
-        val sourceSets = project.extensions.getByType(SourceSetContainer::class.java)
-        val mainSourceSet = sourceSets.getByName("main")
-        val classDirectories = mainSourceSet.output.classesDirs.files.toList()
+        val taggedDirs = project.taggedClassDirectories()
+        val classDirectories = taggedDirs.map { it.first }
 
         val cacheFile = File(project.layout.buildDirectory.asFile.get(), "cnav/call-graph.cache")
-        val result = CallGraphCache.getOrBuild(cacheFile, classDirectories)
+        val result = CallGraphCache.getOrBuildTagged(cacheFile, taggedDirs)
         val reportFile = File(project.layout.buildDirectory.asFile.get(), "cnav/skipped-files.txt")
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { logger.warn(it) }
         val graph = result.data

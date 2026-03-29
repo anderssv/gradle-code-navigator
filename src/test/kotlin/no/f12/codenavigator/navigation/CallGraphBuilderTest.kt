@@ -5,6 +5,7 @@ import no.f12.codenavigator.navigation.callgraph.CallGraphBuilder
 import no.f12.codenavigator.navigation.callgraph.CallDirection
 import no.f12.codenavigator.navigation.callgraph.CallTreeFormatter
 import no.f12.codenavigator.navigation.callgraph.MethodRef
+import no.f12.codenavigator.navigation.SourceSet
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
@@ -433,5 +434,62 @@ class CallGraphBuilderTest {
 
         assertEquals(10, graph.lineNumberOf(MethodRef(ClassName("com.example.Service"), "doWork")))
         assertEquals(25, graph.lineNumberOf(MethodRef(ClassName("com.example.Service"), "doOtherWork")))
+    }
+
+    @Test
+    fun `sourceSetOf returns the source set assigned to a class`() {
+        val graph = CallGraph(
+            callerToCallees = emptyMap(),
+            sourceFiles = mapOf(
+                ClassName("com.example.Service") to "Service.kt",
+                ClassName("com.example.ServiceTest") to "ServiceTest.kt",
+            ),
+            sourceSets = mapOf(
+                ClassName("com.example.Service") to SourceSet.MAIN,
+                ClassName("com.example.ServiceTest") to SourceSet.TEST,
+            ),
+        )
+
+        assertEquals(SourceSet.MAIN, graph.sourceSetOf(ClassName("com.example.Service")))
+        assertEquals(SourceSet.TEST, graph.sourceSetOf(ClassName("com.example.ServiceTest")))
+    }
+
+    @Test
+    fun `sourceSetOf returns null for unknown class`() {
+        val graph = CallGraph(
+            callerToCallees = emptyMap(),
+            sourceFiles = mapOf(ClassName("com.example.Service") to "Service.kt"),
+            sourceSets = mapOf(ClassName("com.example.Service") to SourceSet.MAIN),
+        )
+
+        assertEquals(null, graph.sourceSetOf(ClassName("com.example.Missing")))
+    }
+
+    @Test
+    fun `sourceSetOf defaults to null when no source sets provided`() {
+        val graph = CallGraph(
+            callerToCallees = emptyMap(),
+            sourceFiles = mapOf(ClassName("com.example.Service") to "Service.kt"),
+        )
+
+        assertEquals(null, graph.sourceSetOf(ClassName("com.example.Service")))
+    }
+
+    @Test
+    fun `build with tagged directories assigns source sets`() {
+        val mainDir = tempDir.resolve("main-classes").toFile()
+        mainDir.mkdirs()
+        val testDir = tempDir.resolve("test-classes").toFile()
+        testDir.mkdirs()
+
+        TestClassWriter.writeClassWithCalls(mainDir, "com/example/Service", "Service.kt", "handle", emptyList())
+        TestClassWriter.writeClassWithCalls(testDir, "com/example/ServiceTest", "ServiceTest.kt", "testHandle", emptyList())
+
+        val graph = CallGraphBuilder.buildTagged(
+            listOf(mainDir to SourceSet.MAIN, testDir to SourceSet.TEST),
+        ).data
+
+        assertEquals(SourceSet.MAIN, graph.sourceSetOf(ClassName("com.example.Service")))
+        assertEquals(SourceSet.TEST, graph.sourceSetOf(ClassName("com.example.ServiceTest")))
     }
 }

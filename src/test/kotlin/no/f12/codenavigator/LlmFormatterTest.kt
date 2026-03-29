@@ -33,6 +33,7 @@ import no.f12.codenavigator.navigation.stringconstant.StringConstantMatch
 import no.f12.codenavigator.navigation.metrics.MetricsResult
 import no.f12.codenavigator.navigation.annotation.AnnotationMatch
 import no.f12.codenavigator.navigation.annotation.MethodAnnotationMatch
+import no.f12.codenavigator.navigation.SourceSet
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -727,6 +728,88 @@ class LlmFormatterTest {
 
         assertEquals(
             "com.example.Controller.getUsers Controller.kt [@GetMapping(value=\"/users\") [spring]]",
+            result,
+        )
+    }
+
+    @Test
+    fun `renders test source set tag on call tree child node`() {
+        val trees = listOf(
+            CallTreeNode(
+                method = MethodRef(ClassName("com.example.Service"), "doWork"),
+                sourceFile = "Service.kt",
+                lineNumber = null,
+                children = listOf(
+                    CallTreeNode(
+                        method = MethodRef(ClassName("com.example.ServiceTest"), "testDoWork"),
+                        sourceFile = "ServiceTest.kt",
+                        lineNumber = 10,
+                        children = emptyList(),
+                        sourceSet = SourceSet.TEST,
+                    ),
+                ),
+                sourceSet = SourceSet.MAIN,
+            ),
+        )
+
+        val result = LlmFormatter.renderCallTrees(trees, CallDirection.CALLERS)
+
+        assertEquals(
+            "com.example.Service.doWork Service.kt\n  ← com.example.ServiceTest.testDoWork ServiceTest.kt:10 [test]",
+            result,
+        )
+    }
+
+    @Test
+    fun `renders prod source set tag on call tree child node`() {
+        val trees = listOf(
+            CallTreeNode(
+                method = MethodRef(ClassName("com.example.Service"), "doWork"),
+                sourceFile = "Service.kt",
+                lineNumber = null,
+                children = listOf(
+                    CallTreeNode(
+                        method = MethodRef(ClassName("com.example.Controller"), "handle"),
+                        sourceFile = "Controller.kt",
+                        lineNumber = null,
+                        children = emptyList(),
+                        sourceSet = SourceSet.MAIN,
+                    ),
+                ),
+                sourceSet = SourceSet.MAIN,
+            ),
+        )
+
+        val result = LlmFormatter.renderCallTrees(trees, CallDirection.CALLERS)
+
+        assertEquals(
+            "com.example.Service.doWork Service.kt\n  ← com.example.Controller.handle Controller.kt [prod]",
+            result,
+        )
+    }
+
+    @Test
+    fun `renders no source set tag on call tree node when null`() {
+        val trees = listOf(
+            CallTreeNode(
+                method = MethodRef(ClassName("com.example.Service"), "doWork"),
+                sourceFile = "Service.kt",
+                lineNumber = null,
+                children = listOf(
+                    CallTreeNode(
+                        method = MethodRef(ClassName("com.example.Controller"), "handle"),
+                        sourceFile = "Controller.kt",
+                        lineNumber = null,
+                        children = emptyList(),
+                    ),
+                ),
+            ),
+        )
+
+        val result = LlmFormatter.renderCallTrees(trees, CallDirection.CALLERS)
+
+        assertEquals(
+            "com.example.Service.doWork Service.kt\n  ← com.example.Controller.handle Controller.kt",
             result,
         )
     }

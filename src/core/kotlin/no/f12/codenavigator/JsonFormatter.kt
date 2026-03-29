@@ -223,6 +223,7 @@ object JsonFormatter {
                 "targetMethod" to u.targetName,
                 "targetDescriptor" to u.targetDescriptor,
                 "kind" to u.kind.name.lowercase(),
+                "sourceSet" to u.sourceSet?.label,
             )
         }
 
@@ -350,6 +351,7 @@ object JsonFormatter {
             "method" to node.method.qualifiedName,
             "sourceFile" to node.sourceFile,
             "lineNumber" to node.lineNumber,
+            "sourceSet" to node.sourceSet?.label,
             "annotations" to if (node.annotations.isNotEmpty()) JsonRaw(renderAnnotationTags(node.annotations)) else null,
             "children" to JsonRaw(children),
         )

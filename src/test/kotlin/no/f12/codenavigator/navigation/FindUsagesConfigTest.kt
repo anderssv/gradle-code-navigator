@@ -1,6 +1,8 @@
 package no.f12.codenavigator.navigation
 
 import no.f12.codenavigator.navigation.callgraph.FindUsagesConfig
+import no.f12.codenavigator.navigation.callgraph.UsageKind
+import no.f12.codenavigator.navigation.callgraph.UsageSite
 import no.f12.codenavigator.config.OutputFormat
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -127,5 +129,104 @@ class FindUsagesConfigTest {
         val config = FindUsagesConfig.parse(mapOf("owner-class" to "com.example.Foo"))
 
         assertNull(config.field)
+    }
+
+    @Test
+    fun `parses prod-only flag`() {
+        val config = FindUsagesConfig.parse(
+            mapOf("owner-class" to "com.example.Foo", "prod-only" to "true"),
+        )
+
+        assertEquals(true, config.prodOnly)
+    }
+
+    @Test
+    fun `parses test-only flag`() {
+        val config = FindUsagesConfig.parse(
+            mapOf("owner-class" to "com.example.Foo", "test-only" to "true"),
+        )
+
+        assertEquals(true, config.testOnly)
+    }
+
+    @Test
+    fun `defaults prod-only and test-only to false`() {
+        val config = FindUsagesConfig.parse(mapOf("owner-class" to "com.example.Foo"))
+
+        assertEquals(false, config.prodOnly)
+        assertEquals(false, config.testOnly)
+    }
+
+    private fun usageSite(callerClass: String, sourceSet: SourceSet?) = UsageSite(
+        callerClass = ClassName(callerClass),
+        callerMethod = "doWork",
+        sourceFile = "Test.kt",
+        targetOwner = ClassName("com.example.Target"),
+        targetName = "handle",
+        targetDescriptor = "()V",
+        kind = UsageKind.METHOD_CALL,
+        sourceSet = sourceSet,
+    )
+
+    private fun config(prodOnly: Boolean, testOnly: Boolean) = FindUsagesConfig(
+        ownerClass = "com.example.Target",
+        method = null,
+        field = null,
+        type = null,
+        outsidePackage = null,
+        prodOnly = prodOnly,
+        testOnly = testOnly,
+        format = OutputFormat.TEXT,
+    )
+
+    @Test
+    fun `filterBySourceSet returns all usages when neither prodOnly nor testOnly set`() {
+        val usages = listOf(
+            usageSite("com.example.ProdCaller", SourceSet.MAIN),
+            usageSite("com.example.TestCaller", SourceSet.TEST),
+        )
+
+        val filtered = config(prodOnly = false, testOnly = false).filterBySourceSet(usages)
+
+        assertEquals(2, filtered.size)
+    }
+
+    @Test
+    fun `filterBySourceSet with prodOnly keeps only MAIN source set usages`() {
+        val usages = listOf(
+            usageSite("com.example.ProdCaller", SourceSet.MAIN),
+            usageSite("com.example.TestCaller", SourceSet.TEST),
+        )
+
+        val filtered = config(prodOnly = true, testOnly = false).filterBySourceSet(usages)
+
+        assertEquals(1, filtered.size)
+        assertEquals(ClassName("com.example.ProdCaller"), filtered[0].callerClass)
+    }
+
+    @Test
+    fun `filterBySourceSet with testOnly keeps only TEST source set usages`() {
+        val usages = listOf(
+            usageSite("com.example.ProdCaller", SourceSet.MAIN),
+            usageSite("com.example.TestCaller", SourceSet.TEST),
+        )
+
+        val filtered = config(prodOnly = false, testOnly = true).filterBySourceSet(usages)
+
+        assertEquals(1, filtered.size)
+        assertEquals(ClassName("com.example.TestCaller"), filtered[0].callerClass)
+    }
+
+    @Test
+    fun `filterBySourceSet with prodOnly excludes usages with null source set`() {
+        val usages = listOf(
+            usageSite("com.example.ProdCaller", SourceSet.MAIN),
+            usageSite("com.example.UnknownCaller", null),
+        )
+
+        val filtered = config(prodOnly = true, testOnly = false).filterBySourceSet(usages)
+
+        assertEquals(1, filtered.size)
+        assertEquals(ClassName("com.example.ProdCaller"), filtered[0].callerClass)
     }
 }

@@ -1,7 +1,9 @@
 package no.f12.codenavigator.navigation.callgraph
 
 import no.f12.codenavigator.ParamDef
+import no.f12.codenavigator.TaskRegistry
 import no.f12.codenavigator.config.OutputFormat
+import no.f12.codenavigator.navigation.SourceSet
 
 data class FindUsagesConfig(
     val ownerClass: String?,
@@ -9,8 +11,18 @@ data class FindUsagesConfig(
     val field: String?,
     val type: String?,
     val outsidePackage: String?,
+    val prodOnly: Boolean,
+    val testOnly: Boolean,
     val format: OutputFormat,
 ) {
+    fun filterBySourceSet(usages: List<UsageSite>): List<UsageSite> {
+        if (!prodOnly && !testOnly) return usages
+        return usages.filter { usage ->
+            if (prodOnly) usage.sourceSet == SourceSet.MAIN
+            else usage.sourceSet == SourceSet.TEST
+        }
+    }
+
     companion object {
         fun parse(properties: Map<String, String?>): FindUsagesConfig {
             val ownerClass = properties["owner-class"]
@@ -38,6 +50,8 @@ data class FindUsagesConfig(
                 field = field,
                 type = type,
                 outsidePackage = properties["outside-package"],
+                prodOnly = TaskRegistry.PROD_ONLY.parse(properties["prod-only"]),
+                testOnly = TaskRegistry.TEST_ONLY.parse(properties["test-only"]),
                 format = ParamDef.parseFormat(properties),
             )
         }

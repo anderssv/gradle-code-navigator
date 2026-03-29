@@ -244,6 +244,7 @@ Items below are low-priority or may not be worth building. Revisit if demand eme
 
 ## Future ideas (not yet planned)
 
+- **Dead code: flag methods called only from test scope**: Use source set tagging from item 2 to identify production methods/classes whose only callers are in the test source set. These are candidates for removal since no production code depends on them. Replaces the current separate `testGraph` approach in `DeadCodeFinder` with a unified call graph that has source set metadata.
 - **Remove cnav disk cache entirely**: Zero measurable difference on ~20k LOC. Reduces complexity. Needs testing on larger projects.
 - **Fail fast on wrong bytecode**: Replace `ScanResult<T>` partial-fail with hard failure + clear error.
 - **Cross-reference hotspots with bytecode**: Combine `cnavHotspots` with `cnavCallers`/`cnavDeps`.

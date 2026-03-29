@@ -35,6 +35,7 @@ import no.f12.codenavigator.navigation.stringconstant.StringConstantMatch
 import no.f12.codenavigator.navigation.metrics.MetricsResult
 import no.f12.codenavigator.navigation.annotation.AnnotationMatch
 import no.f12.codenavigator.navigation.annotation.MethodAnnotationMatch
+import no.f12.codenavigator.navigation.SourceSet
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -992,5 +993,47 @@ class JsonFormatterTest {
         val result = JsonFormatter.renderCallTrees(trees)
 
         assertTrue(!result.contains(""""parameters""""), "Annotation without parameters should not have parameters key")
+    }
+
+    @Test
+    fun `call tree JSON includes sourceSet when present`() {
+        val trees = listOf(
+            CallTreeNode(
+                method = MethodRef(ClassName("com.example.Service"), "doWork"),
+                sourceFile = "Service.kt",
+                lineNumber = null,
+                children = listOf(
+                    CallTreeNode(
+                        method = MethodRef(ClassName("com.example.ServiceTest"), "testDoWork"),
+                        sourceFile = "ServiceTest.kt",
+                        lineNumber = 10,
+                        children = emptyList(),
+                        sourceSet = SourceSet.TEST,
+                    ),
+                ),
+                sourceSet = SourceSet.MAIN,
+            ),
+        )
+
+        val result = JsonFormatter.renderCallTrees(trees)
+
+        assertTrue(result.contains(""""sourceSet":"prod""""), "Root node should have sourceSet:prod")
+        assertTrue(result.contains(""""sourceSet":"test""""), "Child node should have sourceSet:test")
+    }
+
+    @Test
+    fun `call tree JSON omits sourceSet when null`() {
+        val trees = listOf(
+            CallTreeNode(
+                method = MethodRef(ClassName("com.example.Service"), "doWork"),
+                sourceFile = "Service.kt",
+                lineNumber = null,
+                children = emptyList(),
+            ),
+        )
+
+        val result = JsonFormatter.renderCallTrees(trees)
+
+        assertTrue(!result.contains(""""sourceSet""""), "Should not have sourceSet key when null")
     }
 }

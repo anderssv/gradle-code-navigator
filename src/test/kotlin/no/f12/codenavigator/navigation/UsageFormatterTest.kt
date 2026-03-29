@@ -7,6 +7,7 @@ import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class UsageFormatterTest {
@@ -23,6 +24,7 @@ class UsageFormatterTest {
                 targetName = "process",
                 targetDescriptor = "()V",
                 kind = UsageKind.METHOD_CALL,
+                sourceSet = null,
             ),
         )
 
@@ -57,6 +59,7 @@ class UsageFormatterTest {
                 targetName = "process",
                 targetDescriptor = "()V",
                 kind = UsageKind.METHOD_CALL,
+                sourceSet = null,
             ),
         )
 
@@ -69,8 +72,8 @@ class UsageFormatterTest {
     @Test
     fun `LLM formats multiple usages on separate lines`() {
         val usages = listOf(
-            UsageSite(ClassName("com.example.A"), "fromA", "A.kt", ClassName("com.example.Target"), "process", "()V", UsageKind.METHOD_CALL),
-            UsageSite(ClassName("com.example.B"), "fromB", "B.kt", ClassName("com.example.Target"), "name", "Ljava/lang/String;", UsageKind.FIELD_ACCESS),
+            UsageSite(ClassName("com.example.A"), "fromA", "A.kt", ClassName("com.example.Target"), "process", "()V", UsageKind.METHOD_CALL, null),
+            UsageSite(ClassName("com.example.B"), "fromB", "B.kt", ClassName("com.example.Target"), "name", "Ljava/lang/String;", UsageKind.FIELD_ACCESS, null),
         )
 
         val result = LlmFormatter.formatUsages(usages)
@@ -85,7 +88,7 @@ class UsageFormatterTest {
     @Test
     fun `TEXT formats usages as readable list`() {
         val usages = listOf(
-            UsageSite(ClassName("com.example.Caller"), "doWork", "Caller.kt", ClassName("com.example.Target"), "process", "()V", UsageKind.METHOD_CALL),
+            UsageSite(ClassName("com.example.Caller"), "doWork", "Caller.kt", ClassName("com.example.Target"), "process", "()V", UsageKind.METHOD_CALL, null),
         )
 
         val result = UsageFormatter.format(usages)
@@ -107,8 +110,8 @@ class UsageFormatterTest {
     @Test
     fun `JSON sorts usages by caller class then method`() {
         val usages = listOf(
-            UsageSite(ClassName("com.example.Z"), "z", "Z.kt", ClassName("com.example.Target"), "process", "()V", UsageKind.METHOD_CALL),
-            UsageSite(ClassName("com.example.A"), "a", "A.kt", ClassName("com.example.Target"), "process", "()V", UsageKind.METHOD_CALL),
+            UsageSite(ClassName("com.example.Z"), "z", "Z.kt", ClassName("com.example.Target"), "process", "()V", UsageKind.METHOD_CALL, null),
+            UsageSite(ClassName("com.example.A"), "a", "A.kt", ClassName("com.example.Target"), "process", "()V", UsageKind.METHOD_CALL, null),
         )
 
         val json = JsonFormatter.formatUsages(usages)
@@ -157,5 +160,73 @@ class UsageFormatterTest {
         val guidance = UsageFormatter.noResultsGuidance(ownerClass = "com.example.Target", method = null, field = "accountNumber", type = null)
 
         assertTrue(guidance.contains("com.example.Target.accountNumber"), "Should include owner.field")
+    }
+
+    @Test
+    fun `TEXT formats usage with source set tag`() {
+        val usages = listOf(
+            UsageSite(ClassName("com.example.Caller"), "doWork", "Caller.kt", ClassName("com.example.Target"), "process", "()V", UsageKind.METHOD_CALL, SourceSet.TEST),
+        )
+
+        val result = UsageFormatter.format(usages)
+
+        assertTrue(result.contains("[test]"))
+    }
+
+    @Test
+    fun `TEXT formats usage without source set tag when null`() {
+        val usages = listOf(
+            UsageSite(ClassName("com.example.Caller"), "doWork", "Caller.kt", ClassName("com.example.Target"), "process", "()V", UsageKind.METHOD_CALL, null),
+        )
+
+        val result = UsageFormatter.format(usages)
+
+        assertFalse(result.contains("[test]"))
+        assertFalse(result.contains("[prod]"))
+    }
+
+    @Test
+    fun `LLM formats usage with source set tag`() {
+        val usages = listOf(
+            UsageSite(ClassName("com.example.Caller"), "doWork", "Caller.kt", ClassName("com.example.Target"), "process", "()V", UsageKind.METHOD_CALL, SourceSet.TEST),
+        )
+
+        val result = LlmFormatter.formatUsages(usages)
+
+        assertTrue(result.contains("[test]"))
+    }
+
+    @Test
+    fun `LLM formats usage without source set tag when null`() {
+        val usages = listOf(
+            UsageSite(ClassName("com.example.Caller"), "doWork", "Caller.kt", ClassName("com.example.Target"), "process", "()V", UsageKind.METHOD_CALL, null),
+        )
+
+        val result = LlmFormatter.formatUsages(usages)
+
+        assertFalse(result.contains("[test]"))
+        assertFalse(result.contains("[prod]"))
+    }
+
+    @Test
+    fun `JSON includes sourceSet field when present`() {
+        val usages = listOf(
+            UsageSite(ClassName("com.example.Caller"), "doWork", "Caller.kt", ClassName("com.example.Target"), "process", "()V", UsageKind.METHOD_CALL, SourceSet.TEST),
+        )
+
+        val json = JsonFormatter.formatUsages(usages)
+
+        assertTrue(json.contains("\"sourceSet\":\"test\""))
+    }
+
+    @Test
+    fun `JSON omits sourceSet field when null`() {
+        val usages = listOf(
+            UsageSite(ClassName("com.example.Caller"), "doWork", "Caller.kt", ClassName("com.example.Target"), "process", "()V", UsageKind.METHOD_CALL, null),
+        )
+
+        val json = JsonFormatter.formatUsages(usages)
+
+        assertFalse(json.contains("sourceSet"))
     }
 }

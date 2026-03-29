@@ -10,6 +10,8 @@ data class ComplexityConfig(
     val detail: Boolean,
     val collapseLambdas: Boolean,
     val top: Int,
+    val prodOnly: Boolean,
+    val testOnly: Boolean,
     val format: OutputFormat,
 ) {
     companion object {
@@ -19,6 +21,8 @@ data class ComplexityConfig(
             detail = TaskRegistry.DETAIL.parse(properties["detail"]),
             collapseLambdas = TaskRegistry.COLLAPSE_LAMBDAS.parse(properties["collapse-lambdas"]),
             top = TaskRegistry.TOP.parse(properties["top"]),
+            prodOnly = TaskRegistry.PROD_ONLY.parse(properties["prod-only"]),
+            testOnly = TaskRegistry.TEST_ONLY.parse(properties["test-only"]),
             format = ParamDef.parseFormat(properties),
         )
     }

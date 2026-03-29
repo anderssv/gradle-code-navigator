@@ -6,6 +6,7 @@ import no.f12.codenavigator.navigation.callgraph.CallGraph
 import no.f12.codenavigator.navigation.callgraph.CallTreeFormatter
 import no.f12.codenavigator.navigation.callgraph.CallTreeNode
 import no.f12.codenavigator.navigation.callgraph.MethodRef
+import no.f12.codenavigator.navigation.SourceSet
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -483,6 +484,97 @@ class CallerTreeFormatterTest {
             """
             com.example.Controller.getUsers [@Cacheable(value="users", key="#id") [spring]]
               (no callers)
+            """.trimIndent(),
+            result,
+        )
+    }
+
+    @Test
+    fun `renders test source set tag on child node`() {
+        val trees = listOf(
+            CallTreeNode(
+                method = MethodRef(ClassName("com.example.Service"), "doWork"),
+                sourceFile = "Service.kt",
+                lineNumber = null,
+                children = listOf(
+                    CallTreeNode(
+                        method = MethodRef(ClassName("com.example.ServiceTest"), "testDoWork"),
+                        sourceFile = "ServiceTest.kt",
+                        lineNumber = 10,
+                        children = emptyList(),
+                        sourceSet = SourceSet.TEST,
+                    ),
+                ),
+                sourceSet = SourceSet.MAIN,
+            ),
+        )
+
+        val result = CallTreeFormatter.renderTrees(trees, CallDirection.CALLERS)
+
+        assertEquals(
+            """
+            com.example.Service.doWork
+              ← com.example.ServiceTest.testDoWork (ServiceTest.kt:10) [test]
+            """.trimIndent(),
+            result,
+        )
+    }
+
+    @Test
+    fun `renders prod source set tag on child node`() {
+        val trees = listOf(
+            CallTreeNode(
+                method = MethodRef(ClassName("com.example.Service"), "doWork"),
+                sourceFile = "Service.kt",
+                lineNumber = null,
+                children = listOf(
+                    CallTreeNode(
+                        method = MethodRef(ClassName("com.example.Controller"), "handle"),
+                        sourceFile = "Controller.kt",
+                        lineNumber = 42,
+                        children = emptyList(),
+                        sourceSet = SourceSet.MAIN,
+                    ),
+                ),
+                sourceSet = SourceSet.MAIN,
+            ),
+        )
+
+        val result = CallTreeFormatter.renderTrees(trees, CallDirection.CALLERS)
+
+        assertEquals(
+            """
+            com.example.Service.doWork
+              ← com.example.Controller.handle (Controller.kt:42) [prod]
+            """.trimIndent(),
+            result,
+        )
+    }
+
+    @Test
+    fun `renders no source set tag when source set is null`() {
+        val trees = listOf(
+            CallTreeNode(
+                method = MethodRef(ClassName("com.example.Service"), "doWork"),
+                sourceFile = "Service.kt",
+                lineNumber = null,
+                children = listOf(
+                    CallTreeNode(
+                        method = MethodRef(ClassName("com.example.Controller"), "handle"),
+                        sourceFile = "Controller.kt",
+                        lineNumber = 42,
+                        children = emptyList(),
+                    ),
+                ),
+            ),
+        )
+
+        val result = CallTreeFormatter.renderTrees(trees, CallDirection.CALLERS)
+
+        assertEquals(
+            """
+            com.example.Service.doWork
+              ← com.example.Controller.handle (Controller.kt:42)
             """.trimIndent(),
             result,
         )

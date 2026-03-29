@@ -3,6 +3,7 @@ package no.f12.codenavigator.navigation.callgraph
 import no.f12.codenavigator.navigation.ClassName
 import no.f12.codenavigator.navigation.FileCache
 import no.f12.codenavigator.navigation.ScanResult
+import no.f12.codenavigator.navigation.SourceSet
 import java.io.File
 
 object CallGraphCache : FileCache<CallGraph>() {
@@ -10,6 +11,7 @@ object CallGraphCache : FileCache<CallGraph>() {
     private const val EDGES_HEADER = "[EDGES]"
     private const val SOURCES_HEADER = "[SOURCES]"
     private const val LINES_HEADER = "[LINES]"
+    private const val SOURCE_SETS_HEADER = "[SOURCE_SETS]"
 
     override fun write(cacheFile: File, data: CallGraph) {
         writeLines(cacheFile) { writer ->
@@ -42,6 +44,14 @@ object CallGraphCache : FileCache<CallGraph>() {
                 )
                 writer.newLine()
             }
+            writer.write(SOURCE_SETS_HEADER)
+            writer.newLine()
+            data.forEachSourceSet { className, sourceSet ->
+                writer.write(
+                    listOf(className.toString(), sourceSet.name).joinToString(FIELD_SEPARATOR),
+                )
+                writer.newLine()
+            }
         }
     }
 
@@ -49,6 +59,7 @@ object CallGraphCache : FileCache<CallGraph>() {
         val callerToCallees = mutableMapOf<MethodRef, MutableSet<MethodRef>>()
         val sourceFiles = mutableMapOf<ClassName, String>()
         val lineNumbers = mutableMapOf<MethodRef, Int>()
+        val sourceSets = mutableMapOf<ClassName, SourceSet>()
 
         var section = ""
         cacheFile.useLines { lines ->
@@ -57,6 +68,7 @@ object CallGraphCache : FileCache<CallGraph>() {
                     line == EDGES_HEADER -> section = EDGES_HEADER
                     line == SOURCES_HEADER -> section = SOURCES_HEADER
                     line == LINES_HEADER -> section = LINES_HEADER
+                    line == SOURCE_SETS_HEADER -> section = SOURCE_SETS_HEADER
                     section == EDGES_HEADER -> {
                         val parts = line.split(FIELD_SEPARATOR)
                         val caller = MethodRef(ClassName(parts[0]), parts[1])
@@ -72,13 +84,35 @@ object CallGraphCache : FileCache<CallGraph>() {
                         val method = MethodRef(ClassName(parts[0]), parts[1])
                         lineNumbers[method] = parts[2].toInt()
                     }
+                    section == SOURCE_SETS_HEADER -> {
+                        val parts = line.split(FIELD_SEPARATOR)
+                        sourceSets[ClassName(parts[0])] = SourceSet.valueOf(parts[1])
+                    }
                 }
             }
         }
 
-        return CallGraph(callerToCallees, sourceFiles, lineNumbers)
+        return CallGraph(callerToCallees, sourceFiles, lineNumbers, sourceSets)
     }
 
     override fun build(classDirectories: List<File>): ScanResult<CallGraph> =
         CallGraphBuilder.build(classDirectories)
+
+    fun getOrBuildTagged(
+        cacheFile: File,
+        taggedDirectories: List<Pair<File, SourceSet>>,
+    ): ScanResult<CallGraph> {
+        val classDirectories = taggedDirectories.map { it.first }
+        if (isFresh(cacheFile, classDirectories)) {
+            try {
+                return ScanResult(read(cacheFile), emptyList())
+            } catch (_: Exception) {
+                cacheFile.delete()
+            }
+        }
+
+        val result = CallGraphBuilder.buildTagged(taggedDirectories)
+        write(cacheFile, result.data)
+        return result
+    }
 }

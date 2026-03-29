@@ -2,6 +2,7 @@ package no.f12.codenavigator.navigation.callgraph
 
 import no.f12.codenavigator.navigation.AnnotationName
 import no.f12.codenavigator.navigation.ClassName
+import no.f12.codenavigator.navigation.SourceSet
 import no.f12.codenavigator.navigation.annotation.FrameworkPresets
 
 data class AnnotationTag(
@@ -16,6 +17,7 @@ data class CallTreeNode(
     val lineNumber: Int?,
     val children: List<CallTreeNode>,
     val annotations: List<AnnotationTag> = emptyList(),
+    val sourceSet: SourceSet? = null,
 )
 
 object CallTreeBuilder {
@@ -70,7 +72,7 @@ object CallTreeBuilder {
         } else {
             emptyList()
         }
-        return CallTreeNode(method, sourceFile, lineNumber, children, annotations)
+        return CallTreeNode(method, sourceFile, lineNumber, children, annotations, graph.sourceSetOf(method.className))
     }
 
     private fun resolveAnnotations(

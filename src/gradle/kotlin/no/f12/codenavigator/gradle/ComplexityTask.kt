@@ -4,6 +4,7 @@ import no.f12.codenavigator.JsonFormatter
 import no.f12.codenavigator.LlmFormatter
 import no.f12.codenavigator.OutputWrapper
 import no.f12.codenavigator.TaskRegistry
+import no.f12.codenavigator.navigation.SourceSet
 import no.f12.codenavigator.navigation.callgraph.CallGraphCache
 import no.f12.codenavigator.navigation.complexity.ClassComplexityAnalyzer
 import no.f12.codenavigator.navigation.complexity.ComplexityConfig
@@ -12,7 +13,6 @@ import no.f12.codenavigator.navigation.LambdaCollapser
 import no.f12.codenavigator.navigation.SkippedFileReporter
 
 import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
 import java.io.File
@@ -26,12 +26,10 @@ abstract class ComplexityTask : DefaultTask() {
             project.buildPropertyMap(TaskRegistry.COMPLEXITY),
         )
 
-        val sourceSets = project.extensions.getByType(SourceSetContainer::class.java)
-        val mainSourceSet = sourceSets.getByName("main")
-        val classDirectories = mainSourceSet.output.classesDirs.files.toList()
+        val taggedDirs = project.taggedClassDirectories()
 
         val cacheFile = File(project.layout.buildDirectory.asFile.get(), "cnav/call-graph.cache")
-        val result = CallGraphCache.getOrBuild(cacheFile, classDirectories)
+        val result = CallGraphCache.getOrBuildTagged(cacheFile, taggedDirs)
         val reportFile = File(project.layout.buildDirectory.asFile.get(), "cnav/skipped-files.txt")
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { logger.warn(it) }
         val graph = result.data
@@ -41,8 +39,13 @@ abstract class ComplexityTask : DefaultTask() {
             classPattern = config.classPattern,
             projectOnly = config.projectOnly,
         )
-        val results = if (config.collapseLambdas) LambdaCollapser.collapseComplexity(rawResults) else rawResults
-        val truncated = results.take(config.top)
+        val collapsed = if (config.collapseLambdas) LambdaCollapser.collapseComplexity(rawResults) else rawResults
+        val filtered = when {
+            config.prodOnly -> collapsed.filter { graph.sourceSetOf(it.className) == SourceSet.MAIN }
+            config.testOnly -> collapsed.filter { graph.sourceSetOf(it.className) == SourceSet.TEST }
+            else -> collapsed
+        }
+        val truncated = filtered.take(config.top)
 
         if (truncated.isEmpty()) {
             logger.lifecycle("No matching classes found.")

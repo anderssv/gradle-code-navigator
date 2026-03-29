@@ -45,6 +45,12 @@ class FindUsagesMojo : AbstractMojo() {
     @Parameter(property = "outside-package")
     private var outsidePackage: String? = null
 
+    @Parameter(property = "prod-only")
+    private var prodOnly: String? = null
+
+    @Parameter(property = "test-only")
+    private var testOnly: String? = null
+
     override fun execute() {
         val config = try {
             FindUsagesConfig.parse(TaskRegistry.FIND_USAGES.enhanceProperties(buildPropertyMap()))
@@ -56,16 +62,17 @@ class FindUsagesMojo : AbstractMojo() {
             )
         }
 
-        val classesDir = File(project.build.outputDirectory)
-        if (!classesDir.exists()) {
-            log.warn("Classes directory does not exist: $classesDir — run 'mvn compile' first.")
+        val taggedDirs = project.taggedClassDirectories()
+        if (taggedDirs.isEmpty()) {
+            log.warn("Classes directory does not exist: ${File(project.build.outputDirectory)} — run 'mvn compile' first.")
             return
         }
 
-        val result = UsageScanner.scan(listOf(classesDir), ownerClass = config.ownerClass, method = config.method, field = config.field, type = config.type)
+        val result = UsageScanner.scanTagged(taggedDirs, ownerClass = config.ownerClass, method = config.method, field = config.field, type = config.type)
         val reportFile = File(project.build.directory, "cnav/skipped-files.txt")
         SkippedFileReporter.report(result.skippedFiles, reportFile)?.let { log.warn(it) }
-        val usages = UsageScanner.filterOutsidePackage(result.data, config.outsidePackage)
+        val afterPackageFilter = UsageScanner.filterOutsidePackage(result.data, config.outsidePackage)
+        val usages = config.filterBySourceSet(afterPackageFilter)
 
         if (usages.isEmpty()) {
             println(UsageFormatter.noResultsGuidance(config.ownerClass, config.method, config.field, config.type))
@@ -87,5 +94,7 @@ class FindUsagesMojo : AbstractMojo() {
         field?.let { put("field", it) }
         type?.let { put("type", it) }
         outsidePackage?.let { put("outside-package", it) }
+        prodOnly?.let { put("prod-only", it) }
+        testOnly?.let { put("test-only", it) }
     }
 }

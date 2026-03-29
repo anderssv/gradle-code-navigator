@@ -6,6 +6,7 @@ import no.f12.codenavigator.navigation.callgraph.CallGraph
 import no.f12.codenavigator.navigation.callgraph.CallTreeBuilder
 import no.f12.codenavigator.navigation.callgraph.CallTreeNode
 import no.f12.codenavigator.navigation.callgraph.MethodRef
+import no.f12.codenavigator.navigation.SourceSet
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -604,5 +605,45 @@ class CallTreeBuilderTest {
         )
 
         assertEquals(emptyMap<String, String>(), result[0].annotations[0].parameters)
+    }
+
+    @Test
+    fun `node includes source set from graph`() {
+        val target = MethodRef(ClassName("com.example.Service"), "doWork")
+        val testCaller = MethodRef(ClassName("com.example.ServiceTest"), "testDoWork")
+        val prodCaller = MethodRef(ClassName("com.example.Controller"), "handle")
+        val graph = CallGraph(
+            mapOf(
+                testCaller to setOf(target),
+                prodCaller to setOf(target),
+            ),
+            sourceFiles = mapOf(
+                ClassName("com.example.Service") to "Service.kt",
+                ClassName("com.example.ServiceTest") to "ServiceTest.kt",
+                ClassName("com.example.Controller") to "Controller.kt",
+            ),
+            sourceSets = mapOf(
+                ClassName("com.example.Service") to SourceSet.MAIN,
+                ClassName("com.example.ServiceTest") to SourceSet.TEST,
+                ClassName("com.example.Controller") to SourceSet.MAIN,
+            ),
+        )
+
+        val result = CallTreeBuilder.build(graph, listOf(target), maxDepth = 3, CallDirection.CALLERS)
+
+        assertEquals(SourceSet.MAIN, result[0].sourceSet)
+        val childSourceSets = result[0].children.associate { it.method.methodName to it.sourceSet }
+        assertEquals(SourceSet.TEST, childSourceSets["testDoWork"])
+        assertEquals(SourceSet.MAIN, childSourceSets["handle"])
+    }
+
+    @Test
+    fun `node source set is null when graph has no source set info`() {
+        val target = MethodRef(ClassName("com.example.Service"), "doWork")
+        val graph = CallGraph(emptyMap())
+
+        val result = CallTreeBuilder.build(graph, listOf(target), maxDepth = 3, CallDirection.CALLERS)
+
+        assertEquals(null, result[0].sourceSet)
     }
 }
