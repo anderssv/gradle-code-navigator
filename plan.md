@@ -5,22 +5,6 @@ Value and effort are qualitative assessments to aid prioritization, not estimate
 
 ---
 
-## 1. `cnavContext` — smart context gathering for AI agents
-
-**Value: high** | **Effort: medium**
-
-Given a class or method, automatically gather "everything an agent needs": class signature, callers (depth 2), callees (depth 2), interface implementations, and source file path.
-
-```bash
-./gradlew cnavContext -Ppattern=ResetPasswordService -Pformat=json
-```
-
-- **Builder**: Orchestrates existing `ClassDetailScanner`, `CallTreeBuilder` (callers + callees), and `InterfaceRegistry` into a single result
-- **Parameters**: `-Ppattern=<class>` (required), `-Pmaxdepth=N` (default 2), `-Pformat=json|text|llm`
-- **Why high value**: Reduces agent round-trips from 4-5 to 1, saving significant wall-clock time. Pure composition of existing features — no new analysis code.
-
----
-
 ## 2. `cnavWhyDepends` — dependency edge explanation
 
 **Value: high** | **Effort: medium**

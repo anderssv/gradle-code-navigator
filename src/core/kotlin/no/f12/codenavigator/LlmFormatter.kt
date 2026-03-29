@@ -31,6 +31,7 @@ import no.f12.codenavigator.navigation.callgraph.UsageSite
 import no.f12.codenavigator.navigation.annotation.AnnotationMatch
 import no.f12.codenavigator.navigation.callgraph.AnnotationTag
 import no.f12.codenavigator.navigation.changedsince.ChangedClassImpact
+import no.f12.codenavigator.navigation.context.ContextResult
 
 object LlmFormatter {
 
@@ -215,6 +216,28 @@ object LlmFormatter {
             append(metrics.topHotspots.joinToString("\n") { "${it.file} revisions=${it.revisions} churn=${it.totalChurn}" })
         }
     }
+
+    fun formatContext(result: ContextResult): String = buildString {
+        append(formatClassDetails(listOf(result.classDetail)))
+        if (result.callers.isNotEmpty()) {
+            appendLine()
+            appendLine("callers:")
+            append(renderCallTrees(result.callers, CallDirection.CALLERS))
+        }
+        if (result.callees.isNotEmpty()) {
+            appendLine()
+            appendLine("callees:")
+            append(renderCallTrees(result.callees, CallDirection.CALLEES))
+        }
+        if (result.implementors.isNotEmpty()) {
+            appendLine()
+            append("implementors:${result.implementors.joinToString(",") { "${it.className}(${it.sourceFile})" }}")
+        }
+        if (result.implementedInterfaces.isNotEmpty()) {
+            appendLine()
+            append("implements:${result.implementedInterfaces.joinToString(",")}")
+        }
+    }.trimEnd()
 
     fun formatDsm(matrix: DsmMatrix): String = buildString {
         append("packages:${matrix.packages.joinToString(",")}")

@@ -46,6 +46,7 @@ enum class BuildTool(
             "authors" to "cnavAuthors",
             "coupling" to "cnavCoupling",
             "changed-since" to "cnavChangedSince",
+            "context" to "cnavContext",
             "help" to "cnavHelp",
             "agent-help" to "cnavAgentHelp",
             "config-help" to "cnavHelpConfig",

@@ -36,6 +36,7 @@ import no.f12.codenavigator.navigation.metrics.MetricsResult
 import no.f12.codenavigator.navigation.annotation.AnnotationMatch
 import no.f12.codenavigator.navigation.annotation.MethodAnnotationMatch
 import no.f12.codenavigator.navigation.SourceSet
+import no.f12.codenavigator.navigation.context.ContextResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -1036,4 +1037,83 @@ class JsonFormatterTest {
 
         assertTrue(!result.contains(""""sourceSet""""), "Should not have sourceSet key when null")
     }
+
+    // === Context formatting ===
+
+    @Test
+    fun `formats context as JSON with class detail`() {
+        val result = JsonFormatter.formatContext(aContextResult())
+
+        assertTrue(result.contains(""""classDetail""""), "Should have classDetail key")
+        assertTrue(result.contains(""""com.example.MyService""""), "Should contain class name")
+    }
+
+    @Test
+    fun `formats context JSON with callers`() {
+        val callerRoot = CallTreeNode(
+            method = MethodRef(ClassName("com.example.MyService"), "doWork"),
+            sourceFile = "MyService.kt",
+            lineNumber = 10,
+            children = listOf(
+                CallTreeNode(
+                    method = MethodRef(ClassName("com.example.Caller"), "run"),
+                    sourceFile = "Caller.kt",
+                    lineNumber = 5,
+                    children = emptyList(),
+                ),
+            ),
+        )
+        val result = JsonFormatter.formatContext(aContextResult(callers = listOf(callerRoot)))
+
+        assertTrue(result.contains(""""callers""""), "Should have callers key")
+        assertTrue(result.contains(""""com.example.Caller.run""""), "Should contain caller method")
+    }
+
+    @Test
+    fun `formats context JSON with empty callers as empty array`() {
+        val result = JsonFormatter.formatContext(aContextResult())
+
+        assertTrue(result.contains(""""callers":[]"""), "Should have empty callers array")
+    }
+
+    @Test
+    fun `formats context JSON with implementors`() {
+        val result = JsonFormatter.formatContext(aContextResult(
+            implementors = listOf(ImplementorInfo(ClassName("com.example.Impl"), "Impl.kt")),
+        ))
+
+        assertTrue(result.contains(""""implementors""""), "Should have implementors key")
+        assertTrue(result.contains(""""com.example.Impl""""), "Should contain implementor class name")
+    }
+
+    @Test
+    fun `formats context JSON with implemented interfaces`() {
+        val result = JsonFormatter.formatContext(aContextResult(
+            implementedInterfaces = listOf(ClassName("com.example.Iface")),
+        ))
+
+        assertTrue(result.contains(""""implementedInterfaces""""), "Should have implementedInterfaces key")
+        assertTrue(result.contains(""""com.example.Iface""""), "Should contain interface name")
+    }
+
+    private fun aContextResult(
+        callers: List<CallTreeNode> = emptyList(),
+        callees: List<CallTreeNode> = emptyList(),
+        implementors: List<ImplementorInfo> = emptyList(),
+        implementedInterfaces: List<ClassName> = emptyList(),
+    ): ContextResult = ContextResult(
+        classDetail = ClassDetail(
+            className = ClassName("com.example.MyService"),
+            sourceFile = "MyService.kt",
+            superClass = null,
+            interfaces = emptyList(),
+            fields = emptyList(),
+            methods = listOf(MethodDetail("doWork", listOf("String"), "void", emptyList())),
+            annotations = emptyList(),
+        ),
+        callers = callers,
+        callees = callees,
+        implementors = implementors,
+        implementedInterfaces = implementedInterfaces,
+    )
 }

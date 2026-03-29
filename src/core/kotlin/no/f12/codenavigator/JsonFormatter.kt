@@ -27,6 +27,7 @@ import no.f12.codenavigator.navigation.hierarchy.TypeHierarchyResult
 import no.f12.codenavigator.navigation.callgraph.UsageSite
 import no.f12.codenavigator.navigation.annotation.AnnotationMatch
 import no.f12.codenavigator.navigation.changedsince.ChangedClassImpact
+import no.f12.codenavigator.navigation.context.ContextResult
 
 @JvmInline
 private value class JsonRaw(val json: String)
@@ -343,6 +344,17 @@ object JsonFormatter {
                     "totalChurn" to h.totalChurn,
                 )
             }),
+        )
+
+    fun formatContext(result: ContextResult): String =
+        jsonObject(
+            "classDetail" to JsonRaw(formatClassDetails(listOf(result.classDetail))),
+            "callers" to JsonRaw(renderCallTrees(result.callers)),
+            "callees" to JsonRaw(renderCallTrees(result.callees)),
+            "implementors" to JsonRaw(jsonArray(result.implementors) { impl ->
+                jsonObject("className" to impl.className.toString(), "sourceFile" to impl.sourceFile)
+            }),
+            "implementedInterfaces" to JsonRaw(jsonStringArray(result.implementedInterfaces.map { it.toString() })),
         )
 
     private fun renderCallNode(node: CallTreeNode): String {

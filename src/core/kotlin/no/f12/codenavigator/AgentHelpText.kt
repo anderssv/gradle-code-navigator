@@ -136,6 +136,10 @@ object AgentHelpText {
         appendLine("  \"What's the blast radius of my changes?\"")
         appendLine("    → ${u("changed-since", p("ref", "main"))}")
         appendLine()
+        appendLine("  \"Give me everything about class X\" / \"Full context for X\"")
+        appendLine("    → ${u("context", p("pattern", "X"))}")
+        appendLine("    # Returns class detail + callers + callees + interfaces in one call")
+        appendLine()
         appendLine("--- Task Reference ---")
         appendLine()
         appendTaskReference(tool)
@@ -384,6 +388,13 @@ object AgentHelpText {
         appendLine("  {\"changedClasses\": [{\"className\": \"com.example.Service\", \"sourceFile\": \"Service.kt\",")
         appendLine("    \"callers\": [{\"className\": \"com.example.Controller\", \"method\": \"handle\"}]}],")
         appendLine("   \"unresolvedFiles\": [\"build.gradle.kts\"]}")
+        appendLine()
+        appendLine("${t("context")}:")
+        appendLine("  {\"classDetail\": {\"className\": \"...\", \"sourceFile\": \"...\", ...},")
+        appendLine("   \"callers\": [{\"method\": \"...\", \"children\": [...]}],")
+        appendLine("   \"callees\": [{\"method\": \"...\", \"children\": [...]}],")
+        appendLine("   \"implementors\": [{\"className\": \"...\", \"sourceFile\": \"...\"}],")
+        appendLine("   \"implementedInterfaces\": [\"...\"]}")
     }
 
     private fun generateExtraction(tool: BuildTool): String = buildString {

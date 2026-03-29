@@ -146,6 +146,7 @@ object TaskRegistry {
     val REF = ParamDef("ref", "<git-ref>", "Git ref to compare against (branch, tag, or commit SHA)", flag = false, defaultValue = null, enhancePattern = false, type = ParamType.STRING)
     val STRING_PATTERN = ParamDef("pattern", "<regex>", "Regex to match against string constant values", flag = false, defaultValue = null, enhancePattern = false, type = ParamType.STRING)
     val METHODS = ParamDef("methods", "true", "Also search method-level annotations", flag = false, defaultValue = "false", enhancePattern = false, type = ParamType.BOOLEAN)
+    val CONTEXT_MAXDEPTH = ParamDef("maxdepth", "<N>", "Max call tree depth (default: 2)", flag = false, defaultValue = "2", enhancePattern = false, type = ParamType.INT)
 
     private val FORMAT_PARAMS = listOf(FORMAT, LLM)
 
@@ -340,6 +341,13 @@ object TaskRegistry {
         requiresCompilation = true,
     )
 
+    val CONTEXT = TaskDef(
+        goal = "context",
+        description = "Gather full context for a class: detail, callers, callees, interfaces",
+        params = FORMAT_PARAMS + listOf(PATTERN, CONTEXT_MAXDEPTH, PROJECTONLY_ON, FILTER_SYNTHETIC, PROD_ONLY, TEST_ONLY),
+        requiresCompilation = true,
+    )
+
     val ALL_TASKS: List<TaskDef> = listOf(
         LIST_CLASSES,
         FIND_CLASS,
@@ -365,6 +373,7 @@ object TaskRegistry {
         AUTHORS,
         COUPLING,
         CHANGED_SINCE,
+        CONTEXT,
         HELP,
         AGENT_HELP,
         CONFIG_HELP,

@@ -118,6 +118,12 @@ class CodeNavigatorPlugin : Plugin<Project> {
             dependsOn("classes")
         }
 
+        project.tasks.register("cnavContext", ContextTask::class.java) {
+            description = "Gather full context for a class: detail, callers, callees, interfaces. Usage: -Ppattern=<regex>"
+            group = "code-navigator"
+            dependsOn("classes")
+        }
+
         project.tasks.register("cnavHelp", CodeNavigatorHelpTask::class.java) {
             description = "Shows available code-navigator tasks and their usage"
             group = "code-navigator"

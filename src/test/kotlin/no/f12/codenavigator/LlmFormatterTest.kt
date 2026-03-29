@@ -34,6 +34,7 @@ import no.f12.codenavigator.navigation.metrics.MetricsResult
 import no.f12.codenavigator.navigation.annotation.AnnotationMatch
 import no.f12.codenavigator.navigation.annotation.MethodAnnotationMatch
 import no.f12.codenavigator.navigation.SourceSet
+import no.f12.codenavigator.navigation.context.ContextResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -813,4 +814,109 @@ class LlmFormatterTest {
             result,
         )
     }
+
+    // === Context formatting ===
+
+    @Test
+    fun `formats context with class detail`() {
+        val result = LlmFormatter.formatContext(aContextResult())
+
+        assertTrue(result.contains("com.example.MyService"), "Should contain class name")
+        assertTrue(result.contains("MyService.kt"), "Should contain source file")
+    }
+
+    @Test
+    fun `formats context with callers section`() {
+        val callerRoot = CallTreeNode(
+            method = MethodRef(ClassName("com.example.MyService"), "doWork"),
+            sourceFile = "MyService.kt",
+            lineNumber = 10,
+            children = listOf(
+                CallTreeNode(
+                    method = MethodRef(ClassName("com.example.Caller"), "run"),
+                    sourceFile = "Caller.kt",
+                    lineNumber = 5,
+                    children = emptyList(),
+                ),
+            ),
+        )
+        val result = LlmFormatter.formatContext(aContextResult(callers = listOf(callerRoot)))
+
+        assertTrue(result.contains("callers:"), "Should have callers section")
+        assertTrue(result.contains("com.example.Caller.run"), "Should contain caller method")
+    }
+
+    @Test
+    fun `formats context with callees section`() {
+        val calleeRoot = CallTreeNode(
+            method = MethodRef(ClassName("com.example.MyService"), "doWork"),
+            sourceFile = "MyService.kt",
+            lineNumber = 10,
+            children = listOf(
+                CallTreeNode(
+                    method = MethodRef(ClassName("com.example.Repo"), "save"),
+                    sourceFile = "Repo.kt",
+                    lineNumber = 30,
+                    children = emptyList(),
+                ),
+            ),
+        )
+        val result = LlmFormatter.formatContext(aContextResult(callees = listOf(calleeRoot)))
+
+        assertTrue(result.contains("callees:"), "Should have callees section")
+        assertTrue(result.contains("com.example.Repo.save"), "Should contain callee method")
+    }
+
+    @Test
+    fun `formats context with implementors`() {
+        val result = LlmFormatter.formatContext(aContextResult(
+            implementors = listOf(
+                ImplementorInfo(ClassName("com.example.ImplA"), "ImplA.kt"),
+            ),
+        ))
+
+        assertTrue(result.contains("implementors:"), "Should have implementors section")
+        assertTrue(result.contains("com.example.ImplA(ImplA.kt)"), "Should contain implementor")
+    }
+
+    @Test
+    fun `formats context with implemented interfaces`() {
+        val result = LlmFormatter.formatContext(aContextResult(
+            implementedInterfaces = listOf(ClassName("com.example.Service")),
+        ))
+
+        assertTrue(result.contains("implements:"), "Should have implements section")
+        assertTrue(result.contains("com.example.Service"), "Should contain interface name")
+    }
+
+    @Test
+    fun `omits empty sections from context`() {
+        val result = LlmFormatter.formatContext(aContextResult())
+
+        assertTrue(!result.contains("callers:"), "Should not have callers when empty")
+        assertTrue(!result.contains("callees:"), "Should not have callees when empty")
+        assertTrue(!result.contains("implementors:"), "Should not have implementors when empty")
+        assertTrue(!result.contains("implements:"), "Should not have implements when empty")
+    }
+
+    private fun aContextResult(
+        callers: List<CallTreeNode> = emptyList(),
+        callees: List<CallTreeNode> = emptyList(),
+        implementors: List<ImplementorInfo> = emptyList(),
+        implementedInterfaces: List<ClassName> = emptyList(),
+    ): ContextResult = ContextResult(
+        classDetail = ClassDetail(
+            className = ClassName("com.example.MyService"),
+            sourceFile = "MyService.kt",
+            superClass = null,
+            interfaces = emptyList(),
+            fields = emptyList(),
+            methods = listOf(MethodDetail("doWork", listOf("String"), "void", emptyList())),
+            annotations = emptyList(),
+        ),
+        callers = callers,
+        callees = callees,
+        implementors = implementors,
+        implementedInterfaces = implementedInterfaces,
+    )
 }

@@ -1,5 +1,11 @@
 # Plan — Completed
 
+## ~~1. `cnavContext` — smart context gathering for AI agents (High value)~~ DONE
+
+Given a class pattern, gathers everything an AI agent needs in a single invocation: class detail (signature, fields, methods, annotations), callers tree (depth-configurable), callees tree (depth-configurable), interface implementations, and implemented interfaces. Pure composition of existing features — no new analysis code. Reduces agent round-trips from 4-5 to 1.
+
+**Implementation**: `ContextConfig` with `pattern`, `maxDepth`, `format`, `projectOnly`, `prodOnly`, `testOnly` parameters. `ContextBuilder.build()` composes `ClassDetail`, caller/callee `CallTreeNode` trees, implementors, and implemented interfaces into a `ContextResult` data class. Orchestration in `ContextTask` (Gradle) and `ContextMojo` (Maven) — scans class detail, builds call graph and interface registry, then for each matched class builds caller/callee trees and looks up interface information. TEXT formatter in `ContextFormatter`, plus `LlmFormatter.formatContext()` and `JsonFormatter.formatContext()`. Supports all standard output formats (TEXT/JSON/LLM) and filtering parameters (`projectonly`, `prodonly`, `testonly`).
+
 ## ~~2. Separate prod/test in output (High value)~~ DONE
 
 All bytecode tasks now tag each caller, callee, and usage reference with `[test]` or `[prod]` based on which source set the class came from. Adds `-Pprod-only=true` / `-Ptest-only=true` filtering parameters to `cnavCallers`, `cnavCallees`, `cnavUsages`, `cnavComplexity`, and `cnavRank`.
