@@ -49,6 +49,7 @@ object DeadCodeFinder {
         inlineMethods: Set<MethodRef> = emptySet(),
         classExternalInterfaces: Map<ClassName, Set<ClassName>> = emptyMap(),
         prodOnly: Boolean = false,
+        modifierAnnotated: Set<String> = emptySet(),
     ): List<DeadCode> {
         val projectClasses = graph.projectClasses()
         if (projectClasses.isEmpty()) return emptyList()
@@ -125,7 +126,7 @@ object DeadCodeFinder {
                         memberName = null,
                         kind = DeadCodeKind.CLASS,
                         sourceFile = graph.sourceFileOf(cls),
-                        confidence = classConfidence(cls, null, testGraph, referencedInTests, classAnnotations, methodAnnotations, classExternalInterfaces),
+                        confidence = classConfidence(cls, null, testGraph, referencedInTests, classAnnotations, methodAnnotations, classExternalInterfaces, modifierAnnotated),
                         reason = reason,
                     )
                 )
@@ -149,7 +150,7 @@ object DeadCodeFinder {
                             memberName = method.methodName,
                             kind = DeadCodeKind.METHOD,
                             sourceFile = graph.sourceFileOf(method.className),
-                            confidence = classConfidence(method.className, method, testGraph, referencedInTests, classAnnotations, methodAnnotations, classExternalInterfaces),
+                            confidence = classConfidence(method.className, method, testGraph, referencedInTests, classAnnotations, methodAnnotations, classExternalInterfaces, modifierAnnotated),
                             reason = reason,
                         )
                     )
@@ -173,7 +174,12 @@ object DeadCodeFinder {
         classAnnotations: Map<ClassName, Set<AnnotationName>>,
         methodAnnotations: Map<MethodRef, Set<AnnotationName>>,
         classExternalInterfaces: Map<ClassName, Set<ClassName>>,
+        modifierAnnotated: Set<String> = emptySet(),
     ): DeadCodeConfidence {
+        if (hasModifierAnnotation(className, method, classAnnotations, methodAnnotations, modifierAnnotated)) {
+            return DeadCodeConfidence.LOW
+        }
+
         val hasClassAnnotations = classAnnotations.containsKey(className)
         val hasMethodAnnotations = method != null && methodAnnotations.containsKey(method)
         if (hasClassAnnotations || hasMethodAnnotations) return DeadCodeConfidence.LOW
@@ -183,6 +189,23 @@ object DeadCodeFinder {
         if (testGraph != null && referencedInTests) return DeadCodeConfidence.MEDIUM
 
         return DeadCodeConfidence.HIGH
+    }
+
+    private fun hasModifierAnnotation(
+        className: ClassName,
+        method: MethodRef?,
+        classAnnotations: Map<ClassName, Set<AnnotationName>>,
+        methodAnnotations: Map<MethodRef, Set<AnnotationName>>,
+        modifierAnnotated: Set<String>,
+    ): Boolean {
+        if (modifierAnnotated.isEmpty()) return false
+        val classAnns = classAnnotations[className] ?: emptySet()
+        if (classAnns.any { it.value in modifierAnnotated || it.simpleName() in modifierAnnotated }) return true
+        if (method != null) {
+            val methodAnns = methodAnnotations[method] ?: emptySet()
+            if (methodAnns.any { it.value in modifierAnnotated || it.simpleName() in modifierAnnotated }) return true
+        }
+        return false
     }
 
     private fun isPropertyAccessor(

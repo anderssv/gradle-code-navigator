@@ -103,6 +103,7 @@ class DeadCodeMojo : AbstractMojo() {
             inlineMethods = inlineMethods,
             classExternalInterfaces = classExternalInterfaces,
             prodOnly = config.prodOnly,
+            modifierAnnotated = config.modifierAnnotated.toSet(),
         )
 
         if (dead.isEmpty()) {

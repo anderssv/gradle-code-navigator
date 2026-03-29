@@ -27,6 +27,7 @@ class DeadCodeFinderTest {
         inlineMethods: Set<MethodRef> = emptySet(),
         classExternalInterfaces: Map<ClassName, Set<ClassName>> = emptyMap(),
         prodOnly: Boolean = false,
+        modifierAnnotated: Set<String> = emptySet(),
     ): List<DeadCode> = DeadCodeFinder.find(
         graph = graph,
         filter = filter,
@@ -41,6 +42,7 @@ class DeadCodeFinderTest {
         inlineMethods = inlineMethods,
         classExternalInterfaces = classExternalInterfaces,
         prodOnly = prodOnly,
+        modifierAnnotated = modifierAnnotated,
     )
 
     @Test
@@ -942,5 +944,71 @@ class DeadCodeFinderTest {
         val deadClassNames = dead.map { it.className.value }
         assertTrue("com.example.package-info" !in deadClassNames, "package-info should be auto-filtered")
         assertTrue("com.example.Service" in deadClassNames, "Service should still appear")
+    }
+
+    // === Modifier annotations vs entry-point annotations ===
+
+    @Test
+    fun `method with modifier annotation is reported as dead with LOW confidence not excluded`() {
+        val graph = testCallGraph(
+            method("com.example.Controller", "handle") to method("com.example.Service", "process"),
+            method("com.example.Service", "transactionalMethod") to method("com.example.Repo", "save"),
+            projectClasses = setOf("com.example.Controller", "com.example.Service", "com.example.Repo"),
+        )
+
+        val dead = findDead(
+            graph = graph,
+            modifierAnnotated = setOf("Transactional"),
+            methodAnnotations = mapOf(
+                MethodRef(ClassName("com.example.Service"), "transactionalMethod") to setOf(AnnotationName("Transactional")),
+            ),
+        )
+
+        val deadMethods = dead.filter { it.kind == DeadCodeKind.METHOD }
+        val transactionalDead = deadMethods.first { it.memberName == "transactionalMethod" }
+        assertEquals(DeadCodeConfidence.LOW, transactionalDead.confidence, "Modifier annotation should set LOW confidence")
+    }
+
+    @Test
+    fun `method with entry-point annotation is excluded but modifier annotation is not`() {
+        val graph = testCallGraph(
+            method("com.example.Controller", "handle") to method("com.example.Service", "process"),
+            method("com.example.Service", "scheduled") to method("com.example.Repo", "save"),
+            method("com.example.Service", "transactional") to method("com.example.Repo", "save"),
+            projectClasses = setOf("com.example.Controller", "com.example.Service", "com.example.Repo"),
+        )
+
+        val dead = findDead(
+            graph = graph,
+            excludeAnnotated = setOf("Scheduled"),
+            modifierAnnotated = setOf("Transactional"),
+            methodAnnotations = mapOf(
+                MethodRef(ClassName("com.example.Service"), "scheduled") to setOf(AnnotationName("Scheduled")),
+                MethodRef(ClassName("com.example.Service"), "transactional") to setOf(AnnotationName("Transactional")),
+            ),
+        )
+
+        val deadMethods = dead.filter { it.kind == DeadCodeKind.METHOD }
+        assertTrue(deadMethods.none { it.memberName == "scheduled" }, "Entry-point @Scheduled should be excluded")
+        assertTrue(deadMethods.any { it.memberName == "transactional" }, "Modifier @Transactional should NOT be excluded, just LOW confidence")
+    }
+
+    @Test
+    fun `class with modifier annotation is reported as dead with LOW confidence not excluded`() {
+        val graph = testCallGraph(
+            method("com.example.TransactionalService", "run") to method("com.example.External", "call"),
+            projectClasses = setOf("com.example.TransactionalService"),
+        )
+
+        val dead = findDead(
+            graph = graph,
+            modifierAnnotated = setOf("Transactional"),
+            classAnnotations = mapOf(
+                ClassName("com.example.TransactionalService") to setOf(AnnotationName("Transactional")),
+            ),
+        )
+
+        assertEquals(1, dead.size)
+        assertEquals(DeadCodeConfidence.LOW, dead[0].confidence)
     }
 }

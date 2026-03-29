@@ -156,4 +156,36 @@ class DeadCodeConfigTest {
 
         assertTrue(config.excludeAnnotated.isEmpty())
     }
+
+    @Test
+    fun `defaults modifierAnnotated to empty list when absent`() {
+        val config = DeadCodeConfig.parse(emptyMap())
+
+        assertTrue(config.modifierAnnotated.isEmpty())
+    }
+
+    @Test
+    fun `framework=spring populates modifierAnnotated with spring modifier annotations`() {
+        val config = DeadCodeConfig.parse(mapOf("framework" to "spring"))
+
+        assertTrue(config.modifierAnnotated.contains("org.springframework.transaction.annotation.Transactional"))
+        assertTrue(config.modifierAnnotated.contains("org.springframework.cache.annotation.Cacheable"))
+    }
+
+    @Test
+    fun `framework=spring excludeAnnotated does not contain modifier annotations`() {
+        val config = DeadCodeConfig.parse(mapOf("framework" to "spring"))
+
+        assertFalse(config.excludeAnnotated.contains("org.springframework.transaction.annotation.Transactional"))
+        assertFalse(config.excludeAnnotated.contains("org.springframework.cache.annotation.Cacheable"))
+    }
+
+    @Test
+    fun `framework=quarkus populates both excludeAnnotated and modifierAnnotated`() {
+        val config = DeadCodeConfig.parse(mapOf("framework" to "quarkus"))
+
+        assertTrue(config.excludeAnnotated.contains("jakarta.ws.rs.GET"), "Entry-point annotation should be in excludeAnnotated")
+        assertTrue(config.modifierAnnotated.contains("org.eclipse.microprofile.faulttolerance.CircuitBreaker"), "Modifier annotation should be in modifierAnnotated")
+        assertFalse(config.excludeAnnotated.contains("org.eclipse.microprofile.faulttolerance.CircuitBreaker"), "Modifier should NOT be in excludeAnnotated")
+    }
 }
