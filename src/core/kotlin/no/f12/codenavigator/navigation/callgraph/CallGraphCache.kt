@@ -1,6 +1,5 @@
 package no.f12.codenavigator.navigation.callgraph
 
-import no.f12.codenavigator.CacheFreshness
 import no.f12.codenavigator.navigation.ClassName
 import no.f12.codenavigator.navigation.FileCache
 import no.f12.codenavigator.navigation.ScanResult
@@ -13,37 +12,35 @@ object CallGraphCache : FileCache<CallGraph>() {
     private const val LINES_HEADER = "[LINES]"
 
     override fun write(cacheFile: File, data: CallGraph) {
-        CacheFreshness.atomicWrite(cacheFile) { file ->
-            file.bufferedWriter().use { writer ->
-                writer.write(EDGES_HEADER)
+        writeLines(cacheFile) { writer ->
+            writer.write(EDGES_HEADER)
+            writer.newLine()
+            data.forEachEdge { caller, callee ->
+                writer.write(
+                    listOf(
+                        caller.className.toString(),
+                        caller.methodName,
+                        callee.className.toString(),
+                        callee.methodName,
+                    ).joinToString(FIELD_SEPARATOR),
+                )
                 writer.newLine()
-                data.forEachEdge { caller, callee ->
-                    writer.write(
-                        listOf(
-                            caller.className.toString(),
-                            caller.methodName,
-                            callee.className.toString(),
-                            callee.methodName,
-                        ).joinToString(FIELD_SEPARATOR),
-                    )
-                    writer.newLine()
-                }
-                writer.write(SOURCES_HEADER)
+            }
+            writer.write(SOURCES_HEADER)
+            writer.newLine()
+            data.forEachSourceFile { className, sourceFile ->
+                writer.write(
+                    listOf(className.toString(), sourceFile).joinToString(FIELD_SEPARATOR),
+                )
                 writer.newLine()
-                data.forEachSourceFile { className, sourceFile ->
-                    writer.write(
-                        listOf(className.toString(), sourceFile).joinToString(FIELD_SEPARATOR),
-                    )
-                    writer.newLine()
-                }
-                writer.write(LINES_HEADER)
+            }
+            writer.write(LINES_HEADER)
+            writer.newLine()
+            data.forEachLineNumber { method, lineNumber ->
+                writer.write(
+                    listOf(method.className.toString(), method.methodName, lineNumber.toString()).joinToString(FIELD_SEPARATOR),
+                )
                 writer.newLine()
-                data.forEachLineNumber { method, lineNumber ->
-                    writer.write(
-                        listOf(method.className.toString(), method.methodName, lineNumber.toString()).joinToString(FIELD_SEPARATOR),
-                    )
-                    writer.newLine()
-                }
             }
         }
     }
