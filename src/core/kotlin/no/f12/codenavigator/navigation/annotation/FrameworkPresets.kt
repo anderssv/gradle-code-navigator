@@ -44,11 +44,6 @@ object FrameworkPresets {
         "org.springframework.context.annotation.ImportResource",
         "org.springframework.context.annotation.PropertySource",
         "org.springframework.cache.annotation.EnableCaching",
-        "org.springframework.cache.annotation.Cacheable",
-        "org.springframework.cache.annotation.CacheEvict",
-        "org.springframework.cache.annotation.CachePut",
-        "org.springframework.transaction.annotation.Transactional",
-        "org.springframework.scheduling.annotation.Async",
     ).map { AnnotationName(it) }.toSet()
 
     private val JPA = setOf(
@@ -147,18 +142,111 @@ object FrameworkPresets {
         "org.junit.jupiter.api.DisplayName",
     ).map { AnnotationName(it) }.toSet()
 
-    private val PRESETS: Map<String, Set<AnnotationName>> = mapOf(
-        "spring" to SPRING + JPA + JAKARTA + VALIDATION,
-        "jpa" to JPA,
-        "jackson" to JACKSON,
-        "jakarta" to JAKARTA,
-        "validation" to VALIDATION,
-        "junit" to JUNIT,
+    private val SPRING_MODIFIERS = setOf(
+        "org.springframework.transaction.annotation.Transactional",
+        "org.springframework.cache.annotation.Cacheable",
+        "org.springframework.cache.annotation.CacheEvict",
+        "org.springframework.cache.annotation.CachePut",
+        "org.springframework.scheduling.annotation.Async",
+    ).map { AnnotationName(it) }.toSet()
+
+    private val JAXRS = setOf(
+        "jakarta.ws.rs.GET",
+        "jakarta.ws.rs.POST",
+        "jakarta.ws.rs.PUT",
+        "jakarta.ws.rs.DELETE",
+        "jakarta.ws.rs.PATCH",
+        "jakarta.ws.rs.HEAD",
+        "jakarta.ws.rs.OPTIONS",
+        "jakarta.ws.rs.Path",
+        "jakarta.ws.rs.Produces",
+        "jakarta.ws.rs.Consumes",
+        "jakarta.ws.rs.PathParam",
+        "jakarta.ws.rs.QueryParam",
+        "jakarta.ws.rs.HeaderParam",
+        "jakarta.ws.rs.FormParam",
+        "jakarta.ws.rs.BeanParam",
+        "jakarta.ws.rs.CookieParam",
+        "jakarta.ws.rs.DefaultValue",
+        "jakarta.ws.rs.ext.Provider",
+        "jakarta.ws.rs.NameBinding",
+    ).map { AnnotationName(it) }.toSet()
+
+    private val CDI = setOf(
+        "jakarta.enterprise.context.ApplicationScoped",
+        "jakarta.enterprise.context.RequestScoped",
+        "jakarta.enterprise.context.SessionScoped",
+        "jakarta.enterprise.context.Dependent",
+        "jakarta.enterprise.inject.Produces",
+        "jakarta.enterprise.event.Observes",
+        "jakarta.enterprise.event.ObservesAsync",
+        "jakarta.enterprise.inject.Alternative",
+        "jakarta.enterprise.inject.Disposes",
+        "jakarta.interceptor.Interceptor",
+        "jakarta.interceptor.AroundInvoke",
+        "jakarta.interceptor.AroundConstruct",
+        "jakarta.decorator.Decorator",
+        "jakarta.decorator.Delegate",
+    ).map { AnnotationName(it) }.toSet()
+
+    private val MICROPROFILE = setOf(
+        "org.eclipse.microprofile.health.Liveness",
+        "org.eclipse.microprofile.health.Readiness",
+        "org.eclipse.microprofile.health.Startup",
+        "org.eclipse.microprofile.rest.client.inject.RegisterRestClient",
+        "org.eclipse.microprofile.rest.client.inject.RestClient",
+        "org.eclipse.microprofile.config.inject.ConfigProperty",
+        "org.eclipse.microprofile.openapi.annotations.Operation",
+        "org.eclipse.microprofile.openapi.annotations.responses.APIResponse",
+        "org.eclipse.microprofile.openapi.annotations.tags.Tag",
+    ).map { AnnotationName(it) }.toSet()
+
+    private val MICROPROFILE_MODIFIERS = setOf(
+        "org.eclipse.microprofile.faulttolerance.CircuitBreaker",
+        "org.eclipse.microprofile.faulttolerance.Retry",
+        "org.eclipse.microprofile.faulttolerance.Timeout",
+        "org.eclipse.microprofile.faulttolerance.Bulkhead",
+        "org.eclipse.microprofile.faulttolerance.Fallback",
+        "org.eclipse.microprofile.faulttolerance.Asynchronous",
+    ).map { AnnotationName(it) }.toSet()
+
+    private val QUARKUS = setOf(
+        "io.quarkus.scheduler.Scheduled",
+        "io.quarkus.vertx.ConsumeEvent",
+        "io.quarkus.runtime.Startup",
+    ).map { AnnotationName(it) }.toSet()
+
+    private data class Preset(
+        val entryPoints: Set<AnnotationName>,
+        val modifiers: Set<AnnotationName> = emptySet(),
+    ) {
+        val all: Set<AnnotationName> get() = entryPoints + modifiers
+    }
+
+    private val PRESET_MAP: Map<String, Preset> = mapOf(
+        "spring" to Preset(SPRING + JPA + JAKARTA + VALIDATION, SPRING_MODIFIERS),
+        "quarkus" to Preset(QUARKUS + JAXRS + CDI + MICROPROFILE + JPA + JAKARTA + VALIDATION + JACKSON, MICROPROFILE_MODIFIERS),
+        "jaxrs" to Preset(JAXRS),
+        "cdi" to Preset(CDI),
+        "microprofile" to Preset(MICROPROFILE, MICROPROFILE_MODIFIERS),
+        "jpa" to Preset(JPA),
+        "jackson" to Preset(JACKSON),
+        "jakarta" to Preset(JAKARTA),
+        "validation" to Preset(VALIDATION),
+        "junit" to Preset(JUNIT),
     )
+
+    private val PRESETS: Map<String, Set<AnnotationName>> =
+        PRESET_MAP.mapValues { (_, preset) -> preset.all }
 
     private val ANNOTATION_TO_FRAMEWORK: Map<AnnotationName, String> by lazy {
         val result = mutableMapOf<AnnotationName, String>()
-        val specificity = listOf("jpa" to JPA, "jackson" to JACKSON, "jakarta" to JAKARTA, "validation" to VALIDATION, "junit" to JUNIT, "spring" to SPRING)
+        val specificity = listOf(
+            "jpa" to JPA, "jackson" to JACKSON, "jaxrs" to JAXRS, "cdi" to CDI,
+            "microprofile" to MICROPROFILE, "microprofile" to MICROPROFILE_MODIFIERS,
+            "jakarta" to JAKARTA, "validation" to VALIDATION, "junit" to JUNIT,
+            "quarkus" to QUARKUS, "spring" to SPRING, "spring" to SPRING_MODIFIERS,
+        )
         for ((framework, annotations) in specificity) {
             for (annotation in annotations) {
                 result.putIfAbsent(annotation, framework)
@@ -170,8 +258,20 @@ object FrameworkPresets {
     fun resolve(framework: String): Set<AnnotationName> =
         PRESETS[framework.lowercase()] ?: emptySet()
 
+    fun resolveEntryPoints(framework: String): Set<AnnotationName> =
+        PRESET_MAP[framework.lowercase()]?.entryPoints ?: emptySet()
+
+    fun resolveModifiers(framework: String): Set<AnnotationName> =
+        PRESET_MAP[framework.lowercase()]?.modifiers ?: emptySet()
+
     fun resolveAll(frameworks: List<String>): Set<AnnotationName> =
         frameworks.flatMap { resolve(it) }.toSet()
+
+    fun resolveAllEntryPoints(frameworks: List<String>): Set<AnnotationName> =
+        frameworks.flatMap { resolveEntryPoints(it) }.toSet()
+
+    fun resolveAllModifiers(frameworks: List<String>): Set<AnnotationName> =
+        frameworks.flatMap { resolveModifiers(it) }.toSet()
 
     fun availablePresets(): Set<String> = PRESETS.keys
 

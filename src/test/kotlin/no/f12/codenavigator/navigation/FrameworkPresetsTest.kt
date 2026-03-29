@@ -3,6 +3,7 @@ package no.f12.codenavigator.navigation
 import no.f12.codenavigator.navigation.annotation.FrameworkPresets
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class FrameworkPresetsTest {
@@ -242,6 +243,159 @@ class FrameworkPresetsTest {
         assertTrue(annotations.contains(AnnotationName("jakarta.validation.Valid")))
         assertTrue(annotations.contains(AnnotationName("jakarta.validation.constraints.NotBlank")))
         assertTrue(annotations.contains(AnnotationName("jakarta.validation.constraints.NotNull")))
+    }
+
+    // --- Entry-point vs modifier distinction ---
+
+    @Test
+    fun `Transactional is a modifier not an entry-point in spring`() {
+        val entryPoints = FrameworkPresets.resolveEntryPoints("spring")
+        val modifiers = FrameworkPresets.resolveModifiers("spring")
+
+        val transactional = AnnotationName("org.springframework.transaction.annotation.Transactional")
+        assertTrue(modifiers.contains(transactional), "Transactional should be a modifier")
+        assertFalse(entryPoints.contains(transactional), "Transactional should NOT be an entry-point")
+    }
+
+    @Test
+    fun `GetMapping is an entry-point not a modifier in spring`() {
+        val entryPoints = FrameworkPresets.resolveEntryPoints("spring")
+        val modifiers = FrameworkPresets.resolveModifiers("spring")
+
+        val getMapping = AnnotationName("org.springframework.web.bind.annotation.GetMapping")
+        assertTrue(entryPoints.contains(getMapping), "GetMapping should be an entry-point")
+        assertFalse(modifiers.contains(getMapping), "GetMapping should NOT be a modifier")
+    }
+
+    @Test
+    fun `Cacheable and Async are modifiers in spring`() {
+        val modifiers = FrameworkPresets.resolveModifiers("spring")
+
+        assertTrue(modifiers.contains(AnnotationName("org.springframework.cache.annotation.Cacheable")))
+        assertTrue(modifiers.contains(AnnotationName("org.springframework.cache.annotation.CacheEvict")))
+        assertTrue(modifiers.contains(AnnotationName("org.springframework.cache.annotation.CachePut")))
+        assertTrue(modifiers.contains(AnnotationName("org.springframework.scheduling.annotation.Async")))
+    }
+
+    @Test
+    fun `resolve returns union of entry-points and modifiers`() {
+        val all = FrameworkPresets.resolve("spring")
+        val entryPoints = FrameworkPresets.resolveEntryPoints("spring")
+        val modifiers = FrameworkPresets.resolveModifiers("spring")
+
+        assertTrue(all.containsAll(entryPoints))
+        assertTrue(all.containsAll(modifiers))
+        assertTrue(all.contains(AnnotationName("org.springframework.transaction.annotation.Transactional")))
+        assertTrue(all.contains(AnnotationName("org.springframework.web.bind.annotation.GetMapping")))
+    }
+
+    // --- JAX-RS preset ---
+
+    @Test
+    fun `jaxrs preset contains HTTP method entry-points`() {
+        val entryPoints = FrameworkPresets.resolveEntryPoints("jaxrs")
+
+        assertTrue(entryPoints.contains(AnnotationName("jakarta.ws.rs.GET")))
+        assertTrue(entryPoints.contains(AnnotationName("jakarta.ws.rs.POST")))
+        assertTrue(entryPoints.contains(AnnotationName("jakarta.ws.rs.PUT")))
+        assertTrue(entryPoints.contains(AnnotationName("jakarta.ws.rs.DELETE")))
+        assertTrue(entryPoints.contains(AnnotationName("jakarta.ws.rs.PATCH")))
+        assertTrue(entryPoints.contains(AnnotationName("jakarta.ws.rs.Path")))
+        assertTrue(entryPoints.contains(AnnotationName("jakarta.ws.rs.ext.Provider")))
+    }
+
+    @Test
+    fun `jaxrs preset is in availablePresets`() {
+        assertTrue(FrameworkPresets.availablePresets().contains("jaxrs"))
+    }
+
+    // --- CDI preset ---
+
+    @Test
+    fun `cdi preset contains scope and lifecycle entry-points`() {
+        val entryPoints = FrameworkPresets.resolveEntryPoints("cdi")
+
+        assertTrue(entryPoints.contains(AnnotationName("jakarta.enterprise.context.ApplicationScoped")))
+        assertTrue(entryPoints.contains(AnnotationName("jakarta.enterprise.context.RequestScoped")))
+        assertTrue(entryPoints.contains(AnnotationName("jakarta.enterprise.inject.Produces")))
+        assertTrue(entryPoints.contains(AnnotationName("jakarta.enterprise.event.Observes")))
+    }
+
+    @Test
+    fun `cdi preset contains interceptor entry-points`() {
+        val entryPoints = FrameworkPresets.resolveEntryPoints("cdi")
+
+        assertTrue(entryPoints.contains(AnnotationName("jakarta.interceptor.Interceptor")))
+        assertTrue(entryPoints.contains(AnnotationName("jakarta.interceptor.AroundInvoke")))
+    }
+
+    // --- MicroProfile preset ---
+
+    @Test
+    fun `microprofile preset contains health check entry-points`() {
+        val entryPoints = FrameworkPresets.resolveEntryPoints("microprofile")
+
+        assertTrue(entryPoints.contains(AnnotationName("org.eclipse.microprofile.health.Liveness")))
+        assertTrue(entryPoints.contains(AnnotationName("org.eclipse.microprofile.health.Readiness")))
+    }
+
+    @Test
+    fun `microprofile fault tolerance annotations are modifiers`() {
+        val entryPoints = FrameworkPresets.resolveEntryPoints("microprofile")
+        val modifiers = FrameworkPresets.resolveModifiers("microprofile")
+
+        val circuitBreaker = AnnotationName("org.eclipse.microprofile.faulttolerance.CircuitBreaker")
+        val retry = AnnotationName("org.eclipse.microprofile.faulttolerance.Retry")
+        val timeout = AnnotationName("org.eclipse.microprofile.faulttolerance.Timeout")
+
+        assertTrue(modifiers.contains(circuitBreaker))
+        assertTrue(modifiers.contains(retry))
+        assertTrue(modifiers.contains(timeout))
+        assertFalse(entryPoints.contains(circuitBreaker))
+        assertFalse(entryPoints.contains(retry))
+        assertFalse(entryPoints.contains(timeout))
+    }
+
+    // --- Quarkus composite preset ---
+
+    @Test
+    fun `quarkus preset includes jaxrs cdi microprofile jpa jakarta validation`() {
+        val all = FrameworkPresets.resolve("quarkus")
+
+        assertTrue(all.contains(AnnotationName("jakarta.ws.rs.GET")), "JAX-RS")
+        assertTrue(all.contains(AnnotationName("jakarta.enterprise.context.ApplicationScoped")), "CDI")
+        assertTrue(all.contains(AnnotationName("org.eclipse.microprofile.health.Liveness")), "MicroProfile")
+        assertTrue(all.contains(AnnotationName("jakarta.persistence.Entity")), "JPA")
+        assertTrue(all.contains(AnnotationName("jakarta.inject.Inject")), "Jakarta")
+        assertTrue(all.contains(AnnotationName("jakarta.validation.Valid")), "Validation")
+    }
+
+    @Test
+    fun `quarkus preset contains Quarkus-specific entry-points`() {
+        val entryPoints = FrameworkPresets.resolveEntryPoints("quarkus")
+
+        assertTrue(entryPoints.contains(AnnotationName("io.quarkus.scheduler.Scheduled")))
+    }
+
+    @Test
+    fun `quarkus preset is in availablePresets`() {
+        assertTrue(FrameworkPresets.availablePresets().contains("quarkus"))
+    }
+
+    @Test
+    fun `resolveAllEntryPoints merges entry-points from multiple presets`() {
+        val entryPoints = FrameworkPresets.resolveAllEntryPoints(listOf("jaxrs", "cdi"))
+
+        assertTrue(entryPoints.contains(AnnotationName("jakarta.ws.rs.GET")))
+        assertTrue(entryPoints.contains(AnnotationName("jakarta.enterprise.context.ApplicationScoped")))
+    }
+
+    @Test
+    fun `resolveAllModifiers merges modifiers from multiple presets`() {
+        val modifiers = FrameworkPresets.resolveAllModifiers(listOf("spring", "microprofile"))
+
+        assertTrue(modifiers.contains(AnnotationName("org.springframework.transaction.annotation.Transactional")))
+        assertTrue(modifiers.contains(AnnotationName("org.eclipse.microprofile.faulttolerance.CircuitBreaker")))
     }
 
 }
