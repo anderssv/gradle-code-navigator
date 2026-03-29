@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.41
+
+- **Breaking:** Renamed `framework` parameter to `exclude-framework` with inverted semantics. All framework presets are now active by default — no configuration needed for Spring, Quarkus, or other frameworks. Use `exclude-framework=<preset>` to disable a specific preset, or `exclude-framework=ALL` to disable all.
+- **New:** gRPC framework preset. Entry-point annotations: `@GrpcService`, `@GrpcClient`, `@GlobalInterceptor`, `@GrpcGenerated` (Quarkus, Spring, and standard gRPC). Modifier annotations: `@Blocking`, `@NonBlocking`, `@RunOnVirtualThread`, `@RegisterInterceptor` (SmallRye/Quarkus). Available as standalone `grpc` preset and included in `spring` and `quarkus` composites.
+- **Improved:** Dead code output now includes a note about using `exclude=<regex>` to filter out known false positives (e.g. generated packages).
+- **Improved:** Help texts document using `exclude` for package-level filtering of dead code results (e.g. generated protobuf code).
+
 ## 0.1.40
 
 - **Improved:** `cnavCallers`/`cnavCallees` — annotation parameters now appear in call tree output. Annotations show their parameters (e.g. `@GetMapping(value="/users") [spring]`) in all three output formats (TEXT, LLM, JSON). Previously only the annotation name and framework were shown.
